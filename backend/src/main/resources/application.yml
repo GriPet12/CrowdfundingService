@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: CrowdfundingService
+  datasource:
+    url: jdbc:postgresql://localhost:5432/croundfunding
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate.ddl-auto: update
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+jwt:
+  secret: verySecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm
+  expirationMs: 86400000

@@ -1,4 +1,4 @@
-package com.gripet12.CrowdfundingService
+package com.gripet12.crowdfundingService
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest

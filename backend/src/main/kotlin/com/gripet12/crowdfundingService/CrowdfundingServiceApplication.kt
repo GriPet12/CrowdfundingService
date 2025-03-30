@@ -1,4 +1,4 @@
-package com.gripet12.CrowdfundingService
+package com.gripet12.crowdfundingService
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
