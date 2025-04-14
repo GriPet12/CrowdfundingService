@@ -9,13 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 class UserController(private val userService: UserService) {
-
-    @GetMapping
-    fun home(): String {
-        return "Welcome to the User API"
-    }
 
     @GetMapping("/me")
     fun getCurrentUser(): ResponseEntity<UserDto> {
