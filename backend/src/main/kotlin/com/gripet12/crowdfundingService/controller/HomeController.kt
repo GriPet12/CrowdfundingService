@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/")
-@CrossOrigin(origins = ["http://localhost:8080"])
+@CrossOrigin(origins = ["\${frontend.url}"])
 class HomeController(private val projectService: ProjectService, private val userService: UserService) {
 
     @GetMapping("/projects")

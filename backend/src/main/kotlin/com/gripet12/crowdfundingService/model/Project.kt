@@ -16,4 +16,6 @@ data class Project(
 
     @NotBlank
     val title: String
-)
+) {
+    constructor() : this(null, User(), "")
+}

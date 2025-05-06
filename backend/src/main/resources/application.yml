@@ -17,7 +17,14 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
 
 jwt:
   secret: verySecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm
   expirationMs: 86400000
+
+frontend:
+  url: http://localhost:8082

@@ -4,7 +4,6 @@ import com.gripet12.crowdfundingService.dto.AuthRequest
 import com.gripet12.crowdfundingService.dto.AuthResponse
 import com.gripet12.crowdfundingService.dto.UserDto
 import com.gripet12.crowdfundingService.model.User
-import com.gripet12.crowdfundingService.model.Role
 import com.gripet12.crowdfundingService.repository.UserRepository
 import com.gripet12.crowdfundingService.security.JwtTokenProvider
 import org.springframework.security.authentication.AuthenticationManager
