@@ -5,13 +5,16 @@ spring:
   application:
     name: CrowdfundingService
   datasource:
-    url: jdbc:postgresql://localhost:5432/croundfunding
+    url: jdbc:postgresql://localhost:5433/croundfunding
     username: user
     password: password
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate.ddl-auto: update
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.jdbc.time_zone: UTC
     show-sql: true
   h2:
     console:

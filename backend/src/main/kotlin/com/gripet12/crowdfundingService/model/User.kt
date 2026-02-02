@@ -1,24 +1,27 @@
 package com.gripet12.crowdfundingService.model
 
+import com.gripet12.crowdfundingService.model.enums.Role
 import jakarta.persistence.*
-import jakarta.validation.constraints.NotBlank
+import lombok.AllArgsConstructor
+import lombok.NoArgsConstructor
 
 @Entity
 @Table(name = "users")
+@AllArgsConstructor
+@NoArgsConstructor
 data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    val userId: Long? = null,
 
     @Column(unique = true)
-    @NotBlank
     val username: String,
 
-    @NotBlank
     val password: String,
 
-    @NotBlank
     val email: String,
+
+    val isVerified: Boolean = false,
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
@@ -28,6 +31,4 @@ data class User(
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     val roles: Set<Role> = HashSet()
-) {
-    constructor() : this(null, "", "", "", HashSet())
-}
+)

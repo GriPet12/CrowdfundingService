@@ -3,13 +3,15 @@ package com.gripet12.crowdfundingService.model
 import jakarta.persistence.*
 
 @Entity
+@Table(name = "images")
 data class Image(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
     @Lob
-    val data: ByteArray
+    @Column(columnDefinition = "LONGBLOB")
+    val data: ByteArray = byteArrayOf()
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -24,7 +26,7 @@ data class Image(
     }
 
     override fun hashCode(): Int {
-        var result = id?.hashCode() ?: 0
+        var result = id.hashCode()
         result = 31 * result + data.contentHashCode()
         return result
     }

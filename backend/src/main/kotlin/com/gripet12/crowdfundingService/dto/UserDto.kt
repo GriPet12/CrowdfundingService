@@ -1,6 +1,6 @@
 package com.gripet12.crowdfundingService.dto
 
-import com.gripet12.crowdfundingService.model.Role
+import com.gripet12.crowdfundingService.model.enums.Role
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size

@@ -1,7 +1,7 @@
 package com.gripet12.crowdfundingService.security
 
 import com.gripet12.crowdfundingService.config.JwtConfig
-import com.gripet12.crowdfundingService.model.Role
+import com.gripet12.crowdfundingService.model.enums.Role
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken

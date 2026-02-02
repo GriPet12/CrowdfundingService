@@ -1,21 +1,41 @@
 package com.gripet12.crowdfundingService.model
 
 import jakarta.persistence.*
-import jakarta.validation.constraints.NotBlank
+import java.math.BigDecimal
+import lombok.AllArgsConstructor
+import lombok.NoArgsConstructor
 
 @Entity
 @Table(name = "projects")
+@AllArgsConstructor
+@NoArgsConstructor
 data class Project(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    val projectId: Long? = null,
 
     @ManyToOne
-    @JoinColumn(name = "author_id", nullable = false)
-    val author: User,
+    @JoinColumn(name = "creator_id", nullable = false)
+    val creator: User,
 
-    @NotBlank
-    val title: String
-) {
-    constructor() : this(null, User(), "")
-}
+    val title: String,
+
+    val goalAmount: BigDecimal,
+
+    val collectedAmount: BigDecimal,
+
+    val status: String,
+
+    @ManyToOne
+    @JoinColumn(name = "image_id", nullable = false)
+    val mainImage: Image,
+
+    @ManyToMany(cascade = [CascadeType.ALL])
+    val images: MutableSet<Image> = HashSet(),
+
+    @ManyToMany(cascade = [CascadeType.ALL])
+    val videos: MutableSet<Video> = HashSet(),
+
+    @ManyToMany(cascade = [CascadeType.ALL])
+    val categories: MutableSet<Category> = HashSet()
+)

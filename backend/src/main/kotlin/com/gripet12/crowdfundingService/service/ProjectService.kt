@@ -11,12 +11,12 @@ class ProjectService(private val projectRepository: ProjectRepository) {
 
     fun getAllProjects(pageable: Pageable): Page<ProjectDto> {
         return projectRepository.findAll(pageable).map { project ->
-            project.id?.let {
-                project.author.id?.let { it1 ->
+            project.projectId?.let {
+                project.creator.userId?.let { a ->
                     ProjectDto(
                         id = it,
                         title = project.title,
-                        author = it1,
+                        author = a,
                     )
                 }
             }
