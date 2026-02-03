@@ -7,13 +7,9 @@ import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import lombok.AllArgsConstructor
-import lombok.NoArgsConstructor
 
 @Entity
 @Table(name = "comments")
-@AllArgsConstructor
-@NoArgsConstructor
 data class Comment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

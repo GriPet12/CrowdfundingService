@@ -6,13 +6,9 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import lombok.AllArgsConstructor
-import lombok.NoArgsConstructor
 
 @Entity
 @Table(name = "contents")
-@AllArgsConstructor
-@NoArgsConstructor
 data class Content(
 
     @Id

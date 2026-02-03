@@ -18,5 +18,9 @@ data class UserDto(
     @field:Email(message = "Email should be valid")
     val email: String,
 
+    val isVerified: Boolean = false,
+
+    val imageId: Long? = null,
+
     val roles: Set<Role> = setOf(Role.ROLE_USER)
 )

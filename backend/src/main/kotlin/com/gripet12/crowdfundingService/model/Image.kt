@@ -1,6 +1,8 @@
 package com.gripet12.crowdfundingService.model
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import java.sql.Types
 
 @Entity
 @Table(name = "images")
@@ -10,7 +12,7 @@ data class Image(
     val id: Long? = null,
 
     @Lob
-    @Column(columnDefinition = "LONGBLOB")
+    @JdbcTypeCode(Types.BINARY)
     val data: ByteArray = byteArrayOf()
 ) {
     override fun equals(other: Any?): Boolean {
@@ -26,7 +28,7 @@ data class Image(
     }
 
     override fun hashCode(): Int {
-        var result = id.hashCode()
+        var result = id?.hashCode() ?: 0
         result = 31 * result + data.contentHashCode()
         return result
     }

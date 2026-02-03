@@ -1,13 +1,14 @@
 package com.gripet12.crowdfundingService.repository
 
-import com.gripet12.crowdfundingService.model.Image
+import com.gripet12.crowdfundingService.model.Video
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.Optional
 
 @Repository
-interface ImageRepository : JpaRepository<Image, Long> {
-    fun save(image: Image): Image
-    override fun findById(id: Long): Optional<Image>
+interface VideoRepository : JpaRepository<Video, Long> {
+
+    override fun findById(id: Long): Optional<Video>
+
     override fun deleteById(id: Long)
 }

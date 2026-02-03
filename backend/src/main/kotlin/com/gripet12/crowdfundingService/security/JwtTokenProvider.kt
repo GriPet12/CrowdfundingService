@@ -3,11 +3,14 @@ package com.gripet12.crowdfundingService.security
 import com.gripet12.crowdfundingService.config.JwtConfig
 import com.gripet12.crowdfundingService.model.enums.Role
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 import javax.crypto.SecretKey
 

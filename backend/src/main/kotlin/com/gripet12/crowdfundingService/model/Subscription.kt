@@ -6,19 +6,15 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import lombok.AllArgsConstructor
-import lombok.NoArgsConstructor
 import java.math.BigDecimal
 
 @Entity
 @Table(name = "subscriptions")
-@AllArgsConstructor
-@NoArgsConstructor
 data class Subscription(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val subscriptionId: String,
+    val subscriptionId: Long? = null,
 
     @ManyToOne
     val subscrber: User,

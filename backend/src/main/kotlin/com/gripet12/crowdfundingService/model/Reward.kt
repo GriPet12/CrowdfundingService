@@ -6,14 +6,10 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import lombok.AllArgsConstructor
-import lombok.NoArgsConstructor
 import java.math.BigDecimal
 
 @Entity
 @Table(name = "rewards")
-@AllArgsConstructor
-@NoArgsConstructor
 data class Reward(
 
     @Id

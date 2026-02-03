@@ -22,6 +22,8 @@ class UserService(private val userRepository: UserRepository) {
             username = user.username,
             password = "",
             email = user.email,
+            isVerified = user.isVerified,
+            imageId = user.image?.id,
             roles = user.roles.map { it }.toSet()
         )
     }
@@ -32,6 +34,8 @@ class UserService(private val userRepository: UserRepository) {
                 username = user.username,
                 password = "",
                 email = user.email,
+                isVerified = user.isVerified,
+                imageId = user.image?.id,
                 roles = user.roles.map { it }.toSet()
             )
         }

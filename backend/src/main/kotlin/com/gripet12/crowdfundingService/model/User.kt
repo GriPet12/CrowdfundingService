@@ -2,13 +2,9 @@ package com.gripet12.crowdfundingService.model
 
 import com.gripet12.crowdfundingService.model.enums.Role
 import jakarta.persistence.*
-import lombok.AllArgsConstructor
-import lombok.NoArgsConstructor
 
 @Entity
 @Table(name = "users")
-@AllArgsConstructor
-@NoArgsConstructor
 data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +18,10 @@ data class User(
     val email: String,
 
     val isVerified: Boolean = false,
+
+    @ManyToOne
+    @JoinColumn(name = "image_id", nullable = true) // <--- CHANGED TO TRUE
+    val image: Image? = null,
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(

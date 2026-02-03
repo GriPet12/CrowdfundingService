@@ -2,13 +2,9 @@ package com.gripet12.crowdfundingService.model
 
 import jakarta.persistence.*
 import java.math.BigDecimal
-import lombok.AllArgsConstructor
-import lombok.NoArgsConstructor
 
 @Entity
 @Table(name = "projects")
-@AllArgsConstructor
-@NoArgsConstructor
 data class Project(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,18 +20,18 @@ data class Project(
 
     val collectedAmount: BigDecimal,
 
-    val status: String,
+    val status: String? = null,
 
     @ManyToOne
     @JoinColumn(name = "image_id", nullable = false)
-    val mainImage: Image,
+    val mainImage: Image?,
 
     @ManyToMany(cascade = [CascadeType.ALL])
-    val images: MutableSet<Image> = HashSet(),
+    val images: Set<Image?> = HashSet(),
 
     @ManyToMany(cascade = [CascadeType.ALL])
-    val videos: MutableSet<Video> = HashSet(),
+    val videos: Set<Video?> = HashSet(),
 
     @ManyToMany(cascade = [CascadeType.ALL])
-    val categories: MutableSet<Category> = HashSet()
+    val categories: Set<Category?> = HashSet()
 )
