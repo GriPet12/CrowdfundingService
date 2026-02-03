@@ -17,13 +17,19 @@ data class Reward(
     val rewardId: Long,
 
     @ManyToOne
-    val project: Project,
+    val project: Project?,
+
+    val rewardName: String,
+
+    val rewardDescription: String,
 
     val minimalAmount: BigDecimal,
 
     val rewardTier: String,
 
-    val quntityAvailable: Int,
+    val isHaveQuantity: Boolean,
+
+    val quantityAvailable: Int,
 
     val quantityClaimed: Int
 
