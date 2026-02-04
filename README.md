@@ -14,7 +14,7 @@ This project is a web application built with **Spring Boot** (backend) and **Vue
 
 ## Tech Stack  
 - **Backend:** Kotlin, Spring Boot, Spring Security, JPA, PostgreSQL
-- **Frontend:** Vue.js, Vue Router, Vuex, Axios  
+- **Frontend:** React js
 - **Build Tools:** Maven
 - **Deployment:** Docker, Nginx  
 
