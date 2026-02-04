@@ -34,7 +34,15 @@ class ProjectService(
     }
 
     fun deleteProject(id: Long) {
-        projectRepository.deleteById(id)
+        val project = projectRepository.findById(id).orElseThrow { RuntimeException("Project not found") }
+
+        if (project.collectedAmount > 0.toBigDecimal()) {
+            project.status = "CANCELLED"
+            projectRepository.save(project)
+            // todo start process of refund
+        } else {
+            projectRepository.deleteById(id)
+        }
     }
 
     private fun Project.toPreviewProjectDto(): PreviewProjectDto =

@@ -20,7 +20,7 @@ data class Project(
 
     val collectedAmount: BigDecimal,
 
-    val status: String? = null,
+    var status: String? = null,
 
     @ManyToOne
     @JoinColumn(name = "image_id", nullable = false)
