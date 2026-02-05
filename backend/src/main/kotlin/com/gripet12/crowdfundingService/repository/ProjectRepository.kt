@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface ProjectRepository : JpaRepository<Project, Long> {
     override fun findAll(pageable: Pageable): Page<Project>
+    fun findByProjectId(projectId: Long): Project
 }

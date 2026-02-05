@@ -4,31 +4,17 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import java.math.BigDecimal
 
 @Entity
-@Table(name = "donate")
-data class Donate(
-
+@Table(name = "payments")
+data class Payment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val donateId: Long?,
-
-    @ManyToOne
-    val donor: User,
-
-    @ManyToOne
-    val project: Project,
+    val paymentId: Long?,
 
     val amount: BigDecimal,
 
-    val reward: Int,
-
-    @ManyToOne
-    var payment: Payment? = null,
-
-    val isAnonymous: Boolean = false
+    var status: String
 )

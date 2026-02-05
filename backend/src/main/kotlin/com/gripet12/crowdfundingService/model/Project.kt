@@ -18,7 +18,7 @@ data class Project(
 
     val goalAmount: BigDecimal,
 
-    val collectedAmount: BigDecimal,
+    var collectedAmount: BigDecimal,
 
     var status: String? = null,
 

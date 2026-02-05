@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import java.math.BigDecimal
 
@@ -22,9 +23,11 @@ data class Subscription(
     @ManyToOne
     val creator: User,
 
-    //val subscriptionTier: SubscriptionTier,
+    @ManyToOne
+    val subscriptionTier: SubscriptionTier?,
 
-    val status: String,
+    @ManyToOne
+    val payment: Payment? = null,
 
     val tierPrice: BigDecimal
 )
