@@ -1,5 +1,7 @@
 package com.gripet12.crowdfundingService.dto
 
+import org.springframework.web.multipart.MultipartFile
+
 data class PostDto(
 
     var postId: Long?,
@@ -18,5 +20,6 @@ data class PostDto(
 
     var likeCount: Int = 0,
 
-    val content: Set<ContentDto> = HashSet()
+    // IDs of previously uploaded files
+    val content: Set<MultipartFile> = HashSet()
 )

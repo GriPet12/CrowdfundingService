@@ -36,5 +36,5 @@ data class Post(
 
     @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
-    val content: Set<Content> = HashSet()
+    val content: Set<UploadedFile?> = HashSet()
 )

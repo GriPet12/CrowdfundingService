@@ -94,7 +94,7 @@ class PaymentService (
                 subscriptionId = null,
                 subscrber = userRepository.findByUserId(request.donor),
                 creator = userRepository.findByUserId(request.creator),
-                subscriptionTier = subscriptionTierRepository.findByTierId(request.reward),
+                subscriptionTier = subscriptionTierRepository.findByTierId(request.reward.toLong()),
                 payment = payment,
                 tierPrice = request.amount.toBigDecimal()
             )

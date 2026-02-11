@@ -21,7 +21,7 @@ data class User(
 
     @ManyToOne
     @JoinColumn(name = "image_id", nullable = true) // <--- CHANGED TO TRUE
-    val image: Image? = null,
+    val image: UploadedFile? = null,
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(

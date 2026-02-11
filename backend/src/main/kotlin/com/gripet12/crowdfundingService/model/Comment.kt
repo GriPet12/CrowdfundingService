@@ -22,7 +22,7 @@ data class Comment(
     val project: Project,
 
     @ManyToOne
-    val content: Content,
+    val post: Post,
 
     val commentText: String
 
