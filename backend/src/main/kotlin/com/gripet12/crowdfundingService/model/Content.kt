@@ -4,7 +4,6 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
 @Entity
@@ -15,17 +14,7 @@ data class Content(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val contentId: Long,
 
-    @ManyToOne
-    val creator: User,
+    var contentType: String,
 
-    @ManyToOne
-    val project: Project,
-
-    val contentType: String,
-
-    val visibility: String,
-
-    val requiredTier: String,
-
-    val likeCount: Int = 0
+    var mediaId: Long
 )
