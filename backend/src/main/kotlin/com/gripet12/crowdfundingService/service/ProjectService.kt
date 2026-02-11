@@ -4,10 +4,9 @@ import com.gripet12.crowdfundingService.dto.PreviewProjectDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
 import com.gripet12.crowdfundingService.model.Project
 import com.gripet12.crowdfundingService.repository.CategoryRepository
-import com.gripet12.crowdfundingService.repository.ImageRepository
+import com.gripet12.crowdfundingService.repository.FileRepository
 import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
-import com.gripet12.crowdfundingService.repository.VideoRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -16,8 +15,7 @@ import org.springframework.stereotype.Service
 class ProjectService(
     private val projectRepository: ProjectRepository,
     private val userRepository: UserRepository,
-    private val imageRepository: ImageRepository,
-    private val videoRepository: VideoRepository,
+    private val fileRepository: FileRepository,
     private val categoryRepository: CategoryRepository
 ) {
 
@@ -65,8 +63,7 @@ class ProjectService(
             collectedAmount = collectedAmount,
             status = status,
             mainImage = mainImage?.id,
-            images = images.map() { it?.id }.toSet(),
-            videos = videos.map() { it?.id }.toSet(),
+            media = media.map { it?.id }.toSet(),
             categories = categories.map { it?.categoryId }.toSet()
         )
 
@@ -78,9 +75,8 @@ class ProjectService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
-            mainImage = mainImage?.let { imageRepository.findById(it).orElse(null) },
-            images = images.filterNotNull().map { imageRepository.findById(it).orElseThrow() }.toSet(),
-            videos = videos.filterNotNull().map { videoRepository.findById(it).orElseThrow() }.toSet(),
+            mainImage = mainImage?.let { fileRepository.findById(it).orElse(null) },
+            media = media.filterNotNull().map { fileRepository.findById(it).orElseThrow() }.toSet(),
             categories = categories.filterNotNull().map {
                 categoryRepository.findByCategoryId(it).orElseThrow()
             }.toSet()

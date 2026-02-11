@@ -24,13 +24,10 @@ data class Project(
 
     @ManyToOne
     @JoinColumn(name = "image_id", nullable = false)
-    val mainImage: Image?,
+    val mainImage: UploadedFile?,
 
     @ManyToMany(cascade = [CascadeType.ALL])
-    val images: Set<Image?> = HashSet(),
-
-    @ManyToMany(cascade = [CascadeType.ALL])
-    val videos: Set<Video?> = HashSet(),
+    val media: Set<UploadedFile?> = HashSet(),
 
     @ManyToMany(cascade = [CascadeType.ALL])
     val categories: Set<Category?> = HashSet()

@@ -17,9 +17,7 @@ data class ProjectDto(
 
     val mainImage: Long?,
 
-    val images: Set<Long?> = HashSet(),
-
-    val videos: Set<Long?> = HashSet(),
+    val media: Set<Long?> = HashSet(),
 
     val categories: Set<Long?> = HashSet()
 )
