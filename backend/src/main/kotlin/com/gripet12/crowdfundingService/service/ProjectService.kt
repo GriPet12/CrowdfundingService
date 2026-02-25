@@ -51,6 +51,7 @@ class ProjectService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
+            hotnessScore = hotnessScore,
             mainImage = mainImage?.id
         )
 
@@ -62,6 +63,7 @@ class ProjectService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
+            hotnessScore = hotnessScore,
             mainImage = mainImage?.id,
             media = media.map { it?.id }.toSet(),
             categories = categories.map { it?.categoryId }.toSet()
@@ -75,6 +77,7 @@ class ProjectService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
+            hotnessScore = hotnessScore,
             mainImage = mainImage?.let { fileRepository.findById(it).orElse(null) },
             media = media.filterNotNull().map { fileRepository.findById(it).orElseThrow() }.toSet(),
             categories = categories.filterNotNull().map {

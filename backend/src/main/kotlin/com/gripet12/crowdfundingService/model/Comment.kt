@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import java.sql.Time
+import java.sql.Timestamp
 
 @Entity
 @Table(name = "comments")
@@ -23,6 +25,8 @@ data class Comment(
     @ManyToOne
     val post: Post?,
 
-    val commentText: String
+    val commentText: String,
+
+    val createAt: Timestamp = Timestamp(System.currentTimeMillis())
 
 )

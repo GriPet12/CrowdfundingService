@@ -15,6 +15,8 @@ data class ProjectDto(
 
     val status: String? = null,
 
+    var hotnessScore: Double = 0.0,
+
     val mainImage: Long?,
 
     val media: Set<Long?> = HashSet(),

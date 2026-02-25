@@ -8,6 +8,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import java.math.BigDecimal
+import java.sql.Timestamp
 
 @Entity
 @Table(name = "donate")
@@ -30,5 +31,7 @@ data class Donate(
     @ManyToOne
     var payment: Payment? = null,
 
-    val isAnonymous: Boolean = false
+    val isAnonymous: Boolean = false,
+
+    val createAt: Timestamp = Timestamp(System.currentTimeMillis())
 )

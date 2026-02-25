@@ -22,6 +22,8 @@ data class Project(
 
     var status: String? = null,
 
+    var hotnessScore: Double = 0.0,
+
     @ManyToOne
     @JoinColumn(name = "image_id", nullable = false)
     val mainImage: UploadedFile?,

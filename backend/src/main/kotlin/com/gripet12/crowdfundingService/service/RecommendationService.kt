@@ -90,6 +90,7 @@ class RecommendationService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
+            hotnessScore = hotnessScore,
             mainImage = mainImage?.id
         )
 }
