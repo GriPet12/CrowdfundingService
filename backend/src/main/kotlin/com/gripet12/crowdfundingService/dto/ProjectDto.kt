@@ -15,11 +15,13 @@ data class ProjectDto(
 
     val status: String? = null,
 
+    val description: String? = null,
+
     var hotnessScore: Double = 0.0,
 
     val mainImage: Long?,
 
-    val media: Set<Long?> = HashSet(),
+    val media: Set<MediaDto> = HashSet(),
 
-    val categories: Set<Long?> = HashSet()
+    val categories: Set<String?> = HashSet()
 )

@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface SubscriptionTierRepository : JpaRepository<SubscriptionTier, Long> {
     fun findByTierId(tierId: Long?): SubscriptionTier?
+    fun findByCreatorId(creatorId: Long): List<SubscriptionTier>
+    fun findByTierIdAndCreatorId(tierId: Long, creatorId: Long): SubscriptionTier?
 }

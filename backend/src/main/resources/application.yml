@@ -1,5 +1,7 @@
 server:
   port: 8081
+  servlet:
+    context-path: /api
 
 spring:
   mail:
@@ -16,12 +18,13 @@ spring:
   application:
     name: CrowdfundingService
   datasource:
-    url: jdbc:postgresql://localhost:5433/croundfunding
+    url: jdbc:postgresql://localhost:5433/croundfunding?TimeZone=UTC
     username: user
     password: password
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
     hibernate:
       ddl-auto: update
     properties:
@@ -41,4 +44,4 @@ jwt:
   expirationMs: 86400000
 
 frontend:
-  url: http://localhost:8082
+  url: http://localhost:5173

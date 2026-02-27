@@ -19,7 +19,7 @@ data class Donate(
     val donateId: Long?,
 
     @ManyToOne
-    val donor: User,
+    val donor: User?,
 
     @ManyToOne
     val project: Project,

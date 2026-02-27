@@ -17,5 +17,7 @@ data class PreviewProjectDto(
 
     val hotnessScore: Double,
 
-    val mainImage: Long?
+    val mainImage: Long?,
+
+    val categories: Set<String?> = HashSet()
 )

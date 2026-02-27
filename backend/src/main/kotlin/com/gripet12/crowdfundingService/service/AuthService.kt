@@ -34,7 +34,9 @@ class AuthService(
 
         return AuthResponse(
             token = token,
+            id = user.userId,
             username = user.username,
+            imageId = user.image?.id,
             roles = roles
         )
     }
@@ -64,7 +66,9 @@ class AuthService(
 
         return AuthResponse(
             token = token,
+            id = user.userId,
             username = user.username,
+            imageId = user.image?.id,
             roles = roles.map { it }
         )
     }

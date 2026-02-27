@@ -1,6 +1,7 @@
 package com.gripet12.crowdfundingService.model
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -8,7 +9,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "ANALYTICS_LOGS")
@@ -29,5 +30,6 @@ data class AnalyticsLog(
     @ManyToMany(cascade = [CascadeType.ALL])
     val categories: Set<Category?> = HashSet(),
 
-    val actionTime: Timestamp = Timestamp(System.currentTimeMillis())
+    @Column(columnDefinition = "timestamp without time zone")
+    val actionTime: LocalDateTime = LocalDateTime.now()
 )

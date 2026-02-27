@@ -7,8 +7,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.http.ResponseEntity
 
 @RestController
-@RequestMapping("/api/payment")
-@CrossOrigin(origins = ["http://localhost:5173"])
+@RequestMapping("/payment")
 class PaymentController(private val paymentService: PaymentService) {
 
     @PostMapping("/{type}/generate")

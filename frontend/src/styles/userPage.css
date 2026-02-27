@@ -1,0 +1,405 @@
+.user-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 20px 60px;
+}
+
+.user-page-loading,
+.user-page-error {
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 0 20px;
+    text-align: center;
+    font-size: 16px;
+    color: #666;
+}
+
+.user-page-error p {
+    color: #cc0000;
+    margin-bottom: 20px;
+}
+
+.user-page-back {
+    margin-bottom: 20px;
+}
+
+.user-page-back-btn {
+    background: transparent;
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.user-page-back-btn:hover {
+    background-color: #1a1a1a;
+    color: white;
+}
+
+.user-page-hero {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 40px;
+    margin-bottom: 40px;
+}
+
+.user-page-avatar-wrapper {
+    flex-shrink: 0;
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid #e0e0e0;
+}
+
+.user-page-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.user-page-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    font-weight: 900;
+}
+
+.user-page-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.user-page-name {
+    font-size: 32px;
+    font-weight: 900;
+    margin: 0;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+}
+
+.user-page-email {
+    font-size: 14px;
+    color: #888;
+    margin: 0;
+}
+
+.user-page-description {
+    font-size: 15px;
+    color: #444;
+    line-height: 1.6;
+    margin: 8px 0 0;
+}
+
+.user-page-donate {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 320px;
+    height: 44px;
+    align-self: flex-start;
+}
+
+.user-page-tabs-container {
+    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 30px;
+}
+
+.user-page-tabs {
+    display: flex;
+    gap: 0;
+}
+
+.user-page-tab {
+    flex: none;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.user-page-tab:hover {
+    color: #1a1a1a;
+}
+
+.user-page-tab.active {
+    color: #1a1a1a;
+    border-bottom-color: #1a1a1a;
+}
+
+.user-page-tab-content {
+    min-height: 200px;
+}
+
+.user-page-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 180px;
+    color: #999;
+    font-size: 15px;
+}
+
+.user-page-content-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #333;
+    max-width: 780px;
+}
+
+.user-page-content-tab,
+.user-page-chat-tab,
+.user-page-projects-tab {
+    animation: fadeInTab 0.25s ease;
+}
+
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.userpage-donate-section {
+    width: 100%;
+    position: relative;
+    height: 44px;
+}
+
+.userpage-donate-start-wrapper,
+.userpage-donate-input-wrapper {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.userpage-donate-start-wrapper {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.userpage-donate-input-wrapper {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.userpage-donate-section.active .userpage-donate-start-wrapper {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.userpage-donate-section.active .userpage-donate-input-wrapper {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.userpage-donate-btn {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background-color: #1a1a1a;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.userpage-donate-btn:hover {
+    background-color: #333;
+}
+
+.userpage-donate-input-group {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+}
+
+.userpage-donate-cancel {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+    padding: 0 5px;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.userpage-donate-cancel:hover {
+    color: #ff4d4d;
+}
+
+.userpage-donate-input {
+    flex-grow: 1;
+    height: 44px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    min-width: 0;
+}
+
+.userpage-donate-confirm {
+    height: 44px;
+    padding: 0 20px;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background-color: #28a745;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.userpage-donate-confirm:hover {
+    background-color: #218838;
+}
+
+.userpage-donate-confirm:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+@media screen and (max-width: 768px) {
+    .user-page-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 24px;
+        gap: 20px;
+    }
+
+    .user-page-info {
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .user-page-avatar-wrapper {
+        width: 120px;
+        height: 120px;
+    }
+
+    .user-page-avatar-placeholder {
+        font-size: 48px;
+    }
+
+    .user-page-name {
+        font-size: 24px;
+    }
+
+    .user-page-donate {
+        max-width: 100%;
+        width: 100%;
+        height: 44px;
+        align-self: stretch;
+    }
+
+    .user-page-tab {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .user-page {
+        padding: 15px 15px 40px;
+    }
+
+    .user-page-hero {
+        padding: 20px;
+    }
+
+    .user-page-avatar-wrapper {
+        width: 90px;
+        height: 90px;
+    }
+
+    .user-page-avatar-placeholder {
+        font-size: 36px;
+    }
+
+    .user-page-name {
+        font-size: 20px;
+    }
+
+    .user-page-tab {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+.user-page-follow-author-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 320px;
+    height: 44px;
+    margin-top: 10px;
+    padding: 0 20px;
+    background: transparent;
+    border: 2px solid #c8960c;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #c8960c;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.user-page-follow-author-btn:not(.user-page-follow-author-btn--active):hover:not(:disabled) {
+    border-color: #c8960c;
+    color: #c8960c;
+    background: #fffbf0;
+}
+.user-page-follow-author-btn--active {
+    border-color: #c8960c !important;
+    background: #c8960c !important;
+    color: #fff !important;
+}
+.user-page-follow-author-btn--active:hover:not(:disabled) {
+    background: #a87a0a !important;
+    border-color: #a87a0a !important;
+}
+.user-page-follow-author-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media screen and (max-width: 768px) {
+    .user-page-follow-author-btn { max-width: 100%; }
+}
+

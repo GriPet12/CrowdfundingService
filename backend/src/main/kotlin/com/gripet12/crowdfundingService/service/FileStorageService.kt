@@ -5,6 +5,7 @@ import com.gripet12.crowdfundingService.model.enums.FileCategory
 import com.gripet12.crowdfundingService.repository.FileRepository
 import org.apache.tika.Tika
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 
 @Service
@@ -13,6 +14,7 @@ class FileStorageService(
 ) {
     private val tika = Tika()
 
+    @Transactional
     fun uploadFile(file: MultipartFile): UploadedFile {
         val bytes = file.bytes
         val mimeType = tika.detect(bytes)
@@ -38,8 +40,15 @@ class FileStorageService(
         }
     }
 
+    @Transactional(readOnly = true)
+    fun getImage(id: Long): UploadedFile? = fileRepository.findById(id)
+        .filter { it.category == FileCategory.PHOTO }
+        .orElse(null)
+
+    @Transactional(readOnly = true)
     fun getFile(id: Long): UploadedFile? = fileRepository.findById(id).orElse(null)
 
+    @Transactional
     fun deleteFile(id: Long) {
         fileRepository.deleteById(id)
     }

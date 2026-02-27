@@ -1,7 +1,7 @@
 package com.gripet12.crowdfundingService.dto
 
 data class PaymentRequest(
-    val orderId: String,
+    val orderId: String? = null,
 
     val amount: Double,
 

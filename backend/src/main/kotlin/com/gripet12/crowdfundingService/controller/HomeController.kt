@@ -23,7 +23,7 @@ class HomeController(
 
     @GetMapping("/projects")
     fun getProjects(
-        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "6") size: Int,
         @RequestParam(defaultValue = "0") page: Int
     ): PageResponseDto<PreviewProjectDto> {
         val pageable = Pageable.ofSize(size).withPage(page)
@@ -38,7 +38,10 @@ class HomeController(
         )
     }
     @GetMapping("/creators")
-    fun getCreators(size: Int = 0, page: Int = 10): PageResponseDto<UserDto> {
+    fun getCreators(
+        @RequestParam(defaultValue = "12") size: Int,
+        @RequestParam(defaultValue = "0") page: Int
+    ): PageResponseDto<UserDto> {
         val pageable = Pageable.ofSize(size).withPage(page)
         val creatorsPage = userService.getAllCreators(pageable)
 

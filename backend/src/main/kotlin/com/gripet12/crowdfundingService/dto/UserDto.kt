@@ -6,16 +6,19 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
 data class UserDto(
-    @field:NotBlank(message = "Username is required")
-    @field:Size(min = 4, max = 50, message = "Username must be between 4 and 50 characters")
+
+    val id: Long? = null,
+
+    @field:NotBlank
+    @field:Size(min = 4, max = 50)
     val username: String,
 
-    @field:NotBlank(message = "Password is required")
-    @field:Size(min = 6, message = "Password must be at least 6 characters")
+    @field:NotBlank
+    @field:Size(min = 6)
     val password: String,
 
-    @field:NotBlank(message = "Email is required")
-    @field:Email(message = "Email should be valid")
+    @field:NotBlank
+    @field:Email
     val email: String,
 
     val isVerified: Boolean = false,

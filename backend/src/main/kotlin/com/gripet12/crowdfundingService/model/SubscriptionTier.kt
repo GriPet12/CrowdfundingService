@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.Column
 
 @Entity
 @Table(name = "subscription_tiers")
@@ -12,6 +13,9 @@ data class SubscriptionTier(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val tierId: Long?,
+
+    @Column(nullable = false)
+    val creatorId: Long,
 
     val amount: Long,
 

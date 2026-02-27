@@ -5,6 +5,7 @@ import com.gripet12.crowdfundingService.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -29,4 +30,8 @@ class UserController(private val userService: UserService) {
     fun userEndpoint(): ResponseEntity<String> {
         return ResponseEntity.ok("This is a user protected endpoint")
     }
+
+    @GetMapping("/{id}")
+    fun getUser(@PathVariable id: Long) =
+        userService.getUserById(id)
 }

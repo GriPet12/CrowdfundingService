@@ -1,0 +1,460 @@
+.my-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 20px 60px;
+}
+
+.my-page-loading {
+    max-width: 1200px;
+    margin: 60px auto;
+    text-align: center;
+    font-size: 16px;
+    color: #666;
+}
+
+.my-page-back { margin-bottom: 20px; }
+
+.my-page-back-btn {
+    background: transparent;
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.my-page-back-btn:hover { background-color: #1a1a1a; color: white; }
+
+.my-page-hero {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 40px;
+    margin-bottom: 40px;
+}
+
+.my-page-avatar-wrapper {
+    flex-shrink: 0;
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid #e0e0e0;
+}
+
+.my-page-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.my-page-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    font-weight: 900;
+}
+
+.my-page-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.my-page-name {
+    font-size: 32px;
+    font-weight: 900;
+    margin: 0;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+}
+
+.my-page-email {
+    font-size: 14px;
+    color: #888;
+    margin: 0;
+}
+
+.my-page-hero-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.my-page-add-project-btn {
+    padding: 10px 22px;
+    background-color: #1a1a1a;
+    color: white;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.my-page-add-project-btn:hover { background-color: #333; }
+
+.my-page-tabs-container {
+    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 30px;
+}
+
+.my-page-tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
+.my-page-tabs::-webkit-scrollbar { display: none; }
+
+.my-page-tab {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.my-page-tab:hover { color: #1a1a1a; }
+.my-page-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+
+.my-page-tab-content { min-height: 200px; }
+
+.my-page-content-tab,
+.my-page-chat-tab,
+.my-page-projects-tab,
+.my-page-subscriptions-tab,
+.my-page-following-tab,
+.my-page-authors-tab,
+.my-page-my-subscriptions-tab {
+    animation: myPageFade 0.25s ease;
+}
+
+.authors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+@media (max-width: 600px) {
+    .authors-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}
+
+.my-subs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.my-subs-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #f9f9f9;
+    border: 1px solid #ebebeb;
+    border-radius: 10px;
+    padding: 16px 20px;
+    transition: box-shadow 0.2s;
+}
+.my-subs-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
+
+.my-subs-avatar {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+}
+.my-subs-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.my-subs-info { flex: 1; min-width: 0; }
+
+.my-subs-creator {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.my-subs-tier {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.my-subs-tier-badge {
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.my-subs-price {
+    font-size: 20px;
+    font-weight: 900;
+    color: #1a1a1a;
+    white-space: nowrap;
+}
+.my-subs-period { font-size: 12px; font-weight: 500; color: #888; margin-left: 2px; }
+
+.my-subs-status {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.my-subs-status--approved { background: #e6f4ec; color: #1a7a3c; }
+.my-subs-status--pending  { background: #fff8e1; color: #b8860b; }
+.my-subs-status--declined { background: #fdecea; color: #cc0000; }
+
+@media (max-width: 600px) {
+    .my-subs-card { flex-wrap: wrap; gap: 10px; }
+    .my-subs-price, .my-subs-status { margin-left: auto; }
+}
+
+@keyframes myPageFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.my-page-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 180px;
+    color: #999;
+    font-size: 15px;
+}
+
+.my-page-projects-header {
+    margin-bottom: 20px;
+}
+
+.my-page-editor {
+    background: #f9f9f9;
+    border-radius: 10px;
+    padding: 28px;
+    margin-bottom: 30px;
+}
+
+.my-page-editor-heading {
+    font-size: 18px;
+    font-weight: 900;
+    color: #1a1a1a;
+    margin: 0 0 16px;
+}
+
+.my-page-editor-title {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 18px;
+    font-weight: 700;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    color: #1a1a1a;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+.my-page-editor-title:focus { outline: none; border-color: #1a1a1a; }
+.my-page-editor-title::placeholder { font-weight: 400; color: #aaa; }
+
+.my-page-editor-text {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    line-height: 1.6;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 120px;
+    box-sizing: border-box;
+    font-family: inherit;
+    color: #333;
+    transition: border-color 0.2s;
+}
+.my-page-editor-text:focus { outline: none; border-color: #1a1a1a; }
+
+.my-page-editor-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.my-page-editor-attachment {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #e8e8e8;
+    border: 1px solid #ddd;
+}
+
+.my-page-editor-preview-img {
+    width: 100px;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+}
+
+.my-page-editor-preview-video {
+    width: 140px;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+    background: #000;
+}
+
+.my-page-editor-preview-file {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #444;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 40px;
+}
+
+.my-page-editor-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.55);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.my-page-editor-remove:hover { background: #cc0000; }
+
+.my-page-editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.my-page-editor-attach-btn {
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #555;
+    padding: 9px 16px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+.my-page-editor-attach-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+
+.my-page-editor-publish-btn {
+    margin-left: auto;
+    background-color: #1a1a1a;
+    color: white;
+    border: 1px solid transparent;
+    padding: 10px 24px;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.my-page-editor-publish-btn:hover:not(:disabled) { background-color: #333; }
+.my-page-editor-publish-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.my-page-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.my-page-post {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px 24px;
+    border: 1px solid #ebebeb;
+}
+
+.my-page-post-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0 0 10px;
+}
+
+.my-page-post-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #444;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+@media screen and (max-width: 768px) {
+    .my-page-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 24px;
+        gap: 20px;
+    }
+
+    .my-page-info { width: 100%; align-items: center; }
+
+    .my-page-avatar-wrapper { width: 110px; height: 110px; }
+    .my-page-avatar-placeholder { font-size: 44px; }
+    .my-page-name { font-size: 24px; }
+
+    .my-page-tab { padding: 10px 16px; font-size: 14px; }
+
+    .my-page-editor { padding: 18px; }
+    .my-page-editor-actions { flex-wrap: wrap; }
+    .my-page-editor-publish-btn { margin-left: 0; width: 100%; }
+}
+
+@media screen and (max-width: 480px) {
+    .my-page { padding: 15px 15px 40px; }
+    .my-page-tab { padding: 8px 12px; font-size: 13px; }
+}
+

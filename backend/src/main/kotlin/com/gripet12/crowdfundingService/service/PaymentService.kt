@@ -14,10 +14,11 @@ import com.gripet12.crowdfundingService.repository.UserRepository
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.nio.charset.StandardCharsets
 
 @Service
-class PaymentService (
+class PaymentService(
     private val donateRepository: DonateRepository,
     private val paymentRepository: PaymentRepository,
     private val projectRepository: ProjectRepository,
@@ -29,31 +30,47 @@ class PaymentService (
     private val merchantSecret = "flk3409refn54t54t*FNJRET"
     private val merchantDomainName = "www.market.ua"
 
+    private val returnUrl = "http://localhost:5173"
+    private val serviceUrl = "http://localhost:8081/api/payment/callback"
+
+    @Transactional
     fun generatePaymentData(request: PaymentRequest, type: String): Map<String, String> {
         val currency = "UAH"
         val orderDate = System.currentTimeMillis() / 1000
         val productName = "CrowdfundingDonation"
         val productCount = "1"
 
-        val formattedAmount = String.format("%.2f", request.amount).replace(",", ".")
+        val formattedAmount = "%.2f".format(request.amount).replace(",", ".")
 
-        val orderId = createPayment(request, type).toString()
+        val orderId = createPayment(request, type)
 
-        val stringToSign = "$merchantAccount;$merchantDomainName;$orderId;$orderDate;$formattedAmount;$currency;$productName;$productCount;$formattedAmount"
+        val stringToSign = listOf(
+            merchantAccount,
+            merchantDomainName,
+            orderId,
+            orderDate.toString(),
+            formattedAmount,
+            currency,
+            productName,
+            productCount,
+            formattedAmount
+        ).joinToString(";")
 
         val signature = hmacMd5(stringToSign, merchantSecret)
 
         return mapOf(
-            "merchantAccount" to merchantAccount,
+            "merchantAccount"   to merchantAccount,
             "merchantDomainName" to merchantDomainName,
             "merchantSignature" to signature,
-            "orderReference" to orderId,
-            "orderDate" to orderDate.toString(),
-            "amount" to formattedAmount,
-            "currency" to currency,
-            "productName[]" to productName,
-            "productCount[]" to productCount,
-            "productPrice[]" to formattedAmount
+            "orderReference"    to orderId,
+            "orderDate"         to orderDate.toString(),
+            "amount"            to formattedAmount,
+            "currency"          to currency,
+            "productName[]"     to productName,
+            "productCount[]"    to productCount,
+            "productPrice[]"    to formattedAmount,
+            "returnUrl"         to returnUrl,
+            "serviceUrl"        to serviceUrl
         )
     }
 
@@ -62,60 +79,64 @@ class PaymentService (
         val secretKeySpec = SecretKeySpec(key.toByteArray(StandardCharsets.UTF_8), algorithm)
         val mac = Mac.getInstance(algorithm)
         mac.init(secretKeySpec)
-
-        val bytes = mac.doFinal(data.toByteArray(StandardCharsets.UTF_8))
-
-        return bytes.joinToString("") { "%02x".format(it) }
+        return mac.doFinal(data.toByteArray(StandardCharsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
     }
 
-
-    fun createPayment(request: PaymentRequest, type: String): Long? {
+    fun createPayment(request: PaymentRequest, type: String): String {
         val payment = Payment(
             paymentId = null,
             amount = request.amount.toBigDecimal(),
-            status = "PENDING",
+            status = "PENDING"
         )
-
-        val paymentId = paymentRepository.save(payment).paymentId
+        val savedPayment = paymentRepository.save(payment)
+        val orderReference = savedPayment.orderReference
 
         if (type == "DONATION") {
+            val donorUser = if (request.isAnonymous || request.donateId == 0L) null
+                            else userRepository.getReferenceById(request.donateId)
+            val project = projectRepository.getReferenceById(request.project)
+
             val donate = Donate(
                 donateId = null,
-                donor = userRepository.findByUserId(request.donateId),
-                project = projectRepository.findByProjectId(request.project),
+                donor = donorUser,
+                project = project,
                 amount = request.amount.toBigDecimal(),
                 reward = request.reward,
-                payment = payment
+                payment = savedPayment,
+                isAnonymous = request.isAnonymous
             )
-
             donateRepository.save(donate)
+
         } else if (type == "SUBSCRIPTION") {
             val subscription = Subscription(
                 subscriptionId = null,
-                subscrber = userRepository.findByUserId(request.donor),
-                creator = userRepository.findByUserId(request.creator),
+                subscrber = userRepository.getReferenceById(request.donor),
+                creator = userRepository.getReferenceById(request.creator),
                 subscriptionTier = subscriptionTierRepository.findByTierId(request.reward.toLong()),
-                payment = payment,
+                payment = savedPayment,
                 tierPrice = request.amount.toBigDecimal()
             )
-
             subscriptionRepository.save(subscription)
         }
 
-        return paymentId
+        return orderReference
     }
 
+    @Transactional
     fun processPaymentCallback(response: WayForPayCallbackDto) {
-
-        val paymentId = response.orderReference.toLong()
-        val payment = paymentRepository.findByPaymentId(paymentId)
+        val payment = paymentRepository.findByOrderReference(response.orderReference)
+        payment.status = if (response.transactionStatus == "Approved") "APPROVED" else "DECLINED"
+        paymentRepository.save(payment)
 
         if (response.transactionStatus == "Approved") {
-            payment.status = "APPROVED"
-
-        } else {
-            payment.status = "DECLINED"
+            val donate = donateRepository.findByPayment(payment)
+            if (donate != null) {
+                projectRepository.increaseCollectedAmount(
+                    donate.project.projectId!!,
+                    donate.amount
+                )
+            }
         }
-        paymentRepository.save(payment)
     }
 }

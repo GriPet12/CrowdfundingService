@@ -1,12 +1,13 @@
 package com.gripet12.crowdfundingService.model
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import java.security.Timestamp
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "analytics_logs")
@@ -24,7 +25,8 @@ data class AnalyticsLogs(
 
     val actionType: String,
 
-    val actionTime: Timestamp,
+    @Column(columnDefinition = "timestamp without time zone")
+    val actionTime: LocalDateTime,
 
     val ipAddress: String
 )

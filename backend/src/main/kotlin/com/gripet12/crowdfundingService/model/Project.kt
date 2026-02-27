@@ -22,6 +22,9 @@ data class Project(
 
     var status: String? = null,
 
+    @Column(length = 2048)
+    val description: String? = null,
+
     var hotnessScore: Double = 0.0,
 
     @ManyToOne

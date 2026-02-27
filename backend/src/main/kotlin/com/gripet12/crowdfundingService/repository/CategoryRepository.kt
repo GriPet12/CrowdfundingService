@@ -10,4 +10,5 @@ interface CategoryRepository : JpaRepository<Category, Long> {
     fun save(category: Category): Category
     fun findByCategoryId(id: Long?): Optional<Category?>
     fun deleteByCategoryId(id: Long)
+    fun findByCategoryName(categoryName: String): Optional<Category>
 }

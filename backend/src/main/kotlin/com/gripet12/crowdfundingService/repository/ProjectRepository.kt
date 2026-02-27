@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.sql.Timestamp
 
@@ -14,6 +15,17 @@ import java.sql.Timestamp
 interface ProjectRepository : JpaRepository<Project, Long> {
     override fun findAll(pageable: Pageable): Page<Project>
     fun findByProjectId(projectId: Long): Project
+
+    @Query("SELECT DISTINCT p FROM Project p LEFT JOIN FETCH p.categories WHERE p.projectId IN :ids")
+    fun findAllWithCategoriesByIds(ids: List<Long>): List<Project>
+
+    @Query("SELECT p.projectId FROM Project p")
+    fun findAllIds(pageable: Pageable): Page<Long>
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Project p SET p.collectedAmount = p.collectedAmount + :amount WHERE p.projectId = :projectId")
+    fun increaseCollectedAmount(projectId: Long, amount: BigDecimal)
 
     @Modifying
     @Query(
