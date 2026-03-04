@@ -1,22 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AuthService from './AuthService.jsx';
 
 const BACKEND_URL = 'http://localhost:8081';
 const FACEBOOK_ENABLED = false; 
 
+const RESEND_COOLDOWN = 60;
+
 const LoginUser = ({ onSwitchToRegister }) => {
     const [data, setData] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [notVerified, setNotVerified] = useState(false);
+    const [notVerifiedEmail, setNotVerifiedEmail] = useState('');
+    const [resendStatus, setResendStatus] = useState('idle');
+    const [cooldown, setCooldown] = useState(0);
+    const timerRef = useRef(null);
+
+    useEffect(() => () => clearInterval(timerRef.current), []);
+
+    const startCooldown = () => {
+        setCooldown(RESEND_COOLDOWN);
+        timerRef.current = setInterval(() => {
+            setCooldown(prev => {
+                if (prev <= 1) { clearInterval(timerRef.current); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+    };
 
     const handleLogin = (e) => {
         e.preventDefault();
         setError('');
+        setNotVerified(false);
         setLoading(true);
         AuthService.login(data.username, data.password).then(
             () => { window.location.reload(); },
-            () => { setError('Невірний логін або пароль'); }
+            (err) => {
+                const respData = err?.response?.data;
+                const errCode = respData?.error || '';
+                if (errCode === 'EMAIL_NOT_VERIFIED') {
+                    setNotVerifiedEmail(respData?.email || '');
+                    setNotVerified(true);
+                } else {
+                    setError('Невірний логін або пароль');
+                }
+            }
         ).finally(() => setLoading(false));
+    };
+
+    const handleResend = async () => {
+        setResendStatus('sending');
+        try {
+            const r = await fetch('/api/auth/resend-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: notVerifiedEmail }),
+            });
+            const resData = await r.json();
+            if (r.ok) { setResendStatus('sent'); startCooldown(); }
+            else setResendStatus(resData.error === 'ALREADY_VERIFIED' ? 'already' : 'error');
+        } catch { setResendStatus('error'); }
     };
 
     const handleSocialLogin = (provider) => {
@@ -27,7 +70,31 @@ const LoginUser = ({ onSwitchToRegister }) => {
         <form className="auth-form" onSubmit={handleLogin}>
             {error && <div className="auth-error-box">{error}</div>}
 
-            
+            {notVerified && (
+                <div className="auth-not-verified-box">
+                    <p className="auth-not-verified-title">📧 Email не підтверджено</p>
+                    <p className="auth-not-verified-text">
+                        Будь ласка, підтвердіть свою електронну адресу{notVerifiedEmail ? <> <strong>{notVerifiedEmail}</strong></> : ''}, щоб увійти в акаунт.
+                    </p>
+                    {resendStatus === 'sent' && <p className="auth-resend-msg auth-resend-msg--ok">✓ Лист надіслано! Перевірте пошту.</p>}
+                    {resendStatus === 'already' && <p className="auth-resend-msg auth-resend-msg--info">Email вже підтверджено. Спробуйте увійти знову.</p>}
+                    {resendStatus === 'error' && <p className="auth-resend-msg auth-resend-msg--err">Помилка. Спробуйте ще раз.</p>}
+                    <button
+                        type="button"
+                        className="btn-resend"
+                        onClick={handleResend}
+                        disabled={resendStatus === 'sending' || cooldown > 0}
+                    >
+                        {resendStatus === 'sending'
+                            ? 'Надсилання…'
+                            : cooldown > 0
+                                ? `Надіслати повторно (${cooldown}с)`
+                                : 'Надіслати лист підтвердження'}
+                    </button>
+                </div>
+            )}
+
+
             <div className="auth-social-btns">
                 <button type="button" className="auth-social-btn auth-social-btn--google"
                     onClick={() => handleSocialLogin('google')}>

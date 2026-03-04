@@ -8,5 +8,6 @@ import java.util.Optional
 @Repository
 interface EmailVerificationTokenRepository : JpaRepository<EmailVerificationToken, Long> {
     fun findByToken(token: String): Optional<EmailVerificationToken>
+    fun findByUserUserId(userId: Long): Optional<EmailVerificationToken>
     fun deleteByUserUserId(userId: Long)
 }

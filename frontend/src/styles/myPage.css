@@ -106,6 +106,161 @@
 }
 .my-page-add-project-btn:hover { background-color: #333; }
 
+.my-page-change-password-btn {
+    padding: 10px 22px;
+    background-color: #fff;
+    color: #1a1a1a;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.my-page-change-password-btn:hover { background-color: #f0f0f0; }
+
+.chpwd-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.chpwd-modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    animation: chpwdFadeIn 0.2s ease;
+}
+
+@keyframes chpwdFadeIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.chpwd-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #888;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    transition: color 0.2s;
+}
+.chpwd-close:hover { color: #1a1a1a; }
+
+.chpwd-title {
+    font-size: 22px;
+    font-weight: 900;
+    margin: 0 0 24px;
+    color: #1a1a1a;
+}
+
+.chpwd-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.chpwd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.chpwd-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #555;
+}
+
+.chpwd-input {
+    padding: 10px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1a1a1a;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+.chpwd-input:focus { outline: none; border-color: #1a1a1a; }
+
+.chpwd-error {
+    font-size: 13px;
+    color: #cc0000;
+    margin: 0;
+    background: #fdecea;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.chpwd-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 8px 0 4px;
+}
+.chpwd-success p {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a7a3c;
+    margin: 0;
+}
+.chpwd-success .chpwd-submit-btn {
+    flex: none;
+    width: 100%;
+    max-width: 200px;
+}
+
+.chpwd-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.chpwd-submit-btn {
+    flex: 1;
+    padding: 11px 0;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.chpwd-submit-btn:hover:not(:disabled) { background: #333; }
+.chpwd-submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+.chpwd-cancel-btn {
+    flex: 1;
+    padding: 11px 0;
+    background: #fff;
+    color: #1a1a1a;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.chpwd-cancel-btn:hover:not(:disabled) { border-color: #1a1a1a; }
+.chpwd-cancel-btn:disabled { opacity: 0.6; cursor: default; }
+
 .my-page-tabs-container {
     border-bottom: 2px solid #f0f0f0;
     margin-bottom: 30px;
@@ -432,6 +587,16 @@
 }
 .my-page-editor-publish-btn:hover:not(:disabled) { background-color: #333; }
 .my-page-editor-publish-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.my-page-editor-error {
+    margin-top: 10px;
+    color: #c0392b;
+    font-size: 13px;
+    background: #fdf0ee;
+    border: 1px solid #f5c6c2;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
 
 .my-page-posts {
     display: flex;

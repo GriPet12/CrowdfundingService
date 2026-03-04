@@ -21,6 +21,7 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
     const [requiredTierId, setRequiredTierId] = useState('');
     const [minDonationAmount, setMinDonationAmount] = useState('');
     const [publishing, setPublishing] = useState(false);
+    const [publishError, setPublishError] = useState('');
     const fileRef = useRef();
 
     const handleFiles = (e) => {
@@ -34,6 +35,7 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
     const handlePublish = async () => {
         if (!title.trim() && !text.trim() && files.length === 0) return;
         setPublishing(true);
+        setPublishError('');
         try {
             await onPublish({
                 title,
@@ -49,6 +51,9 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
             setVisibilityMode('public');
             setRequiredTierId('');
             setMinDonationAmount('');
+            setPublishError('');
+        } catch (err) {
+            setPublishError(err.message || 'Не вдалося опублікувати пост. Спробуйте ще раз.');
         } finally {
             setPublishing(false);
         }
@@ -199,6 +204,112 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
                     {publishing ? 'Публікація…' : 'Опублікувати'}
                 </button>
             </div>
+            {publishError && (
+                <p className="my-page-editor-error">{publishError}</p>
+            )}
+        </div>
+    );
+};
+
+const ChangePasswordModal = ({ token, onClose }) => {
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        if (newPassword.length < 6) {
+            setError('Новий пароль повинен містити мінімум 6 символів.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setError('Паролі не збігаються.');
+            return;
+        }
+        setSaving(true);
+        try {
+            const res = await fetch('/api/users/me/password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ currentPassword, newPassword }),
+            });
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || 'Помилка зміни пароля');
+            }
+            setSuccess(true);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="chpwd-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+            <div className="chpwd-modal">
+                <button className="chpwd-close" onClick={onClose} aria-label="Закрити">✕</button>
+                <h2 className="chpwd-title">Зміна пароля</h2>
+                {success ? (
+                    <div className="chpwd-success">
+                        <p>Пароль успішно змінено!</p>
+                        <button className="chpwd-submit-btn" onClick={onClose}>Закрити</button>
+                    </div>
+                ) : (
+                    <form className="chpwd-form" onSubmit={handleSubmit}>
+                        <div className="chpwd-field">
+                            <label className="chpwd-label">Поточний пароль</label>
+                            <input
+                                className="chpwd-input"
+                                type="password"
+                                value={currentPassword}
+                                onChange={e => setCurrentPassword(e.target.value)}
+                                required
+                                autoComplete="current-password"
+                            />
+                        </div>
+                        <div className="chpwd-field">
+                            <label className="chpwd-label">Новий пароль</label>
+                            <input
+                                className="chpwd-input"
+                                type="password"
+                                value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                required
+                                minLength={6}
+                                autoComplete="new-password"
+                            />
+                        </div>
+                        <div className="chpwd-field">
+                            <label className="chpwd-label">Підтвердити новий пароль</label>
+                            <input
+                                className="chpwd-input"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)}
+                                required
+                                autoComplete="new-password"
+                            />
+                        </div>
+                        {error && <p className="chpwd-error">{error}</p>}
+                        <div className="chpwd-actions">
+                            <button className="chpwd-submit-btn" type="submit" disabled={saving}>
+                                {saving ? 'Збереження…' : 'Змінити пароль'}
+                            </button>
+                            <button className="chpwd-cancel-btn" type="button" onClick={onClose} disabled={saving}>
+                                Скасувати
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </div>
         </div>
     );
 };
@@ -232,6 +343,7 @@ const MyPage = () => {
 
     
     const [deletingProjectId, setDeletingProjectId] = useState(null);
+    const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
     useEffect(() => {
         if (!currentUserRef.current) { navigate('/'); }
@@ -442,6 +554,8 @@ const MyPage = () => {
             minDonationAmount: minDonationAmount ? Number(minDonationAmount) : null,
             isPrivate: visibilityMode === 'private',
             mediaIds: uploadedIds.filter(Boolean),
+            likeCount: 0,
+            commentCount: 0,
         };
         const res = await fetch('/api/posts', {
             method: 'POST',
@@ -456,6 +570,9 @@ const MyPage = () => {
             const newPost = await res.json();
             setPosts(prev => [newPost, ...prev]);
             setPostsVisible(v => Math.max(v, 10));
+        } else {
+            const msg = await res.text().catch(() => '');
+            throw new Error(msg || `Помилка сервера: ${res.status}`);
         }
     };
 
@@ -475,6 +592,7 @@ const MyPage = () => {
     const display = profile ?? currentUser;
 
     return (
+        <>
         <div className="my-page">
 
             <div className="my-page-back">
@@ -537,6 +655,12 @@ const MyPage = () => {
                                     onClick={() => setEditingProfile(true)}
                                 >
                                     Редагувати профіль
+                                </button>
+                                <button
+                                    className="my-page-change-password-btn"
+                                    onClick={() => setChangePasswordOpen(true)}
+                                >
+                                    Змінити пароль
                                 </button>
                             </div>
                         </>
@@ -896,6 +1020,14 @@ const MyPage = () => {
 
             </div>
         </div>
+
+        {changePasswordOpen && (
+            <ChangePasswordModal
+                token={currentUser.token}
+                onClose={() => setChangePasswordOpen(false)}
+            />
+        )}
+        </>
     );
 };
 

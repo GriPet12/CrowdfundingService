@@ -1,17 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import '../../styles/auth.css';
+
+const RESEND_COOLDOWN = 60;
 
 const VerifyEmailPage = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
-    const [status, setStatus] = useState('loading'); 
+    const [status, setStatus] = useState('loading');
     const [message, setMessage] = useState('');
     const [resendEmail, setResendEmail] = useState('');
     const [resendStatus, setResendStatus] = useState('');
+    const [cooldown, setCooldown] = useState(0);
+    const timerRef = useRef(null);
+    const verifiedRef = useRef(false);
+    const tokenRef = useRef(params.get('token'));
+    const uidRef = useRef(params.get('uid'));
+
+    useEffect(() => () => clearInterval(timerRef.current), []);
+
+    const startCooldown = () => {
+        setCooldown(RESEND_COOLDOWN);
+        timerRef.current = setInterval(() => {
+            setCooldown(prev => {
+                if (prev <= 1) { clearInterval(timerRef.current); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+    };
 
     useEffect(() => {
-        const token = params.get('token');
+        const token = tokenRef.current;
+        const uid = uidRef.current;
 
         const doVerify = async () => {
             if (!token) {
@@ -19,8 +39,12 @@ const VerifyEmailPage = () => {
                 setMessage('Токен відсутній.');
                 return;
             }
+            if (verifiedRef.current) return;
+            verifiedRef.current = true;
+
             try {
-                const r = await fetch(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
+                const uidParam = uid ? `&uid=${encodeURIComponent(uid)}` : '';
+                const r = await fetch(`/api/auth/verify-email?token=${encodeURIComponent(token)}${uidParam}`);
                 const data = await r.json();
                 if (r.ok) {
                     setStatus('success');
@@ -33,13 +57,14 @@ const VerifyEmailPage = () => {
                     );
                 }
             } catch {
+                verifiedRef.current = false; // дозволяємо retry при мережевій помилці
                 setStatus('error');
                 setMessage('Помилка мережі.');
             }
         };
 
         doVerify();
-    }, []); 
+    }, []);
 
     const handleResend = async (e) => {
         e.preventDefault();
@@ -51,7 +76,7 @@ const VerifyEmailPage = () => {
                 body: JSON.stringify({ email: resendEmail }),
             });
             const data = await r.json();
-            if (r.ok) setResendStatus('sent');
+            if (r.ok) { setResendStatus('sent'); startCooldown(); }
             else setResendStatus(data.error === 'ALREADY_VERIFIED' ? 'already' : 'error');
         } catch { setResendStatus('error'); }
     };
@@ -96,14 +121,18 @@ const VerifyEmailPage = () => {
                             onChange={e => setResendEmail(e.target.value)}
                             required
                         />
-                        <button className="btn-submit" type="submit" disabled={resendStatus === 'sending'}>
-                            {resendStatus === 'sending' ? 'Надсилання…' : 'Надіслати'}
+                        <button className="btn-resend" type="submit" disabled={resendStatus === 'sending' || cooldown > 0}>
+                            {resendStatus === 'sending'
+                                ? 'Надсилання…'
+                                : cooldown > 0
+                                    ? `Надіслати повторно (${cooldown}с)`
+                                    : 'Надіслати'}
                         </button>
                     </form>
 
-                    {resendStatus === 'sent' && <p style={{ color: 'green', marginTop: 12 }}>Лист надіслано! Перевірте пошту.</p>}
-                    {resendStatus === 'already' && <p style={{ color: '#888', marginTop: 12 }}>Email вже підтверджено.</p>}
-                    {resendStatus === 'error' && <p style={{ color: 'red', marginTop: 12 }}>Помилка. Перевірте email і спробуйте ще раз.</p>}
+                    {resendStatus === 'sent' && <p className="auth-resend-msg auth-resend-msg--ok" style={{ marginTop: 12 }}>✓ Лист надіслано! Перевірте пошту.</p>}
+                    {resendStatus === 'already' && <p className="auth-resend-msg auth-resend-msg--info" style={{ marginTop: 12 }}>Email вже підтверджено.</p>}
+                    {resendStatus === 'error' && <p className="auth-resend-msg auth-resend-msg--err" style={{ marginTop: 12 }}>Помилка. Перевірте email і спробуйте ще раз.</p>}
                 </>
             )}
         </div>

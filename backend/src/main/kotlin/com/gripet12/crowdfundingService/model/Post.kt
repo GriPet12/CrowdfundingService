@@ -28,6 +28,12 @@ data class Post(
     @JoinColumn(name = "post_id")
     val content: Set<UploadedFile?> = HashSet(),
 
+    @Column(nullable = false, columnDefinition = "int not null default 0")
+    var likeCount: Int = 0,
+
+    @Column(nullable = false, columnDefinition = "int not null default 0")
+    var commentCount: Int = 0,
+
     @Column(nullable = false, columnDefinition = "boolean not null default false")
     var banned: Boolean = false,
 

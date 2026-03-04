@@ -1,5 +1,6 @@
 package com.gripet12.crowdfundingService.service
 
+import com.gripet12.crowdfundingService.dto.ChangePasswordRequest
 import com.gripet12.crowdfundingService.dto.PageResponseDto
 import com.gripet12.crowdfundingService.dto.UpdateUserRequest
 import com.gripet12.crowdfundingService.dto.UserDto
@@ -9,14 +10,17 @@ import com.gripet12.crowdfundingService.repository.UserRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val fileRepository: FileRepository
+    private val fileRepository: FileRepository,
+    private val passwordEncoder: PasswordEncoder
 ) {
 
     private fun User.toDto() = UserDto(
@@ -76,6 +80,21 @@ class UserService(
             image       = newImage
         )
         return userRepository.save(updated).toDto()
+    }
+
+    @Transactional
+    fun changePassword(request: ChangePasswordRequest) {
+        val authentication = SecurityContextHolder.getContext().authentication
+        val user = userRepository.findByUsername(authentication.name).orElseThrow {
+            IllegalStateException("User not found")
+        }
+
+        if (!passwordEncoder.matches(request.currentPassword, user.password)) {
+            throw BadCredentialsException("Current password is incorrect")
+        }
+
+        val updated = user.copy(password = passwordEncoder.encode(request.newPassword))
+        userRepository.save(updated)
     }
 
 

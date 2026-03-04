@@ -8,6 +8,7 @@ data class AuthResponse(
     val username: String,
     val imageId: Long?,
     val roles: List<Role>,
+    val isVerified: Boolean = false,
 
     val role: String = if (roles.contains(Role.ROLE_ADMIN)) "ADMIN" else "USER"
 )

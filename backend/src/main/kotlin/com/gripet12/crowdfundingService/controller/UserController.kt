@@ -1,5 +1,6 @@
 package com.gripet12.crowdfundingService.controller
 
+import com.gripet12.crowdfundingService.dto.ChangePasswordRequest
 import com.gripet12.crowdfundingService.dto.UpdateUserRequest
 import com.gripet12.crowdfundingService.dto.UserDto
 import com.gripet12.crowdfundingService.service.UserService
@@ -18,6 +19,11 @@ class UserController(private val userService: UserService) {
     fun updateCurrentUser(@RequestBody request: UpdateUserRequest): ResponseEntity<UserDto> =
         ResponseEntity.ok(userService.updateCurrentUser(request))
 
+    @PutMapping("/me/password")
+    fun changePassword(@RequestBody request: ChangePasswordRequest): ResponseEntity<Void> {
+        userService.changePassword(request)
+        return ResponseEntity.noContent().build()
+    }
 
     @GetMapping("/{id}")
     fun getUser(@PathVariable id: Long) = userService.getUserById(id)

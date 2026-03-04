@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AuthService from './AuthService';
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{10,}$/;
@@ -18,6 +18,78 @@ const getPasswordStrength = (pw) => {
 
 const BACKEND_URL = 'http://localhost:8081';
 const FACEBOOK_ENABLED = false; // ← встановіть true після отримання Facebook App ID/Secret
+
+const RESEND_COOLDOWN = 60;
+
+const ResendSuccessScreen = ({ email }) => {
+    const [resendStatus, setResendStatus] = useState('idle'); // idle | sending | sent | error | already
+    const [cooldown, setCooldown] = useState(0);
+    const timerRef = useRef(null);
+
+    const startCooldown = () => {
+        setCooldown(RESEND_COOLDOWN);
+        timerRef.current = setInterval(() => {
+            setCooldown(prev => {
+                if (prev <= 1) { clearInterval(timerRef.current); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    useEffect(() => () => clearInterval(timerRef.current), []);
+
+    const handleResend = async () => {
+        setResendStatus('sending');
+        try {
+            const r = await fetch('/api/auth/resend-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+            const data = await r.json();
+            if (r.ok) { setResendStatus('sent'); startCooldown(); }
+            else setResendStatus(data.error === 'ALREADY_VERIFIED' ? 'already' : 'error');
+        } catch { setResendStatus('error'); }
+    };
+
+    return (
+        <div className="auth-success">
+            <div className="auth-success-icon">✓</div>
+            <h3 className="auth-success-title">Реєстрацію завершено!</h3>
+            <p className="auth-success-text">
+                На адресу <strong>{email}</strong> надіслано листа для підтвердження акаунту.
+            </p>
+            <p className="auth-success-hint">Перевірте папку «Спам», якщо листа немає у вхідних.</p>
+
+            <div className="auth-resend-block">
+                {resendStatus === 'sent' && (
+                    <p className="auth-resend-msg auth-resend-msg--ok">✓ Лист надіслано повторно!</p>
+                )}
+                {resendStatus === 'already' && (
+                    <p className="auth-resend-msg auth-resend-msg--info">Email вже підтверджено. Можете увійти.</p>
+                )}
+                {resendStatus === 'error' && (
+                    <p className="auth-resend-msg auth-resend-msg--err">Помилка. Спробуйте ще раз.</p>
+                )}
+                <button
+                    className="btn-resend"
+                    onClick={handleResend}
+                    disabled={resendStatus === 'sending' || cooldown > 0}
+                >
+                    {resendStatus === 'sending'
+                        ? 'Надсилання…'
+                        : cooldown > 0
+                            ? `Надіслати повторно (${cooldown}с)`
+                            : 'Надіслати лист ще раз'}
+                </button>
+            </div>
+
+            <button className="btn-submit" onClick={() => window.location.reload()}>
+                Увійти в акаунт
+            </button>
+        </div>
+    );
+};
 
 const RegisterUser = ({ onSuccess }) => {
     const [data, setData] = useState({ username: '', email: '', password: '', confirmPassword: '' });
@@ -67,21 +139,7 @@ const RegisterUser = ({ onSuccess }) => {
     };
 
     if (registered) {
-        return (
-            <div className="auth-success">
-                <div className="auth-success-icon">✓</div>
-                <h3 className="auth-success-title">Реєстрацію завершено!</h3>
-                <p className="auth-success-text">
-                    На адресу <strong>{registeredEmail}</strong> надіслано листа для підтвердження акаунту.
-                </p>
-                <p className="auth-success-hint">
-                    Перевірте папку «Спам», якщо листа немає у вхідних.
-                </p>
-                <button className="btn-submit" onClick={() => window.location.reload()}>
-                    Увійти в акаунт
-                </button>
-            </div>
-        );
+        return <ResendSuccessScreen email={registeredEmail} />;
     }
 
     return (

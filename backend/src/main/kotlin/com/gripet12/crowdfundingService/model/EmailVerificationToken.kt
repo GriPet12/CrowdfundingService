@@ -19,5 +19,8 @@ data class EmailVerificationToken(
     val user: User,
 
     @Column(nullable = false)
-    val expiresAt: LocalDateTime = LocalDateTime.now().plusHours(24)
+    val expiresAt: LocalDateTime = LocalDateTime.now().plusHours(24),
+
+    @Column(nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

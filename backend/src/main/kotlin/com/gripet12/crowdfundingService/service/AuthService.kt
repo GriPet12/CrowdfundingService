@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
+data class EmailNotVerifiedException(val email: String) : RuntimeException("EMAIL_NOT_VERIFIED")
+
 @Service
 class AuthService(
     private val authenticationManager: AuthenticationManager,
@@ -32,6 +34,9 @@ class AuthService(
         SecurityContextHolder.getContext().authentication = authentication
 
         val user = userRepository.findByUsername(authRequest.username).orElseThrow()
+
+        if (!user.isVerified) throw EmailNotVerifiedException(user.email)
+
         val roles = user.roles.map { it }
         val token = jwtTokenProvider.createToken(authRequest.username, roles)
 
@@ -40,7 +45,8 @@ class AuthService(
             id = user.userId,
             username = user.username,
             imageId = user.image?.id,
-            roles = roles
+            roles = roles,
+            isVerified = true
         )
     }
 
@@ -74,7 +80,8 @@ class AuthService(
             id = savedUser.userId,
             username = savedUser.username,
             imageId = savedUser.image?.id,
-            roles = roles.map { it }
+            roles = roles.map { it },
+            isVerified = false
         )
     }
 }
