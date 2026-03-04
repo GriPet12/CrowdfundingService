@@ -17,7 +17,9 @@ class UserDetailsServiceImpl(private val userRepository: UserRepository) : UserD
         val user = userRepository.findByUsername(username)
             .orElseThrow { UsernameNotFoundException("User not found with username: $username") }
 
-        val authorities = user.roles.map { SimpleGrantedAuthority(it.name) }
+        val authorities = user.roles
+            .ifEmpty { setOf(com.gripet12.crowdfundingService.model.enums.Role.ROLE_USER) }
+            .map { SimpleGrantedAuthority(it.name) }
 
         return User(
             user.username,

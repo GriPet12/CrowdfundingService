@@ -17,7 +17,7 @@
 
 .st-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 16px;
     margin-top: 16px;
 }
@@ -285,9 +285,171 @@
     margin: 0 0 4px;
 }
 
-@media (max-width: 600px) {
+.st-active-notice {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: #2e7d32;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+.st-active-notice-expiry { color: #555; font-size: 13px; }
+.st-active-notice-auto   { color: #1565c0; font-size: 13px; }
+
+.st-card--subscribed {
+    border-color: #66bb6a;
+    background: #f9fef9;
+    box-shadow: 0 0 0 2px #a5d6a7;
+}
+
+.st-card-subscribed-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2e7d32;
+    background: #e8f5e9;
+    border-radius: 4px;
+    padding: 2px 8px;
+    align-self: flex-start;
+}
+
+.st-auto-hint {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #777;
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    border-left: 3px solid #bbb;
+}
+
+.my-subs-card--expired {
+    opacity: 0.6;
+}
+.my-subs-grant-badge {
+    display: inline-block;
+    font-size: 11px;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-weight: 600;
+    margin-top: 3px;
+}
+.my-subs-grant-badge--auto {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+.my-subs-expiry {
+    font-size: 12px;
+    color: #888;
+    margin: 2px 0 0;
+}
+.my-subs-status--active   { color: #2e7d32; font-weight: 700; }
+.my-subs-status--expired  { color: #c62828; font-weight: 700; }
+
+.st-payment-model-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.st-model-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #555;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.st-model-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.st-model-tab {
+    padding: 6px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 20px;
+    background: #fff;
+    color: #555;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+.st-model-tab:hover { border-color: #1a1a1a; color: #1a1a1a; }
+.st-model-tab--active {
+    border-color: #1a1a1a;
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.st-model-hint {
+    font-size: 11px;
+    color: #888;
+    margin: 0;
+    font-style: italic;
+}
+
+.st-card-expiry {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+    padding: 7px 10px;
+    background: #f0faf1;
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.st-card-expiry-label {
+    color: #555;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.st-card-expiry-date {
+    color: #1a1a1a;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.st-card-expiry-days {
+    color: #2e7d32;
+    font-size: 12px;
+    white-space: nowrap;
+}
+.st-card-expiry-days--warn {
+    color: #c8960c;
+    font-weight: 700;
+}
+
+.st-card-expiry-auto {
+    font-size: 11px;
+    font-weight: 600;
+    background: #e3f2fd;
+    color: #1565c0;
+    border-radius: 4px;
+    padding: 1px 6px;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .st-list { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
     .st-list { grid-template-columns: 1fr; }
     .st-form-row--inline { flex-direction: column; }
     .st-save-btn { width: 100%; }
 }
-

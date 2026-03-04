@@ -21,4 +21,3 @@ data class AuthorFollow(
     @JoinColumn(name = "creator_id", nullable = false)
     val creator: User
 )
-

@@ -36,7 +36,7 @@ class RewardController (
     }
 
     @DeleteMapping("/{rewardId}/project/{projectId}")
-    fun deleteRewardFromProject(@PathVariable rewardId: Long, @PathVariable projectId: Long) {
+    fun deleteRewardFromProject(@PathVariable rewardId: Long, @PathVariable @Suppress("UNUSED_PARAMETER") projectId: Long) {
         rewardService.deleteProjectFromReward(rewardId)
     }
 

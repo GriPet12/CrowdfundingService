@@ -109,9 +109,27 @@
 .my-page-tabs-container {
     border-bottom: 2px solid #f0f0f0;
     margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    position: relative;
 }
 
-.my-page-tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
+.my-page-tabs-arrow {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    color: #888;
+    cursor: pointer;
+    padding: 6px 8px;
+    transition: color 0.2s;
+    user-select: none;
+    z-index: 1;
+}
+.my-page-tabs-arrow:hover { color: #1a1a1a; }
+
+.my-page-tabs { display: flex; overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; flex: 1; }
 .my-page-tabs::-webkit-scrollbar { display: none; }
 
 .my-page-tab {
@@ -236,6 +254,18 @@
 .my-subs-status--approved { background: #e6f4ec; color: #1a7a3c; }
 .my-subs-status--pending  { background: #fff8e1; color: #b8860b; }
 .my-subs-status--declined { background: #fdecea; color: #cc0000; }
+.my-subs-status--active   { background: #e6f4ec; color: #1a7a3c; }
+.my-subs-status--expired  { background: #fdecea; color: #cc0000; }
+
+.my-subs-days-left {
+    color: #2e7d32;
+    font-size: 12px;
+    font-weight: 600;
+}
+.my-subs-days-left--warn {
+    color: #c8960c;
+    font-weight: 700;
+}
 
 @media (max-width: 600px) {
     .my-subs-card { flex-wrap: wrap; gap: 10px; }
@@ -431,6 +461,29 @@
     white-space: pre-wrap;
 }
 
+.my-page-load-more {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0 8px;
+}
+
+.my-page-load-more-btn {
+    background: #fff;
+    border: 2px solid #1a1a1a;
+    color: #1a1a1a;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.my-page-load-more-btn:hover {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
 @media screen and (max-width: 768px) {
     .my-page-hero {
         flex-direction: column;
@@ -458,3 +511,337 @@
     .my-page-tab { padding: 8px 12px; font-size: 13px; }
 }
 
+.my-page-edit-profile-btn {
+    padding: 10px 22px;
+    background-color: #fff;
+    color: #1a1a1a;
+    border: 1.5px solid #1a1a1a;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.my-page-edit-profile-btn:hover { background-color: #f0f0f0; }
+
+.my-page-avatar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: #fff;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.my-page-avatar-overlay:hover { background: rgba(0,0,0,0.6); }
+
+.my-page-description {
+    font-size: 14px;
+    color: #555;
+    margin: 4px 0 0;
+    line-height: 1.5;
+}
+
+.my-page-private-badge {
+    display: inline-block;
+    background: #f0f0f0;
+    color: #555;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 4px;
+}
+
+.my-page-verified-badge,
+.my-page-unverified-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 2px;
+}
+
+.my-page-verified-badge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.my-page-unverified-badge {
+    background: #fff8e1;
+    color: #e65100;
+    border: 1px solid #ffe082;
+}
+
+.my-page-profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.my-page-profile-form-title {
+    font-size: 18px;
+    font-weight: 900;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.my-page-profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.my-page-profile-field--row {
+    flex-direction: column;
+    gap: 4px;
+}
+
+.my-page-profile-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #555;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.my-page-profile-hint {
+    font-size: 12px;
+    color: #999;
+    margin: 0;
+}
+
+.my-page-profile-input {
+    padding: 9px 13px;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    color: #1a1a1a;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+.my-page-profile-input:focus { outline: none; border-color: #1a1a1a; }
+
+.my-page-profile-textarea {
+    padding: 9px 13px;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1a1a1a;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s;
+}
+.my-page-profile-textarea:focus { outline: none; border-color: #1a1a1a; }
+
+.my-page-profile-error {
+    color: #cc0000;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.my-page-profile-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.my-page-profile-save-btn {
+    background-color: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.my-page-profile-save-btn:hover:not(:disabled) { background-color: #333; }
+.my-page-profile-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.my-page-profile-cancel-btn {
+    background-color: #fff;
+    color: #1a1a1a;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.my-page-profile-cancel-btn:hover:not(:disabled) { border-color: #1a1a1a; }
+
+.my-page-project-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.my-page-project-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 4px;
+}
+
+.my-page-project-edit-btn {
+    flex: 1;
+    padding: 8px 0;
+    background: #fff;
+    border: 1.5px solid #1a1a1a;
+    color: #1a1a1a;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.my-page-project-edit-btn:hover { background: #f5f5f5; }
+
+.my-page-project-delete-btn {
+    flex: 1;
+    padding: 8px 0;
+    background: #fff;
+    border: 1.5px solid #e53935;
+    color: #e53935;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.my-page-project-delete-btn:hover { background: #fff0f0; }
+
+.my-donations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.my-donations-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f9f9f9;
+    border: 1px solid #ebebeb;
+    border-radius: 10px;
+    padding: 14px 18px;
+    transition: box-shadow 0.2s;
+}
+.my-donations-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
+
+.my-donations-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.my-donations-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.my-donations-target {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.my-donations-type {
+    font-size: 11px;
+    font-weight: 600;
+    background: #e8e8e8;
+    color: #666;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.my-donations-reward {
+    font-size: 12px;
+    color: #555;
+    margin: 0 0 2px;
+}
+
+.my-donations-date {
+    font-size: 12px;
+    color: #aaa;
+    margin: 0;
+}
+
+.my-donations-amount {
+    font-size: 20px;
+    font-weight: 900;
+    color: #1a1a1a;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.my-donations-status {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.my-donations-status--success,
+.my-donations-status--approved { background: #e6f4ec; color: #1a7a3c; }
+.my-donations-status--pending { background: #fff8e1; color: #b8860b; }
+.my-donations-status--failed,
+.my-donations-status--declined  { background: #fdecea; color: #cc0000; }
+
+.my-page-editor-access-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.my-page-editor-access-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #555;
+    white-space: nowrap;
+}
+
+.my-page-editor-access-select {
+    flex: 1;
+    min-width: 180px;
+    padding: 8px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+.my-page-editor-access-select:focus { outline: none; border-color: #1a1a1a; }
+
+@media (max-width: 600px) {
+    .my-page-project-actions { flex-direction: column; }
+    .my-donations-card { flex-wrap: wrap; gap: 10px; }
+    .my-donations-amount, .my-donations-status { margin-left: auto; }
+}

@@ -6,6 +6,7 @@ const WayForPayForm = ({
     paymentPayload = {},
     label = '✓',
     confirmClass = 'donate-button-confirm',
+    onBeforeSubmit = null,   
 }) => {
     const [paymentData, setPaymentData] = useState(null);
     const [loading, setLoading]         = useState(false);
@@ -15,9 +16,10 @@ const WayForPayForm = ({
     useEffect(() => {
         if (paymentData && formRef.current && !submittedRef.current) {
             submittedRef.current = true;
+            onBeforeSubmit?.();
             formRef.current.submit();
         }
-    }, [paymentData]);
+    }, [paymentData]); 
 
     const handleInitPayment = async () => {
         if (!amount || amount <= 0) {
@@ -37,7 +39,7 @@ const WayForPayForm = ({
 
             if (!response.ok) {
                 let errMsg = `Статус: ${response.status}`;
-                try { const t = await response.text(); if (t) errMsg += ` — ${t}`; } catch (_) {}
+                await response.text().then(t => { if (t) errMsg += ` — ${t}`; }).catch(() => {});
                 console.error('Помилка платежу:', errMsg);
                 alert(`Не вдалося створити платіж. ${errMsg}`);
                 return;

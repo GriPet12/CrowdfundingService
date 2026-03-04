@@ -1,3 +1,10 @@
+.user-page-private-notice {
+    margin: 8px 0 0;
+    font-size: 15px;
+    color: #888;
+    font-weight: 600;
+}
+
 .user-page {
     max-width: 1200px;
     margin: 0 auto;
@@ -82,6 +89,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
 }
 
@@ -106,12 +114,24 @@
     margin: 8px 0 0;
 }
 
+.user-page-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+    width: 260px;
+}
+
 .user-page-donate {
-    margin-top: 20px;
     width: 100%;
-    max-width: 320px;
     height: 44px;
-    align-self: flex-start;
+    position: relative;
+}
+
+.userpage-donate-section {
+    width: 100%;
+    position: relative;
+    height: 44px;
 }
 
 .user-page-tabs-container {
@@ -176,12 +196,6 @@
 @keyframes fadeInTab {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
-}
-
-.userpage-donate-section {
-    width: 100%;
-    position: relative;
-    height: 44px;
 }
 
 .userpage-donate-start-wrapper,
@@ -296,6 +310,10 @@
     cursor: not-allowed;
 }
 
+.user-page-tiers-section {
+    margin-bottom: 32px;
+}
+
 @media screen and (max-width: 768px) {
     .user-page-hero {
         flex-direction: column;
@@ -328,6 +346,10 @@
         width: 100%;
         height: 44px;
         align-self: stretch;
+    }
+
+    .user-page-actions {
+        width: 100%;
     }
 
     .user-page-tab {
@@ -370,18 +392,18 @@
     justify-content: center;
     gap: 6px;
     width: 100%;
-    max-width: 320px;
     height: 44px;
-    margin-top: 10px;
     padding: 0 20px;
     background: transparent;
     border: 2px solid #c8960c;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: 700;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
     color: #c8960c;
     cursor: pointer;
     transition: border-color 0.2s, color 0.2s, background 0.2s;
+    white-space: nowrap;
+    box-sizing: border-box;
 }
 .user-page-follow-author-btn:not(.user-page-follow-author-btn--active):hover:not(:disabled) {
     border-color: #c8960c;
@@ -399,7 +421,33 @@
 }
 .user-page-follow-author-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-@media screen and (max-width: 768px) {
-    .user-page-follow-author-btn { max-width: 100%; }
+.user-page-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+}
+
+.user-page-load-more {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0 8px;
+}
+
+.user-page-load-more-btn {
+    background: #fff;
+    border: 2px solid #1a1a1a;
+    color: #1a1a1a;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.user-page-load-more-btn:hover {
+    background-color: #1a1a1a;
+    color: #fff;
 }
 

@@ -2,10 +2,12 @@ package com.gripet12.crowdfundingService.service
 
 import com.gripet12.crowdfundingService.repository.ProjectRepository
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.sql.Timestamp
 
-class hotnessScoreService (
+@Service
+class HotnessScoreService(
     private val projectRepository: ProjectRepository
 ) {
     @Scheduled(cron = "0 0 * * * *")

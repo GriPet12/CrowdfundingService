@@ -41,15 +41,5 @@ class FileStorageService(
     }
 
     @Transactional(readOnly = true)
-    fun getImage(id: Long): UploadedFile? = fileRepository.findById(id)
-        .filter { it.category == FileCategory.PHOTO }
-        .orElse(null)
-
-    @Transactional(readOnly = true)
     fun getFile(id: Long): UploadedFile? = fileRepository.findById(id).orElse(null)
-
-    @Transactional
-    fun deleteFile(id: Long) {
-        fileRepository.deleteById(id)
-    }
 }

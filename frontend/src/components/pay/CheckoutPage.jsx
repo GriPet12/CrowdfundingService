@@ -3,7 +3,7 @@ import WayForPayForm from './WayForPayForm.jsx';
 
 const CheckoutPage = () => {
     const [amount, setAmount] = useState(150);
-    // eslint-disable-next-line react-hooks/purity
+    
     const orderId = useMemo(() => `ORDER_${Date.now()}`, []);
 
     return (

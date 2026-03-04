@@ -1,6 +1,8 @@
 import '../../styles/userItem.css';
 import DonateSection from '../pay/DonateSection.jsx';
 import AuthService from '../user/AuthService.jsx';
+import analyticsService from '../../services/analyticsService.js';
+import AdminBanButton from '../common/AdminBanButton.jsx';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -11,9 +13,7 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
     const [following, setFollowing] = useState(initialFollowing);
     const [followLoading, setFollowLoading] = useState(false);
 
-    useEffect(() => {
-        setFollowing(initialFollowing);
-    }, [initialFollowing]);
+    useEffect(() => { setFollowing(initialFollowing); }, [initialFollowing]);
 
     const handleFollow = async (e) => {
         e.stopPropagation();
@@ -27,6 +27,7 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
             if (res.ok) {
                 const newVal = (await res.json()).following;
                 setFollowing(newVal);
+                if (newVal) analyticsService.creatorFollow(user.id);
                 onFollowChange?.(user.id, newVal);
             }
         } finally {
@@ -39,7 +40,10 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
             <div className="author-avatar-wrapper">
                 <div
                     className="author-avatar-link"
-                    onClick={() => navigate(`/author/${user.id}`)}
+                    onClick={() => {
+                        analyticsService.creatorClick(user.id);
+                        navigate(`/author/${user.id}`);
+                    }}
                     title={`Перейти до профілю ${user.username}`}
                 >
                     {user.imageId ? (
@@ -65,6 +69,13 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
                         {following ? '★' : '☆'}
                     </button>
                 )}
+                <AdminBanButton
+                    type="user"
+                    id={user.id}
+                    label={user.username}
+                    onDone={() => {}}
+                    style={{ position: 'absolute', top: 4, left: 4, zIndex: 10 }}
+                />
             </div>
 
             <div className="author-name">{user.username}</div>
@@ -91,6 +102,7 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
                 confirmClass="author-donate-confirm"
                 confirmLabel="✓"
                 placeholder="₴"
+                onDonate={() => analyticsService.creatorDonate(user.id)}
             />
         </div>
     );

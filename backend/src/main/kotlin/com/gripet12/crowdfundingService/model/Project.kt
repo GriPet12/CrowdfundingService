@@ -2,6 +2,7 @@ package com.gripet12.crowdfundingService.model
 
 import jakarta.persistence.*
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "projects")
@@ -35,5 +36,15 @@ data class Project(
     val media: Set<UploadedFile?> = HashSet(),
 
     @ManyToMany(cascade = [CascadeType.ALL])
-    val categories: Set<Category?> = HashSet()
+    val categories: Set<Category?> = HashSet(),
+
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    var banned: Boolean = false,
+
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    var bannedWithUser: Boolean = false,
+
+    @Column(name = "created_at", nullable = false,
+        columnDefinition = "timestamp not null default now()")
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

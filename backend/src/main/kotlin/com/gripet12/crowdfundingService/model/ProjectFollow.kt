@@ -21,4 +21,3 @@ data class ProjectFollow(
     @JoinColumn(name = "project_id", nullable = false)
     val project: Project
 )
-

@@ -2,7 +2,9 @@ package com.gripet12.crowdfundingService.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.authentication.InternalAuthenticationServiceException
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -48,6 +50,16 @@ class GlobalExceptionHandler {
         return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
     }
 
+    @ExceptionHandler(InternalAuthenticationServiceException::class)
+    fun handleInternalAuthException(ex: InternalAuthenticationServiceException): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            status = HttpStatus.UNAUTHORIZED.value(),
+            error = "Authentication Error",
+            message = "Invalid username or password"
+        )
+        return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
+    }
+
     @ExceptionHandler(UsernameNotFoundException::class)
     fun handleUsernameNotFoundException(ex: UsernameNotFoundException): ResponseEntity<ErrorResponse> {
         val errorResponse = ErrorResponse(
@@ -68,6 +80,20 @@ class GlobalExceptionHandler {
         )
 
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    fun handleDataIntegrity(ex: DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
+        val msg = ex.rootCause?.message ?: ex.message ?: ""
+        val friendly = when {
+            msg.contains("username", ignoreCase = true) -> "USERNAME_TAKEN"
+            msg.contains("email",    ignoreCase = true) -> "EMAIL_TAKEN"
+            else -> "Порушення цілісності даних"
+        }
+        return ResponseEntity(
+            ErrorResponse(status = HttpStatus.CONFLICT.value(), error = "Conflict", message = friendly),
+            HttpStatus.CONFLICT
+        )
     }
 
     @ExceptionHandler(Exception::class)

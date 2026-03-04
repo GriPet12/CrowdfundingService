@@ -1,0 +1,91 @@
+
+.cm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: cm-fade-in 0.15s ease;
+}
+
+@keyframes cm-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.cm-dialog {
+    background: #fff;
+    border-radius: 14px;
+    padding: 32px 28px 24px;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+    animation: cm-slide-up 0.18s ease;
+}
+
+@keyframes cm-slide-up {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.cm-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fff0f0;
+    color: #cc0000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cm-message {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.cm-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.cm-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.cm-btn--cancel {
+    background: #f0f0f0;
+    color: #555;
+}
+.cm-btn--cancel:hover { background: #e4e4e4; }
+
+.cm-btn--confirm {
+    background: #1a1a1a;
+    color: #fff;
+}
+.cm-btn--confirm:hover { background: #333; }
+
+@media (max-width: 400px) {
+    .cm-dialog { padding: 24px 18px 18px; }
+}
+

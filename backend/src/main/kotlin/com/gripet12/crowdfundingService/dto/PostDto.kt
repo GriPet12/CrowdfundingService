@@ -20,6 +20,5 @@ data class PostDto(
 
     var likeCount: Int = 0,
 
-    // IDs of previously uploaded files
     val content: Set<MultipartFile> = HashSet()
 )

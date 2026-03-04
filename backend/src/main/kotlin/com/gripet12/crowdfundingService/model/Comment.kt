@@ -1,32 +1,25 @@
 package com.gripet12.crowdfundingService.model
 
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
-import java.sql.Time
-import java.sql.Timestamp
+import jakarta.persistence.*
+import java.time.Instant
 
 @Entity
 @Table(name = "comments")
 data class Comment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val commentId: Long,
+    val commentId: Long = 0,
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
     val author: User,
 
-    @ManyToOne
-    val project: Project,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    val post: Post,
 
-    @ManyToOne
-    val post: Post?,
-
+    @Column(nullable = false, length = 2000)
     val commentText: String,
 
-    val createAt: Timestamp = Timestamp(System.currentTimeMillis())
-
+    val createdAt: Instant = Instant.now()
 )

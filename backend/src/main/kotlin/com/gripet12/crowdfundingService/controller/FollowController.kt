@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/follows")
 class FollowController(private val followService: FollowService) {
 
-
     @PostMapping("/projects/{projectId}")
     fun toggleFollow(@PathVariable projectId: Long): ResponseEntity<Map<String, Any>> =
         try {
@@ -31,7 +30,6 @@ class FollowController(private val followService: FollowService) {
     @PostMapping("/projects/batch-status")
     fun batchProjectStatus(@RequestBody ids: List<Long>): ResponseEntity<Set<Long>> =
         ResponseEntity.ok(followService.getFollowedProjectIds(ids))
-
 
     @PostMapping("/authors/{creatorId}")
     fun toggleAuthorFollow(@PathVariable creatorId: Long): ResponseEntity<Map<String, Any>> =
@@ -53,9 +51,7 @@ class FollowController(private val followService: FollowService) {
     fun batchAuthorStatus(@RequestBody ids: List<Long>): ResponseEntity<Set<Long>> =
         ResponseEntity.ok(followService.getFollowedAuthorIds(ids))
 
-
     @GetMapping("/subscriptions")
     fun getMySubscriptions(): ResponseEntity<List<SubscriptionDto>> =
         ResponseEntity.ok(followService.getMySubscriptions())
 }
-

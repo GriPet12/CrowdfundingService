@@ -76,16 +76,67 @@
     gap: 10px;
 }
 
-.btn-login, .btn-register, .btn-logout {
+.btn-login, .btn-register, .btn-logout, .btn-admin {
     padding: 8px 16px;
     border-radius: 4px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    outline: none !important;
+    box-shadow: none !important;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-login:focus, .btn-register:focus, .btn-logout:focus,
+.btn-login:focus-visible, .btn-register:focus-visible, .btn-logout:focus-visible,
+.btn-login:active, .btn-register:active, .btn-logout:active {
+    outline: none;
+    box-shadow: none;
+}
+
+.btn-admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: transparent !important;
+    border: 1px solid #7c3aed !important;
+    color: #7c3aed !important;
+    line-height: 1;
+    text-decoration: none !important;
+}
+.btn-admin:link, .btn-admin:visited {
+    background-color: transparent;
+    border: 1px solid #7c3aed;
+    color: #7c3aed;
+    text-decoration: none;
+}
+.btn-admin:hover {
+    background-color: #7c3aed !important;
+    color: white !important;
+    border-color: #7c3aed !important;
+}
+.btn-admin:focus, .btn-admin:focus-visible, .btn-admin:active {
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    color: #7c3aed !important;
+    border: 1px solid #7c3aed !important;
+}
+.btn-admin.active,
+.btn-admin[aria-current="page"] {
+    background-color: #7c3aed !important;
+    color: white !important;
+    border-color: #7c3aed !important;
 }
 
 .btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     background: transparent;
     border: 1px solid #cc0000;
     color: #cc0000;
@@ -130,34 +181,74 @@
         display: none;
     }
 
-    .btn-login, .btn-register, .btn-logout {
+    .btn-login, .btn-register, .btn-logout, .btn-admin {
         padding: 6px 12px;
         font-size: 12px;
+        min-width: unset;
+        width: auto;
     }
 }
 
 @media screen and (max-width: 480px) {
     .header-container {
         flex-direction: row;
-        gap: 10px;
-        padding-bottom: 0;
+        gap: 6px;
+        padding: 0 10px;
     }
 
     .logo {
-        font-size: 18px; }
+        font-size: 18px;
+        flex-shrink: 0;
+    }
 
     .auth-section {
         width: auto;
         justify-content: flex-end;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .user-profile {
+        gap: 6px;
+        flex-wrap: nowrap;
     }
 
     .auth-buttons {
         width: auto;
         justify-content: flex-end;
-        gap: 5px; }
+        gap: 5px;
+    }
 
     .btn-login, .btn-register {
-        flex: initial; padding: 5px 10px; font-size: 11px; text-align: center;
+        flex: initial;
+        padding: 5px 10px;
+        font-size: 11px;
+        text-align: center;
         width: auto;
+    }
+
+    .btn-logout {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+
+    .btn-logout .btn-logout-text {
+        display: none;
+    }
+
+    .btn-admin {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+
+    .btn-admin .btn-admin-text {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    .avatar-wrapper {
+        width: 32px;
+        height: 32px;
     }
 }

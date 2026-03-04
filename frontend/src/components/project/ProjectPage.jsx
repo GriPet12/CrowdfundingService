@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DonateSection from '../pay/DonateSection.jsx';
 import AuthService from '../user/AuthService.jsx';
+import AdminBanButton from '../common/AdminBanButton.jsx';
+import analyticsService from '../../services/analyticsService.js';
 import '../../styles/projectPage.css';
 
 const getLabel = (category) => {
@@ -21,6 +23,7 @@ const ProjectPage = () => {
     const [following, setFollowing]     = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
     const currentUser = AuthService.getCurrentUser();
+    const analyticsLoggedRef = useRef(null);
 
     useEffect(() => {
         const fetchProject = async () => {
@@ -33,6 +36,11 @@ const ProjectPage = () => {
                 if (data.creator) {
                     const authorRes = await fetch(`/api/users/${data.creator}`);
                     if (authorRes.ok) setAuthor(await authorRes.json());
+                }
+                
+                if (analyticsLoggedRef.current !== id) {
+                    analyticsLoggedRef.current = id;
+                    analyticsService.projectView(id);
                 }
             } catch (err) {
                 setError(err.message);
@@ -51,17 +59,20 @@ const ProjectPage = () => {
             .then(r => r.ok ? r.json() : null)
             .then(data => { if (data) setFollowing(data.following); })
             .catch(() => {});
-    }, [id]); // eslint-disable-line
+    }, [id]); 
 
     const handleFollowProject = async () => {
-        if (!currentUser) { alert('Увійдіть щоб відстежувати проекти'); return; }
         setFollowLoading(true);
         try {
             const res = await fetch(`/api/follows/projects/${id}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${currentUser.token}` },
             });
-            if (res.ok) setFollowing((await res.json()).following);
+            if (res.ok) {
+                const newVal = (await res.json()).following;
+                setFollowing(newVal);
+                if (newVal) analyticsService.projectFollow(id);
+            }
         } finally {
             setFollowLoading(false);
         }
@@ -175,6 +186,7 @@ const ProjectPage = () => {
                     <div className="project-page-donate">
                         <DonateSection
                             type="DONATION"
+                            projectId={project.projectId}
                             paymentPayload={{
                                 donateId: currentUser?.id ?? 0,
                                 donor: currentUser?.id ?? 0,
@@ -194,10 +206,11 @@ const ProjectPage = () => {
                             confirmClass="projectpage-donate-confirm"
                             confirmLabel="✓"
                             placeholder="Сума (₴)"
+                            onDonate={() => analyticsService.projectDonate(project.projectId)}
                         />
                     </div>
 
-                    {(!currentUser || String(currentUser.id) !== String(project.creator)) && (
+                    {currentUser && String(currentUser.id) !== String(project.creator) && (
                         <button
                             className={`project-page-follow-btn ${following ? 'project-page-follow-btn--active' : ''}`}
                             onClick={handleFollowProject}
@@ -207,10 +220,21 @@ const ProjectPage = () => {
                         </button>
                     )}
 
+                    <AdminBanButton
+                        type="project"
+                        id={project.projectId}
+                        label={project.title}
+                        onDone={() => navigate('/')}
+                        withText
+                    />
+
                     {author && (
                         <div
                             className="project-page-author"
-                            onClick={() => navigate(`/author/${author.id}`)}
+                            onClick={() => {
+                                analyticsService.creatorClick(author.id);
+                                navigate(`/author/${author.id}`);
+                            }}
                             title={`Перейти до профілю ${author.username}`}
                         >
                             <div className="project-page-author-avatar-wrap">

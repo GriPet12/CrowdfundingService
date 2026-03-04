@@ -13,9 +13,12 @@ import com.gripet12.crowdfundingService.repository.SubscriptionTierRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.nio.charset.StandardCharsets
+import java.time.LocalDate
 
 @Service
 class PaymentService(
@@ -24,14 +27,14 @@ class PaymentService(
     private val projectRepository: ProjectRepository,
     private val userRepository: UserRepository,
     private val subscriptionTierRepository: SubscriptionTierRepository,
-    private val subscriptionRepository: SubscriptionRepository
+    private val subscriptionRepository: SubscriptionRepository,
+    @Lazy private val subscriptionService: SubscriptionService,
+    @Value("\${wayfoorpay.merchant-account:test_merch_n1}") private val merchantAccount: String,
+    @Value("\${wayfoorpay.merchant-secret:flk3409refn54t54t*FNJRET}") private val merchantSecret: String,
+    @Value("\${wayfoorpay.merchant-domain:www.market.ua}") private val merchantDomainName: String,
+    @Value("\${wayfoorpay.return-url:http://localhost:5173}") private val returnUrl: String,
+    @Value("\${wayfoorpay.service-url:http://localhost:8081/api/payment/callback}") private val serviceUrl: String
 ) {
-    private val merchantAccount = "test_merch_n1"
-    private val merchantSecret = "flk3409refn54t54t*FNJRET"
-    private val merchantDomainName = "www.market.ua"
-
-    private val returnUrl = "http://localhost:5173"
-    private val serviceUrl = "http://localhost:8081/api/payment/callback"
 
     @Transactional
     fun generatePaymentData(request: PaymentRequest, type: String): Map<String, String> {
@@ -95,12 +98,17 @@ class PaymentService(
         if (type == "DONATION") {
             val donorUser = if (request.isAnonymous || request.donateId == 0L) null
                             else userRepository.getReferenceById(request.donateId)
-            val project = projectRepository.getReferenceById(request.project)
+
+            val project = if (request.project > 0L) projectRepository.getReferenceById(request.project) else null
+
+            val creatorUser = if (project == null && request.creator > 0L)
+                userRepository.getReferenceById(request.creator) else null
 
             val donate = Donate(
                 donateId = null,
                 donor = donorUser,
                 project = project,
+                creator = creatorUser,
                 amount = request.amount.toBigDecimal(),
                 reward = request.reward,
                 payment = savedPayment,
@@ -130,12 +138,29 @@ class PaymentService(
         paymentRepository.save(payment)
 
         if (response.transactionStatus == "Approved") {
+
             val donate = donateRepository.findByPayment(payment)
             if (donate != null) {
-                projectRepository.increaseCollectedAmount(
-                    donate.project.projectId!!,
-                    donate.amount
-                )
+
+                if (donate.project != null) {
+                    projectRepository.increaseCollectedAmount(
+                        donate.project.projectId!!,
+                        donate.amount
+                    )
+                }
+
+                val donorId = donate.donor?.userId
+                val creatorId = donate.project?.creator?.userId
+                if (donorId != null && creatorId != null) {
+                    subscriptionService.checkAndGrantAutoSubscription(donorId, creatorId)
+                }
+            }
+
+            val subscription = subscriptionRepository.findByPayment(payment)
+            if (subscription != null) {
+                subscription.active = true
+                subscription.expiresAt = LocalDate.now().plusMonths(1)
+                subscriptionRepository.save(subscription)
             }
         }
     }

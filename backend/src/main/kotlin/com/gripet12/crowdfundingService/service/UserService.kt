@@ -1,15 +1,51 @@
 package com.gripet12.crowdfundingService.service
 
+import com.gripet12.crowdfundingService.dto.PageResponseDto
+import com.gripet12.crowdfundingService.dto.UpdateUserRequest
 import com.gripet12.crowdfundingService.dto.UserDto
+import com.gripet12.crowdfundingService.model.User
+import com.gripet12.crowdfundingService.repository.FileRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
-import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class UserService(private val userRepository: UserRepository) {
+class UserService(
+    private val userRepository: UserRepository,
+    private val fileRepository: FileRepository
+) {
+
+    private fun User.toDto() = UserDto(
+        id = userId,
+        username = username,
+        password = "",
+        email = email,
+        isVerified = isVerified,
+        description = description,
+        isPrivate = isPrivate,
+        imageId = image?.id,
+        roles = roles.toSet(),
+        banned = banned,
+        createdAt = createdAt
+    )
+
+    private fun User.toPrivateDto() = UserDto(
+        id = userId,
+        username = username,
+        password = "",
+        email = "",
+        isVerified = false,
+        description = null,
+        isPrivate = true,
+        imageId = null,
+        roles = setOf(),
+        banned = false,
+        createdAt = null
+    )
 
     @Transactional(readOnly = true)
     fun getCurrentUser(): UserDto {
@@ -20,30 +56,58 @@ class UserService(private val userRepository: UserRepository) {
             IllegalStateException("User not found")
         }
 
-        return UserDto(
-            id = user.userId,
-            username = user.username,
-            password = "",
-            email = user.email,
-            isVerified = user.isVerified,
-            imageId = user.image?.id,
-            roles = user.roles.map { it }.toSet()
-        )
+        return user.toDto()
     }
 
-    @Transactional(readOnly = true)
-    fun getAllCreators(pageable: Pageable): Page<UserDto> {
-        return userRepository.findAll(pageable).map { user ->
-            UserDto(
-                id = user.userId,
-                username = user.username,
-                password = "",
-                email = user.email,
-                isVerified = user.isVerified,
-                imageId = user.image?.id,
-                roles = user.roles.map { it }.toSet()
-            )
+    @Transactional
+    fun updateCurrentUser(request: UpdateUserRequest): UserDto {
+        val authentication = SecurityContextHolder.getContext().authentication
+        val user = userRepository.findByUsername(authentication.name).orElseThrow {
+            IllegalStateException("User not found")
         }
+        val newImage = request.imageId?.let {
+            fileRepository.findById(it).orElse(user.image)
+        } ?: user.image
+
+        val updated = user.copy(
+            username    = request.username.trim(),
+            description = request.description?.trim(),
+            isPrivate   = request.isPrivate,
+            image       = newImage
+        )
+        return userRepository.save(updated).toDto()
+    }
+
+
+    @Transactional(readOnly = true)
+    fun getCreatorsPage(
+        page: Int,
+        size: Int,
+        search: String? = null,
+        sortBy: String = "createdAt",
+        sortDir: String = "desc"
+    ): PageResponseDto<UserDto> {
+
+        val sortField = when (sortBy) {
+            "username"  -> "username"
+            "createdAt" -> "createdAt"
+            else        -> "createdAt"
+        }
+        val direction = if (sortDir.lowercase() == "asc") Sort.Direction.ASC else Sort.Direction.DESC
+        val pageable: Pageable = PageRequest.of(page, size, Sort.by(direction, sortField))
+
+        val usersPage = userRepository.findActiveCreators(
+            search = if (search.isNullOrBlank()) null else search,
+            pageable = pageable
+        )
+
+        return PageResponseDto(
+            content      = usersPage.content.map { it.toDto() },
+            totalElements = usersPage.totalElements,
+            totalPages   = usersPage.totalPages,
+            currentPage  = usersPage.number,
+            size         = usersPage.size
+        )
     }
 
     @Transactional(readOnly = true)
@@ -52,14 +116,14 @@ class UserService(private val userRepository: UserRepository) {
             IllegalStateException("User not found")
         }
 
-        return UserDto(
-            id = user.userId,
-            username = user.username,
-            password = "",
-            email = user.email,
-            isVerified = user.isVerified,
-            imageId = user.image?.id,
-            roles = user.roles.map { it }.toSet()
-        )
+        if (user.isPrivate) {
+            val callerName = try {
+                SecurityContextHolder.getContext().authentication?.name
+            } catch (_: Exception) { null }
+            val isOwner = callerName != null && callerName == user.username
+            if (!isOwner) return user.toPrivateDto()
+        }
+
+        return user.toDto()
     }
 }

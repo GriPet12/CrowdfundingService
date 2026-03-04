@@ -19,3 +19,56 @@ h1, h2, h3, h4, h5, h6 {
 input, button, textarea, select {
     font-family: inherit;
 }
+
+.donate-rewards-list {
+    width: 100%;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.donate-rewards-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #555;
+    margin: 0 0 4px;
+}
+.donate-reward-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    transition: border-color .2s, background .2s;
+    width: 100%;
+}
+.donate-reward-item:hover:not(:disabled) {
+    border-color: #1a1a1a;
+    background: #f9f9f9;
+}
+.donate-reward-item--active {
+    border-color: #7c3aed;
+    background: #f5f0ff;
+}
+.donate-reward-item--soldout {
+    opacity: .5;
+    cursor: not-allowed;
+}
+.donate-reward-name { font-weight: 600; flex: 1; }
+.donate-reward-amount { color: #7c3aed; font-weight: 700; white-space: nowrap; }
+.donate-reward-soldout { font-size: 11px; color: #e53935; font-weight: 600; }
+.donate-reward-warning {
+    font-size: 12px;
+    color: #c0392b;
+    background: #fff5f5;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: 2px 0 0;
+}

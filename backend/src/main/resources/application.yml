@@ -7,8 +7,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: your-email@gmail.com
-    password: your-app-password
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_APP_PASSWORD:your-app-password}
     properties:
       mail:
         smtp:
@@ -18,9 +18,9 @@ spring:
   application:
     name: CrowdfundingService
   datasource:
-    url: jdbc:postgresql://localhost:5433/croundfunding?TimeZone=UTC
-    username: user
-    password: password
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/croundfunding?TimeZone=UTC}
+    username: ${DB_USERNAME:user}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -29,19 +29,46 @@ spring:
       ddl-auto: update
     properties:
       hibernate.jdbc.time_zone: UTC
-    show-sql: true
+    show-sql: false
   h2:
     console:
-      enabled: true
-      path: /h2-console
+      enabled: false
   servlet:
     multipart:
       max-file-size: 15MB
       max-request-size: 15MB
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:change-me}
+            client-secret: ${GOOGLE_CLIENT_SECRET:change-me}
+            scope: email, profile
+            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+          # facebook:
+          #   client-id: YOUR_FACEBOOK_APP_ID
+          #   client-secret: YOUR_FACEBOOK_APP_SECRET
+          #   scope: email, public_profile
+          #   redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
 
 jwt:
-  secret: verySecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm
+  secret: ${JWT_SECRET:verySecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm}
   expirationMs: 86400000
 
 frontend:
-  url: http://localhost:5173
+  url: ${FRONTEND_URL:http://localhost:5173}
+
+# Default admin account (created automatically on first startup if no admin exists)
+admin:
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin123}
+  email: ${ADMIN_EMAIL:admin@crowdfunding.local}
+
+wayfoorpay:
+  merchant-account: ${WAYFOORPAY_MERCHANT_ACCOUNT:test_merch_n1}
+  merchant-secret: ${WAYFOORPAY_MERCHANT_SECRET:change-me}
+  merchant-domain: ${WAYFOORPAY_MERCHANT_DOMAIN:www.market.ua}
+  return-url: ${WAYFOORPAY_RETURN_URL:http://localhost:5173}
+  service-url: ${WAYFOORPAY_SERVICE_URL:http://localhost:8081/api/payment/callback}
+

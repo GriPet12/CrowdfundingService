@@ -1,6 +1,8 @@
 import '../../styles/projectItem.css';
 import DonateSection from '../pay/DonateSection.jsx';
 import AuthService from '../user/AuthService.jsx';
+import analyticsService from '../../services/analyticsService.js';
+import AdminBanButton from '../common/AdminBanButton.jsx';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -10,7 +12,7 @@ const getLabel = (category) => {
     return category.name ?? category.title ?? category.label ?? null;
 };
 
-const ProjectItem = ({ project, initialFollowing = false, onFollowChange }) => {
+const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCardClick }) => {
     const percentage = Math.min((project.collectedAmount / project.goalAmount) * 100, 100);
     const currentUser = AuthService.getCurrentUser();
     const navigate = useNavigate();
@@ -18,9 +20,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange }) => {
     const [following, setFollowing] = useState(initialFollowing);
     const [followLoading, setFollowLoading] = useState(false);
 
-    useEffect(() => {
-        setFollowing(initialFollowing);
-    }, [initialFollowing]);
+    useEffect(() => { setFollowing(initialFollowing); }, [initialFollowing]);
 
     const categories = Array.isArray(project.categories) && project.categories.length > 0
         ? project.categories : null;
@@ -37,6 +37,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange }) => {
             if (res.ok) {
                 const newVal = (await res.json()).following;
                 setFollowing(newVal);
+                if (newVal) analyticsService.projectFollow(project.projectId);
                 onFollowChange?.(project.projectId, newVal);
             }
         } finally {
@@ -51,7 +52,10 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange }) => {
                     src={`/api/files/${project.mainImage}`}
                     alt={project.title}
                     className="project-image project-image-clickable"
-                    onClick={() => navigate(`/project/${project.projectId}`)}
+                    onClick={() => {
+                        onCardClick?.(project.projectId);
+                        navigate(`/project/${project.projectId}`);
+                    }}
                     title="Відкрити проект"
                     loading="lazy"
                 />
@@ -65,6 +69,13 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange }) => {
                         {following ? '♥' : '♡'}
                     </button>
                 )}
+                <AdminBanButton
+                    type="project"
+                    id={project.projectId}
+                    label={project.title}
+                    onDone={() => {}}
+                    style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}
+                />
             </div>
             <h3>{project.title}</h3>
 
@@ -91,6 +102,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange }) => {
 
             <DonateSection
                 type="DONATION"
+                projectId={project.projectId}
                 paymentPayload={{
                     donateId: currentUser?.id ?? 0,
                     donor: currentUser?.id ?? 0,
@@ -101,6 +113,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange }) => {
                     isAnonymous: !currentUser,
                 }}
                 confirmLabel="✓"
+                onDonate={() => analyticsService.projectDonate(project.projectId)}
             />
         </div>
     );

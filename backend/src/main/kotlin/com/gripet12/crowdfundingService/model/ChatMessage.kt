@@ -1,27 +1,25 @@
 package com.gripet12.crowdfundingService.model
 
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "chat_messages")
 data class ChatMessage(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val messageId: Long,
+    val messageId: Long? = null,
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_owner_id", nullable = false)
+    val chatOwner: User,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
     val sender: User,
 
-    @ManyToOne
-    val subject: Subscription,
+    @Column(nullable = false, length = 1000)
+    val text: String,
 
-    @ManyToOne
-    val project: Project,
-
-    val messageContent: String
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

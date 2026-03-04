@@ -16,4 +16,3 @@ interface AuthorFollowRepository : JpaRepository<AuthorFollow, Long> {
     @Query("SELECT af.creator.userId FROM AuthorFollow af WHERE af.follower.userId = :userId AND af.creator.userId IN :creatorIds")
     fun findFollowedAuthorIds(userId: Long, creatorIds: List<Long>): List<Long>
 }
-

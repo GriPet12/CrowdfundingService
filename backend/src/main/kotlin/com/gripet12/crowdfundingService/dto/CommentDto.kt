@@ -1,13 +1,12 @@
 package com.gripet12.crowdfundingService.dto
 
-data class CommentDto(
-    var commentId: Long,
+import java.time.Instant
 
-    var author: Long,
-
-    var project: Long,
-
-    var post: Long,
-
-    val commentText: String
+data class CommentResponseDto(
+    val commentId: Long,
+    val authorId: Long,
+    val authorName: String,
+    val authorImageId: Long?,
+    val commentText: String,
+    val createdAt: Instant
 )

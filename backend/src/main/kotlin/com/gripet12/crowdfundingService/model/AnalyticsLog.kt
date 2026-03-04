@@ -1,35 +1,31 @@
 package com.gripet12.crowdfundingService.model
 
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "ANALYTICS_LOGS")
+@Table(name = "analytics_logs")
 data class AnalyticsLog(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val logId: Long,
+    val logId: Long = 0,
 
     @ManyToOne
-    val user: User,
+    @JoinColumn(name = "user_id", nullable = true)
+    val user: User? = null,
 
-    val action: String,
+    @ManyToOne
+    @JoinColumn(name = "project_id", nullable = true)
+    val project: Project? = null,
 
-    val activityModelType: String,
+    @ManyToOne
+    @JoinColumn(name = "target_user_id", nullable = true)
+    val targetUser: User? = null,
 
-    val activityModelId: Long,
-
-    @ManyToMany(cascade = [CascadeType.ALL])
-    val categories: Set<Category?> = HashSet(),
+    val actionType: String,
 
     @Column(columnDefinition = "timestamp without time zone")
-    val actionTime: LocalDateTime = LocalDateTime.now()
+    val actionTime: LocalDateTime = LocalDateTime.now(),
+
+    val ipAddress: String? = null
 )

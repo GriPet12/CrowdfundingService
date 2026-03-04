@@ -6,11 +6,12 @@ import '../styles/auth.css';
 const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
     const [activeTab, setActiveTab] = useState(initialTab);
 
+    
     useEffect(() => {
         if (isOpen) {
-            setActiveTab(initialTab);
+            setActiveTab(prev => prev !== initialTab ? initialTab : prev);
         }
-    }, [isOpen]);
+    }, [isOpen, initialTab]);
 
     if (!isOpen) return null;
 
@@ -40,7 +41,7 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                 </div>
 
                 {activeTab === 'login' ? (
-                    <LoginUser />
+                    <LoginUser onSwitchToRegister={() => setActiveTab('register')} />
                 ) : (
                     <RegisterUser onSuccess={() => setActiveTab('login')} />
                 )}
@@ -50,4 +51,3 @@ const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
 };
 
 export default AuthModal;
-

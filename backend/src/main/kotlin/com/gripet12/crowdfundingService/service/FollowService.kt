@@ -83,7 +83,10 @@ class FollowService(
                 tierName = sub.subscriptionTier?.name ?: "—",
                 tierLevel = sub.subscriptionTier?.level ?: 0,
                 tierPrice = sub.tierPrice,
-                paymentStatus = sub.payment?.status ?: "UNKNOWN"
+                paymentStatus = sub.payment?.status ?: "AUTO",
+                expiresAt = sub.expiresAt,
+                isActive = sub.active,
+                grantType = sub.grantType
             )
         }
     }
@@ -141,4 +144,3 @@ class FollowService(
         }
     }
 }
-

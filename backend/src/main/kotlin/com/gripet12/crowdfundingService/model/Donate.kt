@@ -22,7 +22,10 @@ data class Donate(
     val donor: User?,
 
     @ManyToOne
-    val project: Project,
+    val project: Project?,
+
+    @ManyToOne
+    val creator: User? = null,
 
     val amount: BigDecimal,
 

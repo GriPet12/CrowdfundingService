@@ -1,32 +1,57 @@
 package com.gripet12.crowdfundingService.service
 
-import com.gripet12.crowdfundingService.dto.CommentDto
+import com.gripet12.crowdfundingService.dto.CommentResponseDto
 import com.gripet12.crowdfundingService.model.Comment
-import com.gripet12.crowdfundingService.model.Post
-import com.gripet12.crowdfundingService.model.Project
-import com.gripet12.crowdfundingService.model.User
 import com.gripet12.crowdfundingService.repository.CommentRepository
 import com.gripet12.crowdfundingService.repository.PostRepository
-import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
-class CommentService (
+@Service
+class CommentService(
     private val commentRepository: CommentRepository,
-    private val projectRepository: ProjectRepository,
-    private val userRepository: UserRepository,
-    private val postRepository: PostRepository
+    private val postRepository: PostRepository,
+    private val userRepository: UserRepository
 ) {
-    fun addComment(commentDto: CommentDto) {
-        val author : User = userRepository.findByUserId(commentDto.author)
-        val project : Project = projectRepository.findByProjectId(commentDto.project)
-        val post : Post? = postRepository.findByPostId(commentDto.post)
-
-        commentRepository.save(Comment(
-            commentId = 0,
-            author = author,
-            project = project,
-            post = post,
-            commentText = commentDto.commentText
-        ))
+    private fun currentUserId(): Long {
+        val auth = SecurityContextHolder.getContext().authentication
+            ?: throw IllegalStateException("Not authenticated")
+        return userRepository.findByUsername(auth.name).orElseThrow()?.userId!!
     }
+
+    @Transactional(readOnly = true)
+    fun getComments(postId: Long): List<CommentResponseDto> =
+        commentRepository.findByPostId(postId).map { it.toDto() }
+
+    @Transactional
+    fun addComment(postId: Long, text: String): CommentResponseDto {
+        if (text.isBlank()) throw IllegalArgumentException("Comment cannot be empty")
+        val userId = currentUserId()
+        val author = userRepository.findByUserId(userId)
+        val post = postRepository.findByPostId(postId)
+            ?: throw NoSuchElementException("Post not found")
+        val comment = commentRepository.save(
+            Comment(author = author, post = post, commentText = text.trim())
+        )
+        return comment.toDto()
+    }
+
+    @Transactional
+    fun deleteComment(commentId: Long) {
+        val userId = currentUserId()
+        val comment = commentRepository.findById(commentId).orElseThrow { NoSuchElementException("Comment not found") }
+        if (comment.author.userId != userId) throw IllegalAccessException("Access denied")
+        commentRepository.delete(comment)
+    }
+
+    private fun Comment.toDto() = CommentResponseDto(
+        commentId = commentId,
+        authorId = author.userId!!,
+        authorName = author.username,
+        authorImageId = author.image?.id,
+        commentText = commentText,
+        createdAt = createdAt
+    )
 }
