@@ -59,7 +59,7 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
                         </div>
                     )}
                 </div>
-                {currentUser && String(currentUser.id) !== String(user.id) && (
+                {currentUser && !currentUser.banned && String(currentUser.id) !== String(user.id) && (
                     <button
                         className={`author-follow-btn ${following ? 'author-follow-btn--active' : ''}`}
                         onClick={handleFollow}
@@ -83,8 +83,9 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
             <DonateSection
                 orderId={`user_${user.id || user.username}`}
                 type="DONATION"
+                disabled={!!currentUser?.banned}
                 paymentPayload={{
-                    donateId: user.id,
+                    donateId: currentUser?.id ?? 0,
                     donor: currentUser?.id ?? 0,
                     project: 0,
                     creator: user.id,

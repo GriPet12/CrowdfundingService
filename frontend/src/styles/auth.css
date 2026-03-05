@@ -188,6 +188,17 @@
     color: #1a1a1a;
 }
 
+.auth-modal-overlay--scrollable {
+    align-items: flex-start;
+    padding: 24px 16px;
+    overflow-y: auto;
+}
+
+.auth-modal-content--scrollable {
+    max-height: none;
+    margin: auto;
+}
+
 @media screen and (max-width: 480px) {
     .auth-modal-content {
         padding: 20px 15px;

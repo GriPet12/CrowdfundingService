@@ -11,6 +11,9 @@ data class CreatorStatsDto(
     val totalDonationsAmount: Double,
     val totalDonationsCount: Long,
 
+    val subscriptionRevenue: Double,
+    val subscriptionCount: Long,
+
     val activityByDay: List<DayActivityDto>,
 
     val donationsByType: List<PieSliceDto>,

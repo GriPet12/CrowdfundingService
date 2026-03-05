@@ -9,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.math.BigDecimal
+import java.sql.Timestamp
 
 @RestController
 @RequestMapping("/donations")
@@ -23,31 +25,32 @@ class DonationController(
         val username = SecurityContextHolder.getContext().authentication?.name
             ?: return ResponseEntity.status(401).build()
 
-        val user = userRepository.findByUsername(username).orElse(null)
+        val userId = userRepository.findUserIdByUsername(username)
             ?: return ResponseEntity.status(401).build()
 
-        val donations = donateRepository.findAllByDonorUserId(user.userId!!)
+        val rows = donateRepository.findAllByDonorUserId(userId)
 
-        val dtos = donations.map { donate ->
-            val rewardName: String? = if (donate.reward > 0) {
-                rewardRepository.findById(donate.reward.toLong())
-                    .map { it.rewardName }
-                    .orElse(null)
-            } else null
+        val dtos = rows.map { row ->
+            val donationId  = (row[0] as? Long)
+            val projectTitle = row[1] as? String
+            val creatorName  = row[2] as? String
+            val rewardId     = (row[3] as? Int) ?: 0
+            val amount       = row[4] as BigDecimal
+            val paymentStatus = row[5] as? String
+            val createdAt    = row[6] as? Timestamp
 
-            val creatorName: String? = if (donate.project == null) {
-
-                donate.creator?.username
+            val rewardName: String? = if (rewardId > 0) {
+                rewardRepository.findById(rewardId.toLong()).map { it.rewardName }.orElse(null)
             } else null
 
             DonationDto(
-                donationId = donate.donateId,
-                projectTitle = donate.project?.title,
-                creatorName = donate.project?.creator?.username ?: creatorName,
-                rewardName = rewardName,
-                amount = donate.amount,
-                paymentStatus = donate.payment?.status,
-                createdAt = donate.createAt
+                donationId    = donationId,
+                projectTitle  = projectTitle,
+                creatorName   = creatorName,
+                rewardName    = rewardName,
+                amount        = amount,
+                paymentStatus = paymentStatus,
+                createdAt     = createdAt
             )
         }
 

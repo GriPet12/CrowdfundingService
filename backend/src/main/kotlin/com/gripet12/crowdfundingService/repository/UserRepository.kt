@@ -13,6 +13,9 @@ import java.util.Optional
 interface UserRepository : JpaRepository<User, Long> {
     fun findByUsername(username: String): Optional<User>
     fun findByEmail(email: String): Optional<User>
+
+    @Query("SELECT u.userId FROM User u WHERE u.username = :username")
+    fun findUserIdByUsername(@Param("username") username: String): Long?
     fun existsByUsername(username: String): Boolean
     fun existsByEmail(email: String): Boolean
     fun findByUserId(userId: Long): User

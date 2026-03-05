@@ -188,10 +188,16 @@ class AnalyticsLogService(
         val totalPosts       = posts.size.toLong()
         val totalLikes       = postLikeRepository.countLikesByCreator(creatorId)
         val totalComments    = posts.sumOf { commentRepository.countByPostPostId(it.postId) }
+
         val projectDonSum    = donateRepository.sumProjectDonationsToCreator(creatorId).toDouble()
-        val donatCount       = donateRepository.countProjectDonationsToCreator(creatorId)
-        val totalDonationsAmount = projectDonSum
-        val totalDonationsCount  = donatCount
+        val projectDonCount  = donateRepository.countProjectDonationsToCreator(creatorId)
+        val directDonSum     = donateRepository.sumDirectDonationsToCreator(creatorId).toDouble()
+        val directDonCount   = donateRepository.countDirectDonationsToCreator(creatorId)
+        val subRevenue       = subscriptionRepository.sumSubscriptionRevenueForCreator(creatorId).toDouble()
+        val subCount         = subscriptionRepository.countApprovedSubscriptionsForCreator(creatorId)
+
+        val totalDonationsAmount = projectDonSum + directDonSum + subRevenue
+        val totalDonationsCount  = projectDonCount + directDonCount + subCount
 
         val rawActivity = analyticsLogRepository.activityByDay(creatorId, since30)
 
@@ -216,9 +222,11 @@ class AnalyticsLogService(
         }
 
         val donationsByType = listOf(
-            PieSliceDto("Через проекти", projectDonSum)
+            PieSliceDto("Через проекти", projectDonSum),
+            PieSliceDto("Прямі донати", directDonSum),
+            PieSliceDto("Підписки", subRevenue)
         ).filter { it.value > 0 }
-            .ifEmpty { listOf(PieSliceDto("Донати", 0.0)) }
+            .ifEmpty { listOf(PieSliceDto("Донатів немає", 0.0)) }
 
         val topPosts = posts.map { p ->
             TopPostDto(
@@ -238,6 +246,8 @@ class AnalyticsLogService(
             totalComments        = totalComments,
             totalDonationsAmount = totalDonationsAmount,
             totalDonationsCount  = totalDonationsCount,
+            subscriptionRevenue  = subRevenue,
+            subscriptionCount    = subCount,
             activityByDay        = activityByDay,
             donationsByType      = donationsByType,
             topPosts             = topPosts

@@ -187,6 +187,7 @@ const ProjectPage = () => {
                         <DonateSection
                             type="DONATION"
                             projectId={project.projectId}
+                            disabled={!!currentUser?.banned}
                             paymentPayload={{
                                 donateId: currentUser?.id ?? 0,
                                 donor: currentUser?.id ?? 0,
@@ -210,7 +211,7 @@ const ProjectPage = () => {
                         />
                     </div>
 
-                    {currentUser && String(currentUser.id) !== String(project.creator) && (
+                    {currentUser && !currentUser.banned && String(currentUser.id) !== String(project.creator) && (
                         <button
                             className={`project-page-follow-btn ${following ? 'project-page-follow-btn--active' : ''}`}
                             onClick={handleFollowProject}

@@ -11,10 +11,10 @@ import java.util.UUID
 
 @Entity
 @Table(name = "payments")
-data class Payment(
+class Payment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val paymentId: Long?,
+    var paymentId: Long? = null,
 
     @Column(unique = true, nullable = true)
     val orderReference: String = UUID.randomUUID().toString(),

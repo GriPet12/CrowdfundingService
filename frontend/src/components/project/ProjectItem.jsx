@@ -59,7 +59,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCard
                     title="Відкрити проект"
                     loading="lazy"
                 />
-                {currentUser && String(currentUser.id) !== String(project.creatorId) && (
+                {currentUser && !currentUser.banned && String(currentUser.id) !== String(project.creatorId) && (
                     <button
                         className={`project-follow-btn ${following ? 'project-follow-btn--active' : ''}`}
                         onClick={handleFollow}
@@ -103,6 +103,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCard
             <DonateSection
                 type="DONATION"
                 projectId={project.projectId}
+                disabled={!!currentUser?.banned}
                 paymentPayload={{
                     donateId: currentUser?.id ?? 0,
                     donor: currentUser?.id ?? 0,

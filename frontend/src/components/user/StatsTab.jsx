@@ -100,6 +100,10 @@ const StatsTab = ({ userId, token }) => {
                     } label="Зібрано донатів" value={fmtMoney(stats.totalDonationsAmount)} sub={`${fmt(stats.totalDonationsCount)} транзакцій`} />
 
                     <StatCard icon={
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                    } label="Дохід з підписок" value={fmtMoney(stats.subscriptionRevenue ?? 0)} sub={`${fmt(stats.subscriptionCount ?? 0)} підписок`} />
+
+                    <StatCard icon={
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     } label="Фоловерів" value={fmt(stats.totalFollowers)} sub="всього" />
                 </div>

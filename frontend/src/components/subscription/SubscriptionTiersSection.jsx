@@ -10,7 +10,7 @@ const PAYMENT_MODELS = [
     { key: 'DONATION',     label: 'Разовий донат',   hint: 'Довільна сума, без зобов\'язань' },
 ];
 
-const SubscriptionTiersSection = ({ creatorId }) => {
+const SubscriptionTiersSection = ({ creatorId, disabled = false }) => {
     const currentUser = AuthService.getCurrentUser();
     const [tiers, setTiers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -60,7 +60,7 @@ const SubscriptionTiersSection = ({ creatorId }) => {
     const closeTier = () => setActiveTierId(null);
 
     if (loading) return <div className="st-loading">Завантаження підписок…</div>;
-    if (tiers.length === 0) return null;
+    if (tiers.length === 0 || disabled) return null;
 
     return (
         <div className="st-section">

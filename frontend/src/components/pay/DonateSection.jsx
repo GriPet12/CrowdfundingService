@@ -5,7 +5,8 @@ import AuthService from '../user/AuthService.jsx';
 const DonateSection = ({
     type            = 'DONATION',
     paymentPayload  = {},
-    projectId       = null,   
+    projectId       = null,
+    disabled        = false,
     wrapperClass    = 'donate-section',
     btnStartClass   = 'donate-start-wrapper',
     btnInputClass   = 'donate-input-wrapper',
@@ -69,14 +70,22 @@ const DonateSection = ({
     return (
         <div className={`${wrapperClass} ${isDonating ? 'active' : ''}`}>
 
+            {disabled ? (
+                <div className={btnStartClass}>
+                    <button type="button" className={startBtnClass} disabled title="Ваш акаунт заблоковано">
+                        Задонатити
+                    </button>
+                </div>
+            ) : (
             <div className={btnStartClass}>
                 <button type="button" className={startBtnClass} onClick={() => setIsDonating(true)}>
                     Задонатити
                 </button>
             </div>
+            )}
 
-            <div className={btnInputClass}>
-                
+            {!disabled && <div className={btnInputClass}>
+
                 {isDonating && rewards.length > 0 && (
                     <div className="donate-rewards-list">
                         <p className="donate-rewards-title">Оберіть винагороду (необов'язково):</p>
@@ -124,7 +133,7 @@ const DonateSection = ({
                         onBeforeSubmit={onDonate}
                     />
                 </div>
-            </div>
+            </div>}
 
         </div>
     );

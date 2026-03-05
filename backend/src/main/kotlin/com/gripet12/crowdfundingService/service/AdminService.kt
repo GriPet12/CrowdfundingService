@@ -266,63 +266,58 @@ class AdminService(
         page: Int,
         size: Int
     ): Page<TransactionDto> {
-        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "donateId"))
         val normalizedType = type?.uppercase()
 
-        // When type is SUBSCRIPTION return only subscriptions mapped to TransactionDto
         if (normalizedType == "SUBSCRIPTION") {
-            val subPageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "subscriptionId"))
-            return subscriptionRepository.findAll(subPageable).map { s ->
+            val subPageable = PageRequest.of(page, size)
+            return subscriptionRepository.findAllScalar(subPageable).map { row ->
                 TransactionDto(
-                    id = s.subscriptionId,
-                    type = "SUBSCRIPTION",
-                    fromUser = s.subscrber.username,
-                    toUser = s.creator.username,
-                    amount = s.tierPrice,
-                    status = s.payment?.status ?: "AUTO",
+                    id        = row[0] as? Long,
+                    type      = "SUBSCRIPTION",
+                    fromUser  = row[1] as? String,
+                    toUser    = row[2] as? String,
+                    amount    = row[3] as BigDecimal,
+                    status    = (row[4] as? String) ?: "AUTO",
                     createdAt = null
                 )
             }
         }
 
-        // Default: donations (optionally filtered)
+        val pageable = PageRequest.of(page, size)
         return donateRepository.findByFilters(
             search = search?.takeIf { it.isNotBlank() },
             from = from,
             to = to,
             pageable = pageable
-        ).map { d ->
+        ).map { row ->
             TransactionDto(
-                id = d.donateId,
-                type = "DONATION",
-                fromUser = d.donor?.username ?: "Анонім",
-                toUser = d.project?.title ?: d.creator?.username,
-                amount = d.amount,
-                status = d.payment?.status ?: "PENDING",
-                createdAt = d.createAt.toLocalDateTime()
+                id        = row[0] as? Long,
+                type      = "DONATION",
+                fromUser  = row[1] as? String ?: "Анонім",
+                toUser    = (row[2] as? String) ?: (row[3] as? String),
+                amount    = row[4] as BigDecimal,
+                status    = (row[5] as? String) ?: "PENDING",
+                createdAt = (row[6] as? java.sql.Timestamp)?.toLocalDateTime()
             )
         }
     }
 
     @Transactional(readOnly = true)
     fun getTransactionSummary(): TransactionSummaryDto {
-        val allDonations = donateRepository.findAll()
-        val approved = allDonations.filter { it.payment?.status == "APPROVED" }
-        val totalDonations = approved.fold(BigDecimal.ZERO) { acc, d -> acc + d.amount }
-
-        val allSubs = subscriptionRepository.findAll()
-        val approvedSubs = allSubs.filter { it.payment?.status == "APPROVED" }
-        val totalSubscriptions = approvedSubs.fold(BigDecimal.ZERO) { acc, s -> acc + s.tierPrice }
+        val totalDonations      = donateRepository.sumAllApprovedDonations()
+        val donationsCount      = donateRepository.countAllApprovedDonations()
+        val totalSubscriptions  = subscriptionRepository.sumAllApprovedSubscriptions()
+        val subscriptionsCount  = subscriptionRepository.countAllApprovedSubscriptions()
 
         return TransactionSummaryDto(
-            totalDonations = totalDonations,
-            donationsCount = approved.size.toLong(),
-            totalWithdrawals = BigDecimal.ZERO,
-            withdrawalsCount = 0L,
+            totalDonations     = totalDonations,
+            donationsCount     = donationsCount,
+            totalWithdrawals   = BigDecimal.ZERO,
+            withdrawalsCount   = 0L,
             totalSubscriptions = totalSubscriptions,
-            subscriptionsCount = approvedSubs.size.toLong(),
-            totalVolume = totalDonations + totalSubscriptions,
-            totalCount = approved.size.toLong() + approvedSubs.size.toLong()
+            subscriptionsCount = subscriptionsCount,
+            totalVolume        = totalDonations + totalSubscriptions,
+            totalCount         = donationsCount + subscriptionsCount
         )
     }
 }

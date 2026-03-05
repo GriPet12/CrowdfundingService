@@ -644,12 +644,14 @@ const MyPage = () => {
                             {display.description && <p className="my-page-description">{display.description}</p>}
                             {display.isPrivate && <span className="my-page-private-badge">Приватний</span>}
                             <div className="my-page-hero-actions">
-                                <button
-                                    className="my-page-add-project-btn"
-                                    onClick={() => navigate('/projects/new')}
-                                >
-                                    + Додати проект
-                                </button>
+                                {!display.banned && (
+                                    <button
+                                        className="my-page-add-project-btn"
+                                        onClick={() => navigate('/projects/new')}
+                                    >
+                                        + Додати проект
+                                    </button>
+                                )}
                                 <button
                                     className="my-page-edit-profile-btn"
                                     onClick={() => setEditingProfile(true)}
@@ -732,6 +734,17 @@ const MyPage = () => {
                 </div>
             </div>
 
+            {display.banned ? (
+                <div className="my-page-banned-notice">
+                    <div className="my-page-banned-icon">🚫</div>
+                    <h2 className="my-page-banned-title">Ваш акаунт заблоковано</h2>
+                    <p className="my-page-banned-text">
+                        Адміністратор заблокував ваш акаунт. Ви не можете створювати проекти чи переглядати вміст сторінки.
+                        Якщо ви вважаєте, що це помилка — зверніться до підтримки.
+                    </p>
+                </div>
+            ) : (
+            <>
             <div className="my-page-tabs-container">
                 <button
                     className="my-page-tabs-arrow my-page-tabs-arrow-left"
@@ -1019,6 +1032,8 @@ const MyPage = () => {
                 )}
 
             </div>
+            </>
+            )}
         </div>
 
         {changePasswordOpen && (

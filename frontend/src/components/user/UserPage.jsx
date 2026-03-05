@@ -8,6 +8,7 @@ import AuthService from './AuthService.jsx';
 import AuthorChat from './AuthorChat.jsx';
 import analyticsService from '../../services/analyticsService.js';
 import AdminBanButton from '../common/AdminBanButton.jsx';
+import ErrorBoundary from '../common/ErrorBoundary.jsx';
 import '../../styles/userPage.css';
 import '../../styles/projectItem.css';
 import '../../styles/postCard.css';
@@ -179,10 +180,10 @@ const UserPage = () => {
 
                     <div className="user-page-actions">
                         <div className="user-page-donate">
-                            {!isOwnProfile && <DonateSection
+                            {!isOwnProfile && !currentUser?.banned && <DonateSection
                                 type="DONATION"
                                 paymentPayload={{
-                                    donateId: author.id,
+                                    donateId: currentUser?.id ?? 0,
                                     donor: currentUser?.id ?? 0,
                                     project: 0,
                                     creator: author.id,
@@ -204,7 +205,7 @@ const UserPage = () => {
                             />}
                         </div>
 
-                        {currentUser && !isOwnProfile && (
+                        {currentUser && !currentUser.banned && !isOwnProfile && (
                             <button
                                 className={`user-page-follow-author-btn ${followingAuthor ? 'user-page-follow-author-btn--active' : ''}`}
                                 onClick={handleFollowAuthor}
@@ -229,7 +230,7 @@ const UserPage = () => {
 
             {!isOwnProfile && (
                 <div className="user-page-tiers-section">
-                    <SubscriptionTiersSection creatorId={author.id} />
+                    <SubscriptionTiersSection creatorId={author.id} disabled={!!currentUser?.banned} />
                 </div>
             )}
 
@@ -257,6 +258,16 @@ const UserPage = () => {
             </div>
 
             <div className="user-page-tab-content">
+                {currentUser?.banned ? (
+                    <div className="user-page-banned-notice">
+                        <div className="user-page-banned-icon">🚫</div>
+                        <h2 className="user-page-banned-title">Ваш акаунт заблоковано</h2>
+                        <p className="user-page-banned-text">
+                            Адміністратор заблокував ваш акаунт. Перегляд контенту, підписки, відстеження та донати недоступні.
+                        </p>
+                    </div>
+                ) : (
+                <>
                 {activeTab === 'content' && (
                     <div className="user-page-content-tab">
                         {postsLoading ? (
@@ -287,7 +298,9 @@ const UserPage = () => {
 
                 {activeTab === 'chat' && (
                     <div className="user-page-chat-tab">
-                        <AuthorChat authorId={Number(id)} isOwner={isOwnProfile} />
+                        <ErrorBoundary>
+                            <AuthorChat authorId={Number(id)} isOwner={isOwnProfile} />
+                        </ErrorBoundary>
                     </div>
                 )}
 
@@ -309,6 +322,8 @@ const UserPage = () => {
                             </div>
                         )}
                     </div>
+                )}
+                </>
                 )}
             </div>
         </div>

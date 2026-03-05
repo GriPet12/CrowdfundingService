@@ -40,6 +40,13 @@ class SubscriptionService(
             .map { it.toDto() }
     }
 
+    @Transactional(readOnly = true)
+    fun getMySubscriptions(): List<SubscriptionDto> {
+        val userId = currentUserId()
+        return subscriptionRepository.findAllBySubscriberUserId(userId)
+            .map { it.toDto() }
+    }
+
     @Transactional
     fun checkAndGrantAutoSubscription(donorId: Long, creatorId: Long) {
         val since = Timestamp.valueOf(LocalDateTime.now().minusDays(30))

@@ -14,4 +14,8 @@ class SubscriptionController(
     @GetMapping("/status/{creatorId}")
     fun getSubscriptionStatus(@PathVariable creatorId: Long): ResponseEntity<List<SubscriptionDto>> =
         ResponseEntity.ok(subscriptionService.getSubscriptionStatusForCreator(creatorId))
+
+    @GetMapping("/my")
+    fun getMySubscriptions(): ResponseEntity<List<SubscriptionDto>> =
+        ResponseEntity.ok(subscriptionService.getMySubscriptions())
 }

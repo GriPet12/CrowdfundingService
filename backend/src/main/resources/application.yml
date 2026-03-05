@@ -65,10 +65,8 @@ admin:
   password: ${ADMIN_PASSWORD:admin123}
   email: ${ADMIN_EMAIL:admin@crowdfunding.local}
 
-wayfoorpay:
-  merchant-account: ${WAYFOORPAY_MERCHANT_ACCOUNT:test_merch_n1}
-  merchant-secret: ${WAYFOORPAY_MERCHANT_SECRET:change-me}
-  merchant-domain: ${WAYFOORPAY_MERCHANT_DOMAIN:www.market.ua}
-  return-url: ${WAYFOORPAY_RETURN_URL:http://localhost:5173}
-  service-url: ${WAYFOORPAY_SERVICE_URL:http://localhost:8081/api/payment/callback}
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:sk_test_changeme}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_changeme}
+  return-url: ${STRIPE_RETURN_URL:http://localhost:5173}
 

@@ -16,7 +16,7 @@ const Header = ({ onLoginClick, onRegisterClick }) => {
 
     useEffect(() => {
         const user = AuthService.getCurrentUser();
-        if (!user || user.imageId != null) return;
+        if (!user) return;
 
         fetch('/api/users/me', {
             headers: { 'Authorization': `Bearer ${user.token}` }
@@ -30,6 +30,7 @@ const Header = ({ onLoginClick, onRegisterClick }) => {
                     imageId: data.imageId,
                     role: data.role ?? user.role,
                     roles: data.roles ?? user.roles,
+                    banned: data.banned ?? false,
                 };
                 localStorage.setItem('user', JSON.stringify(updated));
                 setCurrentUser(updated);

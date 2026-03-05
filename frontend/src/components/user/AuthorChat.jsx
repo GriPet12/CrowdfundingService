@@ -15,13 +15,12 @@ const AuthorChat = ({ authorId, isOwner = false }) => {
     const isAtBottomRef = useRef(true);
     const stompClientRef = useRef(null);
 
-    
     const [tiers, setTiers] = useState([]);
     const [selectedLevel, setSelectedLevel] = useState('');
     const [savingSettings, setSavingSettings] = useState(false);
     const [settingsSaved, setSettingsSaved] = useState(false);
 
-    
+    // Завантаження налаштувань чату для власника
     useEffect(() => {
         if (!isOwner || !currentUser) return;
         const headers = { Authorization: `Bearer ${currentUser.token}` };
@@ -32,23 +31,31 @@ const AuthorChat = ({ authorId, isOwner = false }) => {
             setTiers(t.sort((a, b) => a.level - b.level));
             setSelectedLevel(s?.minSubscriptionLevel != null ? String(s.minSubscriptionLevel) : '');
         });
-    }, [isOwner, authorId]); 
+    }, [isOwner, authorId]);
 
-    
+    // Перевірка доступу
     useEffect(() => {
+        if (isOwner) {
+            setAccess({ hasAccess: true });
+            return;
+        }
+        setAccess(null);
         fetch(`/api/chat/${authorId}/access`, {
             headers: currentUser ? { Authorization: `Bearer ${currentUser.token}` } : {},
         })
-            .then(r => r.ok ? r.json() : null)
+            .then(r => r.ok ? r.json() : { hasAccess: false })
             .then(data => setAccess(data))
-            .catch(() => setAccess(null));
-    }, [authorId]); 
+            .catch(() => setAccess({ hasAccess: false }));
+    }, [authorId, isOwner]);
 
-    
+    // Завантаження повідомлень і WebSocket — залежить від hasAccess (примітив)
+    const hasAccess = access?.hasAccess ?? false;
+
     useEffect(() => {
-        if (!access?.hasAccess) { setLoading(false); return; }
+        if (access === null) return; // ще завантажується
 
-        
+        if (!hasAccess) { setLoading(false); return; }
+
         setLoading(true);
         fetch(`/api/chat/${authorId}/messages`, {
             headers: currentUser ? { Authorization: `Bearer ${currentUser.token}` } : {},
@@ -61,46 +68,45 @@ const AuthorChat = ({ authorId, isOwner = false }) => {
             })
             .catch(() => setLoading(false));
 
-        
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const brokerURL = `${wsProtocol}://${window.location.host}/api/ws/websocket`;
-        const client = new Client({
-            brokerURL,
-            connectHeaders: currentUser
-                ? { Authorization: `Bearer ${currentUser.token}` }
-                : {},
-            reconnectDelay: 5000,
-            debug: (str) => console.debug('[STOMP]', str),
-            onConnect: () => {
-                setConnected(true);
-                
-                client.subscribe(`/topic/chat/${authorId}`, (frame) => {
-                    const msg = JSON.parse(frame.body);
-                    setMessages(prev => {
-                        
-                        if (prev.some(m => m.messageId === msg.messageId)) return prev;
-                        const updated = [...prev, msg];
-                        
-                        if (isAtBottomRef.current) {
-                            setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }), 0);
-                        }
-                        return updated;
+        let client;
+        try {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const brokerURL = `${wsProtocol}://${window.location.host}/api/ws/websocket`;
+            client = new Client({
+                brokerURL,
+                connectHeaders: currentUser ? { Authorization: `Bearer ${currentUser.token}` } : {},
+                reconnectDelay: 5000,
+                onConnect: () => {
+                    setConnected(true);
+                    client.subscribe(`/topic/chat/${authorId}`, (frame) => {
+                        const msg = JSON.parse(frame.body);
+                        setMessages(prev => {
+                            if (prev.some(m => m.messageId === msg.messageId)) return prev;
+                            const updated = [...prev, msg];
+                            if (isAtBottomRef.current) {
+                                setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }), 0);
+                            }
+                            return updated;
+                        });
                     });
-                });
-            },
-            onDisconnect: () => setConnected(false),
-            onStompError: () => setConnected(false),
-        });
-
-        client.activate();
-        stompClientRef.current = client;
+                },
+                onDisconnect: () => setConnected(false),
+                onStompError: () => setConnected(false),
+            });
+            client.activate();
+            stompClientRef.current = client;
+        } catch (err) {
+            console.error('WebSocket init error:', err);
+        }
 
         return () => {
-            client.deactivate();
-            stompClientRef.current = null;
+            if (stompClientRef.current) {
+                stompClientRef.current.deactivate();
+                stompClientRef.current = null;
+            }
             setConnected(false);
         };
-    }, [access]); 
+    }, [authorId, access]);
 
     const handleScroll = (e) => {
         const el = e.currentTarget;
@@ -159,7 +165,7 @@ const AuthorChat = ({ authorId, isOwner = false }) => {
 
     if (access === null) return <div className="chat-loading"><p>Завантаження чату…</p></div>;
 
-    if (!access.hasAccess) {
+    if (!isOwner && !access.hasAccess) {
         return (
             <div className="chat-locked">
                 <div className="chat-locked-icon">

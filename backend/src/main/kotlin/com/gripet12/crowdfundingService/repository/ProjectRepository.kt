@@ -62,6 +62,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         pageable: Pageable
     ): Page<Project>
 
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("UPDATE Project p SET p.collectedAmount = p.collectedAmount + :amount WHERE p.projectId = :projectId")
     fun increaseCollectedAmount(projectId: Long, amount: BigDecimal)

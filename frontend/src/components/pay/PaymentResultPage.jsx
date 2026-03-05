@@ -1,33 +1,64 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
 import '../../styles/paymentResult.css';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const PaymentResultPage = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
 
-    const status      = params.get('transactionStatus') ?? params.get('status') ?? '';
-    const orderRef    = params.get('orderReference') ?? '';
-    const amount      = params.get('amount') ?? '';
-    const currency    = params.get('currency') ?? 'UAH';
-    const reason      = params.get('reasonCode') ?? params.get('reason') ?? '';
+    // Stripe redirect params
+    const redirectStatus    = params.get('redirect_status') ?? '';
+    const paymentIntentId   = params.get('payment_intent') ?? '';
+    const clientSecret      = params.get('payment_intent_client_secret') ?? '';
 
-    const approved = status === 'Approved';
-    const declined = status === 'Declined' || status === 'Refunded' || status === 'Expired';
-
-    
-    const [countdown, setCountdown] = useState(approved ? 6 : null);
+    const [statusInfo, setStatusInfo] = useState({ status: 'pending', amount: '', currency: 'USD', orderRef: '' });
+    const [countdown, setCountdown]   = useState(null);
 
     useEffect(() => {
-        if (!approved) return;
-        const t = setInterval(() => {
-            setCountdown(c => {
-                if (c <= 1) { clearInterval(t); navigate('/'); return 0; }
-                return c - 1;
+        if (!clientSecret) {
+            // Fallback: derive status from redirect_status query param only
+            const approved = redirectStatus === 'succeeded';
+            const declined = redirectStatus === 'failed' || redirectStatus === 'canceled';
+            const derivedStatus = approved ? 'approved' : declined ? 'declined' : 'pending';
+            setStatusInfo(prev => ({ ...prev, status: derivedStatus }));
+            if (approved) setCountdown(6);
+            return;
+        }
+
+        stripePromise.then(async (stripe) => {
+            if (!stripe) return;
+            const { paymentIntent, error } = await stripe.retrievePaymentIntent(clientSecret);
+            if (error) {
+                setStatusInfo({ status: 'declined', amount: '', currency: 'USD', orderRef: paymentIntentId });
+                return;
+            }
+            const s = paymentIntent.status;
+            const approved = s === 'succeeded';
+            const declined = s === 'canceled' || s === 'requires_payment_method';
+            setStatusInfo({
+                status:   approved ? 'approved' : declined ? 'declined' : 'pending',
+                amount:   paymentIntent.amount ? (paymentIntent.amount / 100).toFixed(2) : '',
+                currency: (paymentIntent.currency ?? 'usd').toUpperCase(),
+                orderRef: paymentIntent.metadata?.orderReference ?? paymentIntentId,
             });
-        }, 1000);
-        return () => clearInterval(t);
-    }, [approved, navigate]);
+            if (approved) setCountdown(6);
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [clientSecret, paymentIntentId, redirectStatus]);
+
+    useEffect(() => {
+        if (countdown === null) return;
+        if (countdown <= 0) { navigate('/'); return; }
+        const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+        return () => clearTimeout(t);
+    }, [countdown, navigate]);
+
+    const { status, amount, currency, orderRef } = statusInfo;
+    const approved = status === 'approved';
+    const declined = status === 'declined';
 
     return (
         <div className="pr-page">
@@ -60,7 +91,7 @@ const PaymentResultPage = () => {
                     {approved
                         ? 'Дякуємо! Ваш платіж успішно оброблено.'
                         : declined
-                        ? `Платіж не вдався.${reason ? ` Причина: ${reason}.` : ''}`
+                        ? 'Платіж не вдався. Спробуйте ще раз.'
                         : 'Платіж ще обробляється. Перевірте статус пізніше.'}
                 </p>
 
