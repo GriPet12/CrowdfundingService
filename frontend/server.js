@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8081';
+const BACKEND_URL = (process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
 
 const { createProxyServer } = httpProxy;
 
@@ -28,7 +28,8 @@ proxy.on('error', (error, req, res) => {
   }
 });
 
-app.use('/api', (req, res) => {
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api/')) return next();
   proxy.web(req, res);
 });
 
