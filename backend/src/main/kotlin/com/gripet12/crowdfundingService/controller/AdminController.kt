@@ -70,6 +70,26 @@ class AdminController(private val adminService: AdminService) {
         return ResponseEntity.ok().build()
     }
 
+    @GetMapping("/projects/pending")
+    fun getPendingProjects(
+        @RequestParam(required = false) search: String?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponseDto<AdminProjectDto>> =
+        ResponseEntity.ok(adminService.getPendingProjects(search, page, size).toDto())
+
+    @PostMapping("/projects/{id}/approve")
+    fun approveProject(@PathVariable id: Long): ResponseEntity<Void> {
+        adminService.approveProject(id)
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/projects/{id}/reject")
+    fun rejectProject(@PathVariable id: Long): ResponseEntity<Void> {
+        adminService.rejectProject(id)
+        return ResponseEntity.ok().build()
+    }
+
     @GetMapping("/projects")
     fun getProjects(
         @RequestParam(required = false) search: String?,

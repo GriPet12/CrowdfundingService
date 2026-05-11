@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import ProjectItem from './ProjectItem.jsx';
 import AuthService from '../user/AuthService.jsx';
-import analyticsService from '../../services/analyticsService.js';
+import analyticsService from '../../utils/analyticsService.js';
 import '../../styles/projectItem.css';
 import '../../styles/projectSearch.css';
 

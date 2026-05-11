@@ -33,10 +33,10 @@ data class Project(
     val mainImage: UploadedFile?,
 
     @ManyToMany(cascade = [CascadeType.ALL])
-    val media: Set<UploadedFile?> = HashSet(),
+    val media: MutableSet<UploadedFile> = HashSet(),
 
     @ManyToMany(cascade = [CascadeType.ALL])
-    val categories: Set<Category?> = HashSet(),
+    val categories: MutableSet<Category> = HashSet(),
 
     @Column(nullable = false, columnDefinition = "boolean not null default false")
     var banned: Boolean = false,

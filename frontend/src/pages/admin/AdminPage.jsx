@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthService from '../user/AuthService.jsx';
-import ConfirmModal from '../common/ConfirmModal.jsx';
+import AuthService from '../../components/user/AuthService.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import '../../styles/adminPage.css';
 
 const authHeaders = (token) => ({
@@ -891,12 +891,310 @@ const TransactionsTab = ({ token }) => {
     );
 };
 
+const ProjectPreviewModal = ({ project, onApprove, onReject, onClose, actionLoading }) => {
+    if (!project) return null;
+
+    const fmtMoneyLocal = (n) =>
+        `₴${Number(n ?? 0).toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+    const categories = Array.isArray(project.categories) && project.categories.length > 0
+        ? project.categories : [];
+
+    const mediaList = Array.isArray(project.media) ? project.media : [];
+    const imageMedia = mediaList.filter(m => {
+        const mime = m.mimeType ?? m.category ?? '';
+        return mime.startsWith('image/') || mime === 'PHOTO';
+    });
+
+    return (
+        <div className="proj-preview-overlay" onClick={onClose}>
+            <div className="proj-preview-modal" onClick={e => e.stopPropagation()}>
+
+                {/* ── sticky header ── */}
+                <div className="proj-preview-header">
+                    <h2 className="proj-preview-title">{project.title}</h2>
+                    <button className="proj-preview-close" onClick={onClose} aria-label="Закрити">✕</button>
+                </div>
+
+                {/* ── scrollable content ── */}
+                <div className="proj-preview-scroll">
+
+                    {project.mainImage && (
+                        <div className="proj-preview-img-wrap">
+                            <img src={`/api/files/${project.mainImage}`} alt={project.title} className="proj-preview-img" />
+                        </div>
+                    )}
+
+                    <div className="proj-preview-body">
+
+                        {categories.length > 0 && (
+                            <div className="proj-preview-cats">
+                                {categories.map((cat, i) => {
+                                    const label = typeof cat === 'string' ? cat : (cat.name ?? cat.categoryName ?? cat.title ?? '');
+                                    return label ? <span key={i} className="badge badge-user">{label}</span> : null;
+                                })}
+                            </div>
+                        )}
+
+                        <div className="proj-preview-meta">
+                            {project.creatorName && (
+                                <span>Автор: <strong>{project.creatorName}</strong></span>
+                            )}
+                            <span>Ціль: <strong>{fmtMoneyLocal(project.goalAmount)}</strong></span>
+                            <span>Зібрано: <strong>{fmtMoneyLocal(project.collectedAmount ?? project.raisedAmount)}</strong></span>
+                            {project.deadline && (
+                                <span>Дедлайн: <strong>{fmtDate(project.deadline)}</strong></span>
+                            )}
+                        </div>
+
+                        {project.description ? (
+                            <div className="proj-preview-desc">{project.description}</div>
+                        ) : (
+                            <div className="proj-preview-desc proj-preview-desc--empty">Опис відсутній</div>
+                        )}
+
+                        {imageMedia.length > 0 && (
+                            <div className="proj-preview-media">
+                                {imageMedia.map((m, i) => (
+                                    <img
+                                        key={m.id ?? i}
+                                        src={`/api/files/${m.id}`}
+                                        alt={m.originalFileName ?? ''}
+                                        className="proj-preview-media-img"
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        {Array.isArray(project.rewards) && project.rewards.length > 0 && (
+                            <div className="proj-preview-rewards">
+                                <h4>Винагороди</h4>
+                                <div className="proj-preview-rewards-list">
+                                    {project.rewards.map((r, i) => (
+                                        <div key={r.rewardId ?? i} className="proj-preview-reward-item">
+                                            <strong>{r.name}</strong>
+                                            {r.description && <p>{r.description}</p>}
+                                            {r.minAmount != null && <span className="badge badge-donate">від ₴{r.minAmount}</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+
+                {/* ── sticky footer with actions ── */}
+                <div className="proj-preview-footer">
+                    <button className="btn-success" disabled={actionLoading} onClick={onApprove}>
+                        ✓ Підтвердити
+                    </button>
+                    <button className="btn-danger" disabled={actionLoading} onClick={onReject}>
+                        ✕ Відхилити
+                    </button>
+                    <button className="btn-secondary" onClick={onClose}>Закрити</button>
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+const PendingProjectsTab = ({ token }) => {
+    const [projects, setProjects]         = useState([]);
+    const [search, setSearch]             = useState('');
+    const [page, setPage]                 = useState(0);
+    const [totalPages, setTotalPages]     = useState(1);
+    const [totalElements, setTotalElements] = useState(0);
+    const [loading, setLoading]           = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [toast, setToast]               = useState('');
+    const [previewProject, setPreviewProject] = useState(null);
+    const [confirmModal, setConfirmModal] = useState(null);
+    const dSearch = useDebounce(search);
+
+    const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+    const filtersRef = useRef({ search: dSearch });
+    filtersRef.current = { search: dSearch };
+
+    const fetchProjects = useCallback(async (pg = 0) => {
+        const { search } = filtersRef.current;
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({ page: pg, size: 20 });
+            if (search.trim()) params.set('search', search.trim());
+            const res = await fetch(`/api/admin/projects/pending?${params}`, { headers: authHeaders(token) });
+            if (res.ok) {
+                const data = await res.json();
+                setProjects(data.content ?? []);
+                setTotalPages(data.totalPages ?? 1);
+                setTotalElements(data.totalElements ?? 0);
+            }
+        } finally { setLoading(false); }
+    }, [token]);
+
+    useEffect(() => { setPage(0); fetchProjects(0); }, [dSearch]);
+    const handlePage = (p) => { setPage(p); fetchProjects(p); };
+
+    const pageRef = useRef(0);
+    useEffect(() => { pageRef.current = page; }, [page]);
+
+    const fetchFullProject = async (projectId) => {
+        try {
+            const res = await fetch(`/api/projects/${projectId}`, { headers: authHeaders(token) });
+            if (res.ok) return await res.json();
+        } catch { /* ignore */ }
+        return null;
+    };
+
+    const handleOpenPreview = async (p) => {
+        // Show list-item data immediately while loading full details
+        setPreviewProject(p);
+        const full = await fetchFullProject(p.projectId);
+        if (full) {
+            // Merge: keep creatorName from list item, add description/media/rewards from full DTO
+            setPreviewProject({
+                ...p,
+                description: full.description ?? p.description,
+                media: full.media ?? [],
+                rewards: full.rewards ?? [],
+                status: full.status ?? p.status,
+            });
+        }
+    };
+
+    const doApprove = (projectId, title) => {
+        setConfirmModal({
+            msg: `Підтвердити проект «${title}»?`,
+            confirmLabel: 'Підтвердити',
+            onConfirm: async () => {
+                setActionLoading(true);
+                try {
+                    const res = await fetch(`/api/admin/projects/${projectId}/approve`, {
+                        method: 'POST', headers: authHeaders(token),
+                    });
+                    if (res.ok) {
+                        showToast('Проект підтверджено');
+                        setPreviewProject(null);
+                        fetchProjects(pageRef.current);
+                    } else showToast('Помилка підтвердження');
+                } finally { setActionLoading(false); setConfirmModal(null); }
+            },
+        });
+    };
+
+    const doReject = (projectId, title) => {
+        setConfirmModal({
+            msg: `Відхилити проект «${title}»? Автор буде сповіщений.`,
+            confirmLabel: 'Відхилити',
+            onConfirm: async () => {
+                setActionLoading(true);
+                try {
+                    const res = await fetch(`/api/admin/projects/${projectId}/reject`, {
+                        method: 'POST', headers: authHeaders(token),
+                    });
+                    if (res.ok) {
+                        showToast('Проект відхилено');
+                        setPreviewProject(null);
+                        fetchProjects(pageRef.current);
+                    } else showToast('Помилка відхилення');
+                } finally { setActionLoading(false); setConfirmModal(null); }
+            },
+        });
+    };
+
+    return (
+        <div>
+            <div className="admin-toolbar">
+                <input className="admin-search" placeholder="Пошук за назвою або автором…"
+                    value={search} onChange={e => setSearch(e.target.value)} />
+                <button className="btn-secondary" onClick={() => fetchProjects(pageRef.current)}>↻ Оновити</button>
+                {totalElements > 0 && (
+                    <span className="admin-count">На розгляді: {totalElements}</span>
+                )}
+            </div>
+
+            {loading ? (
+                <div className="admin-loading">Завантаження…</div>
+            ) : projects.length === 0 ? (
+                <div className="admin-empty">Немає проєктів на розгляді</div>
+            ) : (
+                <div className="admin-table-wrap">
+                    <table className="admin-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Назва</th>
+                                <th>Автор</th>
+                                <th>Категорія</th>
+                                <th>Ціль</th>
+                                <th>Статус</th>
+                                <th>Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {projects.map(p => (
+                                <tr key={p.projectId} style={{ cursor: 'pointer' }} onClick={() => handleOpenPreview(p)}>
+                                    <td style={{ color: '#9ca3af', fontSize: 12 }}>{p.projectId}</td>
+                                    <td><strong>{p.title}</strong></td>
+                                    <td style={{ color: '#6b7280' }}>{p.creatorName}</td>
+                                    <td>{p.category ?? '—'}</td>
+                                    <td>{fmtMoney(p.goalAmount)}</td>
+                                    <td>
+                                        <span className="badge badge-pending">На розгляді</span>
+                                    </td>
+                                    <td onClick={e => e.stopPropagation()}>
+                                        <div className="td-actions">
+                                            <button className="btn-success" disabled={actionLoading}
+                                                onClick={() => doApprove(p.projectId, p.title)}>
+                                                ✓ Підтвердити
+                                            </button>
+                                            <button className="btn-danger" disabled={actionLoading}
+                                                onClick={() => doReject(p.projectId, p.title)}>
+                                                ✕ Відхилити
+                                            </button>
+                                            <button className="btn-ghost"
+                                                onClick={() => handleOpenPreview(p)}>
+                                                Переглянути
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <Pagination page={page} total={totalPages} onChange={handlePage} />
+
+            {previewProject && (
+                <ProjectPreviewModal
+                    project={previewProject}
+                    onApprove={() => doApprove(previewProject.projectId, previewProject.title)}
+                    onReject={() => doReject(previewProject.projectId, previewProject.title)}
+                    onClose={() => setPreviewProject(null)}
+                    actionLoading={actionLoading}
+                />
+            )}
+
+            {confirmModal && (
+                <ConfirmModal message={confirmModal.msg} confirmLabel={confirmModal.confirmLabel}
+                    cancelLabel="Скасувати" onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(null)} />
+            )}
+            {toast && <div className="admin-toast">{toast}</div>}
+        </div>
+    );
+};
+
 const TABS = [
-    { id: 'users',        label: 'Користувачі', icon: null },
-    { id: 'projects',     label: 'Проєкти',     icon: null },
-    { id: 'posts',        label: 'Пости',        icon: null },
-    { id: 'categories',   label: 'Категорії',    icon: null },
-    { id: 'transactions', label: 'Транзакції',   icon: null },
+    { id: 'users',           label: 'Користувачі', icon: null },
+    { id: 'projects',        label: 'Проєкти',     icon: null },
+    { id: 'pending-projects',label: 'Модерація',   icon: null },
+    { id: 'posts',           label: 'Пости',        icon: null },
+    { id: 'categories',      label: 'Категорії',    icon: null },
+    { id: 'transactions',    label: 'Транзакції',   icon: null },
 ];
 
 const AdminPage = () => {
@@ -943,11 +1241,12 @@ const AdminPage = () => {
                 ))}
             </div>
 
-            {activeTab === 'users'        && <UsersTab        token={token} />}
-            {activeTab === 'projects'     && <ProjectsTab     token={token} />}
-            {activeTab === 'posts'        && <PostsTab        token={token} />}
-            {activeTab === 'categories'   && <CategoriesTab   token={token} />}
-            {activeTab === 'transactions' && <TransactionsTab token={token} />}
+            {activeTab === 'users'            && <UsersTab           token={token} />}
+            {activeTab === 'projects'         && <ProjectsTab        token={token} />}
+            {activeTab === 'pending-projects' && <PendingProjectsTab token={token} />}
+            {activeTab === 'posts'            && <PostsTab           token={token} />}
+            {activeTab === 'categories'       && <CategoriesTab      token={token} />}
+            {activeTab === 'transactions'     && <TransactionsTab    token={token} />}
         </div>
     );
 };

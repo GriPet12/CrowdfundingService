@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import AuthService from '../user/AuthService.jsx';
+import AuthService from '../../components/user/AuthService.jsx';
 import '../../styles/createProject.css';
 
 const MAX_FILE_SIZE_MB = 15;
@@ -22,6 +22,7 @@ const EditProjectPage = () => {
     const [existingMainImageId, setExistingMainImageId] = useState(null);
     const [mainImageFile, setMainImageFile] = useState(null);
     const [mainImagePreview, setMainImagePreview] = useState(null);
+    const [originalStatus, setOriginalStatus] = useState(null);
 
     
     const [existingMedia, setExistingMedia] = useState([]);
@@ -57,6 +58,7 @@ const EditProjectPage = () => {
                         typeof c === 'string' ? c : (c.name ?? c.categoryName ?? '')
                     ).filter(Boolean),
                 });
+                setOriginalStatus(data.status ?? null);
                 setExistingMainImageId(data.mainImage ?? null);
                 setMainImagePreview(data.mainImage ? `/api/files/${data.mainImage}` : null);
                 setExistingMedia(data.media ?? []);
@@ -193,7 +195,12 @@ const EditProjectPage = () => {
                 throw new Error(msg || 'Помилка збереження проекту');
             }
 
-            navigate(`/project/${id}`);
+            // If was REJECTED → now PENDING, send to moderation tab; otherwise go to project page
+            if (originalStatus === 'REJECTED') {
+                navigate('/me', { state: { tab: 'moderation' } });
+            } else {
+                navigate(`/project/${id}`);
+            }
         } catch (err) {
             setError(err.message);
             setUploadProgress('');

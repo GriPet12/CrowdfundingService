@@ -255,6 +255,48 @@ class AdminService(
         categoryRepository.deleteById(id)
     }
 
+    @Transactional(readOnly = true)
+    fun getPendingProjects(
+        search: String?,
+        page: Int,
+        size: Int
+    ): Page<AdminProjectDto> {
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
+        return projectRepository.findByFiltersAdmin(
+            search = search?.takeIf { it.isNotBlank() },
+            status = "PENDING",
+            pageable = pageable
+        ).map { p ->
+            AdminProjectDto(
+                projectId = p.projectId,
+                title = p.title,
+                creatorName = p.creator.username,
+                category = p.categories.firstOrNull()?.categoryName,
+                goalAmount = p.goalAmount,
+                raisedAmount = p.collectedAmount,
+                status = p.status,
+                banned = p.banned,
+                createdAt = p.createdAt
+            )
+        }
+    }
+
+    @Transactional
+    fun approveProject(projectId: Long) {
+        val project = projectRepository.findById(projectId).orElseThrow { NoSuchElementException("Project not found") }
+        if (project.status != "PENDING") throw IllegalStateException("Project is not in PENDING state")
+        project.status = "ACTIVE"
+        projectRepository.save(project)
+    }
+
+    @Transactional
+    fun rejectProject(projectId: Long) {
+        val project = projectRepository.findById(projectId).orElseThrow { NoSuchElementException("Project not found") }
+        if (project.status != "PENDING") throw IllegalStateException("Project is not in PENDING state")
+        project.status = "REJECTED"
+        projectRepository.save(project)
+    }
+
     private fun Category.toDto() = CategoryResponseDto(id = categoryId, name = categoryName, description = description)
 
     @Transactional(readOnly = true)

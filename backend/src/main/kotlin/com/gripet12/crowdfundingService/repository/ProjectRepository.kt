@@ -29,6 +29,36 @@ interface ProjectRepository : JpaRepository<Project, Long> {
     @Query("SELECT p.projectId FROM Project p")
     fun findAllIds(pageable: Pageable): Page<Long>
 
+    @Query("SELECT p FROM Project p WHERE p.creator.userId = :creatorId AND p.status <> :status")
+    fun findByCreatorUserIdAndStatusNotPageable(
+        @Param("creatorId") creatorId: Long,
+        @Param("status") status: String,
+        pageable: Pageable
+    ): Page<Project>
+
+    @Query("SELECT p FROM Project p WHERE p.creator.userId = :creatorId AND p.status NOT IN :statuses")
+    fun findByCreatorUserIdAndStatusNotInPageable(
+        @Param("creatorId") creatorId: Long,
+        @Param("statuses") statuses: List<String>,
+        pageable: Pageable
+    ): Page<Project>
+
+    @Query("SELECT p FROM Project p WHERE p.creator.userId = :creatorId AND p.status = :status")
+    fun findByCreatorUserIdAndStatus(
+        @Param("creatorId") creatorId: Long,
+        @Param("status") status: String,
+        pageable: Pageable
+    ): Page<Project>
+
+    @Query("SELECT p FROM Project p WHERE p.status <> :status")
+    fun findByStatusNot(@Param("status") status: String, pageable: Pageable): Page<Project>
+
+    @Query("SELECT p FROM Project p WHERE p.status NOT IN :statuses")
+    fun findByStatusNotIn(@Param("statuses") statuses: List<String>, pageable: Pageable): Page<Project>
+
+    @Query("SELECT p FROM Project p WHERE p.status = :status")
+    fun findByStatus(@Param("status") status: String, pageable: Pageable): Page<Project>
+
     @Query(
         value = """
             SELECT p FROM Project p
@@ -36,6 +66,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
                OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
                OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
               AND (CAST(:categoryId AS long) IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = CAST(:categoryId AS long)))
+              AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
                 (:filterBanned = 0 AND p.banned = false)
                 OR (:filterBanned = 1 AND p.banned = true AND p.bannedWithUser = false)
@@ -48,6 +79,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
                OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
                OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
               AND (CAST(:categoryId AS long) IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = CAST(:categoryId AS long)))
+              AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
                 (:filterBanned = 0 AND p.banned = false)
                 OR (:filterBanned = 1 AND p.banned = true AND p.bannedWithUser = false)
@@ -59,6 +91,28 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         @Param("search") search: String?,
         @Param("categoryId") categoryId: Long?,
         @Param("filterBanned") filterBanned: Int,
+        pageable: Pageable
+    ): Page<Project>
+
+    @Query(
+        value = """
+            SELECT p FROM Project p
+            WHERE (:status IS NULL OR p.status = :status)
+              AND (CAST(:search AS string) IS NULL
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
+               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+        """,
+        countQuery = """
+            SELECT COUNT(p) FROM Project p
+            WHERE (:status IS NULL OR p.status = :status)
+              AND (CAST(:search AS string) IS NULL
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
+               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+        """
+    )
+    fun findByFiltersAdmin(
+        @Param("search") search: String?,
+        @Param("status") status: String?,
         pageable: Pageable
     ): Page<Project>
 

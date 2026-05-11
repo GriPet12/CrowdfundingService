@@ -1,7 +1,7 @@
 import '../../styles/userItem.css';
 import DonateSection from '../pay/DonateSection.jsx';
 import AuthService from '../user/AuthService.jsx';
-import analyticsService from '../../services/analyticsService.js';
+import analyticsService from '../../utils/analyticsService.js';
 import AdminBanButton from '../common/AdminBanButton.jsx';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';

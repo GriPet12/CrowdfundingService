@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import WayForPayForm from '../pay/WayForPayForm.jsx';
 import AuthService from '../user/AuthService.jsx';
-import analyticsService from '../../services/analyticsService.js';
+import analyticsService from '../../utils/analyticsService.js';
 import '../../styles/subscriptionTiers.css';
 
 const PAYMENT_MODELS = [

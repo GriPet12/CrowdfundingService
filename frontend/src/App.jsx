@@ -9,15 +9,15 @@ import ErrorBoundary from "./components/common/ErrorBoundary.jsx";
 import ProjectList from "./components/project/ProjectList.jsx";
 import UserList from "./components/user/UserList.jsx";
 
-const UserPage    = lazy(() => import("./components/user/UserPage.jsx"));
-const ProjectPage = lazy(() => import("./components/project/ProjectPage.jsx"));
-const MyPage      = lazy(() => import("./components/user/MyPage.jsx"));
-const CreateProjectPage  = lazy(() => import("./components/project/CreateProjectPage.jsx"));
-const EditProjectPage    = lazy(() => import("./components/project/EditProjectPage.jsx"));
-const AdminPage       = lazy(() => import("./components/admin/AdminPage.jsx"));
-const VerifyEmailPage = lazy(() => import("./components/user/VerifyEmailPage.jsx"));
-const OAuth2CallbackPage = lazy(() => import("./components/user/OAuth2CallbackPage.jsx"));
-const PaymentResultPage  = lazy(() => import("./components/pay/PaymentResultPage.jsx"));
+const UserPage    = lazy(() => import("./pages/user/UserPage.jsx"));
+const ProjectPage = lazy(() => import("./pages/project/ProjectPage.jsx"));
+const MyPage      = lazy(() => import("./pages/user/MyPage.jsx"));
+const CreateProjectPage  = lazy(() => import("./pages/project/CreateProjectPage.jsx"));
+const EditProjectPage    = lazy(() => import("./pages/project/EditProjectPage.jsx"));
+const AdminPage       = lazy(() => import("./pages/admin/AdminPage.jsx"));
+const VerifyEmailPage = lazy(() => import("./pages/user/VerifyEmailPage.jsx"));
+const OAuth2CallbackPage = lazy(() => import("./pages/user/OAuth2CallbackPage.jsx"));
+const PaymentResultPage  = lazy(() => import("./pages/pay/PaymentResultPage.jsx"));
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);

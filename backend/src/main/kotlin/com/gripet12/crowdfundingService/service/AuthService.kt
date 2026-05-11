@@ -14,8 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-data class EmailNotVerifiedException(val email: String) : RuntimeException("EMAIL_NOT_VERIFIED")
-
 @Service
 class AuthService(
     private val authenticationManager: AuthenticationManager,

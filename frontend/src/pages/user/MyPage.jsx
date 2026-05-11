@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AuthService from './AuthService.jsx';
-import ProjectItem from '../project/ProjectItem.jsx';
-import UserItem from './UserItem.jsx';
-import SubscriptionTiersManager from '../subscription/SubscriptionTiersManager.jsx';
-import AuthorChat from './AuthorChat.jsx';
-import PostCard from '../post/PostCard.jsx';
-import ConfirmModal from '../common/ConfirmModal.jsx';
-import StatsTab from './StatsTab.jsx';
+import { useNavigate, useLocation } from 'react-router-dom';
+import AuthService from '../../components/user/AuthService.jsx';
+import ProjectItem from '../../components/project/ProjectItem.jsx';
+import UserItem from '../../components/user/UserItem.jsx';
+import SubscriptionTiersManager from '../../components/subscription/SubscriptionTiersManager.jsx';
+import AuthorChat from '../../components/user/AuthorChat.jsx';
+import PostCard from '../../components/post/PostCard.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
+import StatsTab from '../../components/user/StatsTab.jsx';
 import '../../styles/myPage.css';
 import '../../styles/projectItem.css';
 import '../../styles/postCard.css';
@@ -316,6 +316,7 @@ const ChangePasswordModal = ({ token, onClose }) => {
 
 const MyPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const currentUser = AuthService.getCurrentUser();
     const currentUserRef = useRef(currentUser);
 
@@ -328,7 +329,10 @@ const MyPage = () => {
     const [followedAuthors, setFollowedAuthors]   = useState([]);
     const [mySubscriptions, setMySubscriptions] = useState([]);
     const [myDonations, setMyDonations] = useState([]);
-    const [activeTab, setActiveTab] = useState('content');
+    const [pendingProjects, setPendingProjects] = useState([]);
+    const [rejectedProjects, setRejectedProjects] = useState([]);
+    const initialTab = (location.state?.tab) ?? new URLSearchParams(location.search).get('tab') ?? 'content';
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [loading, setLoading] = useState(true);
 
     
@@ -444,6 +448,25 @@ const MyPage = () => {
         })
             .then(r => r.ok ? r.json() : [])
             .then(setMyDonations)
+            .catch(() => {});
+    }, [activeTab]);
+
+    useEffect(() => {
+        const user = currentUserRef.current;
+        if (activeTab !== 'moderation' || !user) return;
+        // Fetch PENDING projects
+        fetch('/api/projects/my/pending', {
+            headers: { Authorization: `Bearer ${user.token}` },
+        })
+            .then(r => r.ok ? r.json() : { content: [] })
+            .then(data => setPendingProjects(data.content ?? (Array.isArray(data) ? data : [])))
+            .catch(() => {});
+        // Fetch REJECTED projects via dedicated endpoint
+        fetch('/api/projects/my/rejected', {
+            headers: { Authorization: `Bearer ${user.token}` },
+        })
+            .then(r => r.ok ? r.json() : { content: [] })
+            .then(data => setRejectedProjects(data.content ?? (Array.isArray(data) ? data : [])))
             .catch(() => {});
     }, [activeTab]);
 
@@ -636,11 +659,7 @@ const MyPage = () => {
                     {!editingProfile ? (
                         <>
                             <h1 className="my-page-name">{display.username}</h1>
-                            {display.email && <p className="my-page-email">{display.email}</p>}
-                            {display.isVerified
-                                ? <span className="my-page-verified-badge">Email підтверджено</span>
-                                : <span className="my-page-unverified-badge">Email не підтверджено</span>
-                            }
+                            <p className="my-page-email">{display.email}</p>
                             {display.description && <p className="my-page-description">{display.description}</p>}
                             {display.isPrivate && <span className="my-page-private-badge">Приватний</span>}
                             <div className="my-page-hero-actions">
@@ -757,6 +776,7 @@ const MyPage = () => {
                         { key: 'stats',            label: 'Статистика' },
                         { key: 'chat',             label: 'Чат' },
                         { key: 'projects',         label: 'Проекти' },
+                        { key: 'moderation',       label: 'На розгляді' },
                         { key: 'subscriptions',    label: 'Мої підписки' },
                         { key: 'following',        label: 'Відстежувані' },
                         { key: 'authors',          label: 'Автори' },
@@ -877,6 +897,110 @@ const MyPage = () => {
                 {activeTab === 'subscriptions' && (
                     <div className="my-page-subscriptions-tab">
                         <SubscriptionTiersManager />
+                    </div>
+                )}
+
+                {activeTab === 'moderation' && (
+                    <div className="my-page-moderation-tab">
+                        {/* PENDING section */}
+                        <div className="moderation-section">
+                            <h3 className="moderation-section-title">
+                                <span className="moderation-badge moderation-badge--pending">На розгляді</span>
+                                {pendingProjects.length > 0 && (
+                                    <span className="moderation-count">{pendingProjects.length}</span>
+                                )}
+                            </h3>
+                            {pendingProjects.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Немає проектів на розгляді.</p>
+                                </div>
+                            ) : (
+                                <div className="projects-grid">
+                                    {pendingProjects.map(p => (
+                                        <div key={p.projectId} className="my-page-project-wrapper">
+                                            <div className="moderation-project-card">
+                                                {p.mainImage && (
+                                                    <img
+                                                        src={`/api/files/${p.mainImage}`}
+                                                        alt={p.title}
+                                                        className="moderation-project-img"
+                                                    />
+                                                )}
+                                                <div className="moderation-project-info">
+                                                    <h4 className="moderation-project-title">{p.title}</h4>
+                                                    {p.description && (
+                                                        <p className="moderation-project-desc">{p.description}</p>
+                                                    )}
+                                                    <div className="moderation-project-meta">
+                                                        <span>Ціль: <strong>₴{p.goalAmount ?? p.goal ?? 0}</strong></span>
+                                                        {p.deadline && (
+                                                            <span>Дедлайн: <strong>{new Date(p.deadline).toLocaleDateString('uk-UA')}</strong></span>
+                                                        )}
+                                                    </div>
+                                                    <span className="moderation-status-badge moderation-status-badge--pending">
+                                                        ⏳ Очікує підтвердження
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* REJECTED section */}
+                        <div className="moderation-section">
+                            <h3 className="moderation-section-title">
+                                <span className="moderation-badge moderation-badge--rejected">Відхилені</span>
+                                {rejectedProjects.length > 0 && (
+                                    <span className="moderation-count">{rejectedProjects.length}</span>
+                                )}
+                            </h3>
+                            {rejectedProjects.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Немає відхилених проектів.</p>
+                                </div>
+                            ) : (
+                                <div className="projects-grid">
+                                    {rejectedProjects.map(p => (
+                                        <div key={p.projectId} className="my-page-project-wrapper">
+                                            <div className="moderation-project-card moderation-project-card--rejected">
+                                                {p.mainImage && (
+                                                    <img
+                                                        src={`/api/files/${p.mainImage}`}
+                                                        alt={p.title}
+                                                        className="moderation-project-img"
+                                                    />
+                                                )}
+                                                <div className="moderation-project-info">
+                                                    <h4 className="moderation-project-title">{p.title}</h4>
+                                                    {p.description && (
+                                                        <p className="moderation-project-desc">{p.description}</p>
+                                                    )}
+                                                    <div className="moderation-project-meta">
+                                                        <span>Ціль: <strong>₴{p.goalAmount ?? p.goal ?? 0}</strong></span>
+                                                        {p.deadline && (
+                                                            <span>Дедлайн: <strong>{new Date(p.deadline).toLocaleDateString('uk-UA')}</strong></span>
+                                                        )}
+                                                    </div>
+                                                    <span className="moderation-status-badge moderation-status-badge--rejected">
+                                                        ✕ Відхилено адміністратором
+                                                    </span>
+                                                    <div className="moderation-project-actions">
+                                                        <button
+                                                            className="my-page-project-edit-btn"
+                                                            onClick={() => navigate(`/projects/${p.projectId}/edit`)}
+                                                        >
+                                                            Редагувати і подати знову
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

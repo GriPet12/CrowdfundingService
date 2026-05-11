@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import DonateSection from '../pay/DonateSection.jsx';
-import AuthService from '../user/AuthService.jsx';
-import AdminBanButton from '../common/AdminBanButton.jsx';
-import analyticsService from '../../services/analyticsService.js';
+import DonateSection from '../../components/pay/DonateSection.jsx';
+import AuthService from '../../components/user/AuthService.jsx';
+import AdminBanButton from '../../components/common/AdminBanButton.jsx';
+import analyticsService from '../../utils/analyticsService.js';
 import '../../styles/projectPage.css';
 
 const getLabel = (category) => {

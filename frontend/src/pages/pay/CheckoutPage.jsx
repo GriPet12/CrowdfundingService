@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import WayForPayForm from './WayForPayForm.jsx';
+import WayForPayForm from '../../components/pay/WayForPayForm.jsx';
 
 const CheckoutPage = () => {
     const [amount, setAmount] = useState(150);

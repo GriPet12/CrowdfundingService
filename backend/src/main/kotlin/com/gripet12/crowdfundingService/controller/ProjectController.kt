@@ -6,6 +6,7 @@ import com.gripet12.crowdfundingService.dto.PreviewProjectDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
 import com.gripet12.crowdfundingService.service.ProjectService
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -25,6 +26,22 @@ class ProjectController(
         @RequestParam(defaultValue = "desc") sortDir: String
     ): PageResponseDto<PreviewProjectDto> =
         projectService.getProjectsPage(page, size, creatorId, search, categoryId, sortBy, sortDir)
+
+    @GetMapping("/my/pending")
+    @PreAuthorize("isAuthenticated()")
+    fun getMyPendingProjects(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int
+    ): PageResponseDto<PreviewProjectDto> =
+        projectService.getMyPendingProjects(page, size)
+
+    @GetMapping("/my/rejected")
+    @PreAuthorize("isAuthenticated()")
+    fun getMyRejectedProjects(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int
+    ): PageResponseDto<PreviewProjectDto> =
+        projectService.getMyRejectedProjects(page, size)
 
     @PostMapping
     fun addProject(@RequestBody dto: CreateProjectDto): ResponseEntity<ProjectDto> =

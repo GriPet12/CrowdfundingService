@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthService from '../user/AuthService.jsx';
+import AuthService from '../../components/user/AuthService.jsx';
 import '../../styles/createProject.css';
 
 const MAX_FILE_SIZE_MB = 15;
