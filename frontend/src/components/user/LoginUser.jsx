@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AuthService from './AuthService.jsx';
 
-const BACKEND_URL = 'http://localhost:8081';
-const FACEBOOK_ENABLED = false; 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8081';
+const FACEBOOK_ENABLED = false;
 
 const RESEND_COOLDOWN = 60;
 
