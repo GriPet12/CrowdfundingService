@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createProxyServer } from 'http-proxy';
+import httpProxy from 'http-proxy';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8081';
+
+const { createProxyServer } = httpProxy;
 
 const proxy = createProxyServer({
   target: BACKEND_URL,
@@ -32,7 +34,7 @@ app.use('/api', (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
