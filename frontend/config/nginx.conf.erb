@@ -1,10 +1,11 @@
-# Heroku автоматично загорне цей блок в секцію http {} під капотом
+# Heroku самостійно загорне цей блок у секцію http {} під капотом
 
 server {
-    listen <%= env["PORT"] %>;
+    # Використовуємо великі літери ENV для зчитування порту Heroku
+    listen <%= ENV["PORT"] %>;
     server_name _;
 
-    # Шлях до зібраного Vite фронтенду
+    # Шлях до папки з білдом Vite всередині контейнера
     root /app/dist;
     index index.html;
 
@@ -12,7 +13,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Кешування статики
+    # Кешування статичних ресурсів
     location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
         expires max;
         add_header Cache-Control "public, must-revalidate, proxy-revalidate";
