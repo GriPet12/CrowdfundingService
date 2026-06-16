@@ -1,0 +1,19 @@
+daemon off;
+# Heroku динамічно виділяє порт, підхоплюємо його з оточення
+listen <%= env["PORT"] %>;
+
+server {
+    server_name _;
+    root /app/frontend/dist; # Шлях куди Vite збирає білд у контейнері Heroku
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Кешування статичних ресурсів для кращої швидкості
+    location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
+        expires max;
+        add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+    }
+}
