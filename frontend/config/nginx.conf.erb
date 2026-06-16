@@ -3,7 +3,8 @@ listen <%= env["PORT"] %>;
 
 server {
     server_name _;
-    root /app/dist; # Коли деплоїться суто папка frontend, папка dist створюється прямо в /app
+    # Використовуємо глобальний шлях до папки з білдом Vite
+    root <%= env["HOME"] %>/dist;
     index index.html;
 
     location / {
