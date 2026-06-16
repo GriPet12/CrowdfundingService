@@ -1,18 +1,31 @@
 daemon off;
-listen <%= env["PORT"] %>;
 
-server {
-    server_name _;
-    # Використовуємо глобальний шлях до папки з білдом Vite
-    root <%= env["HOME"] %>/dist;
-    index index.html;
+events {
+    worker_connections 1024;
+}
 
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
+http {
+    include bin/mime.types;
+    default_type application/octet-stream;
+    sendfile on;
 
-    location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
-        expires max;
-        add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+    server {
+        # Директива listen ОБОВ'ЯЗКОВО має бути всередині блоку server
+        listen <%= env["PORT"] %>;
+        server_name _;
+
+        # Вказуємо точний шлях до папки з білдом Vite у контейнері Heroku
+        root /app/dist;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Кешування для швидкого завантаження активів React
+        location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
+            expires max;
+            add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+        }
     }
 }
