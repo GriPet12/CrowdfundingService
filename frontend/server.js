@@ -1,14 +1,18 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import httpProxy from 'http-proxy';
+import { createRequire } from 'module';
+
+// Дозволяє безпечно імпортувати http-proxy в ES-модулях без втрати методів
+const require = createRequire(import.meta.url);
+const httpProxy = require('http-proxy');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const BACKEND_URL = (process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
+const BACKEND_URL = (process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || 'https://api.crowd-funding.app').replace(/\/$/, '');
 
 const { createProxyServer } = httpProxy;
 
