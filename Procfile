@@ -1,2 +1,1 @@
-web: java -jar target/CrowdfundingService-0.0.1-SNAPSHOT.jar
-
+web: java -Dserver.port=$PORT -jar backend/target/CrowdfundingService-0.0.1-SNAPSHOT.jar

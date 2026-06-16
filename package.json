@@ -1,0 +1,8 @@
+{
+  "name": "crowdfunding-monorepo",
+  "version": "1.0.0",
+  "scripts": {
+    "heroku-prebuild": "cd frontend && npm install && npm run build",
+    "heroku-postbuild": "cd backend && mvn clean package -DskipTests"
+  }
+}
