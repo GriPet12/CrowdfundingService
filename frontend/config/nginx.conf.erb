@@ -1,31 +1,20 @@
-daemon off;
+# Heroku автоматично загорне цей блок в секцію http {} під капотом
 
-events {
-    worker_connections 1024;
-}
+server {
+    listen <%= env["PORT"] %>;
+    server_name _;
 
-http {
-    include bin/mime.types;
-    default_type application/octet-stream;
-    sendfile on;
+    # Шлях до зібраного Vite фронтенду
+    root /app/dist;
+    index index.html;
 
-    server {
-        # Директива listen ОБОВ'ЯЗКОВО має бути всередині блоку server
-        listen <%= env["PORT"] %>;
-        server_name _;
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
 
-        # Вказуємо точний шлях до папки з білдом Vite у контейнері Heroku
-        root /app/dist;
-        index index.html;
-
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
-
-        # Кешування для швидкого завантаження активів React
-        location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
-            expires max;
-            add_header Cache-Control "public, must-revalidate, proxy-revalidate";
-        }
+    # Кешування статики
+    location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
+        expires max;
+        add_header Cache-Control "public, must-revalidate, proxy-revalidate";
     }
 }
