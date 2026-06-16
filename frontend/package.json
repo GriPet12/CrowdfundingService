@@ -37,5 +37,6 @@
   },
   "engines": {
     "node": "20.x"
-  }
+  },
+  "start": "node server.js"
 }
