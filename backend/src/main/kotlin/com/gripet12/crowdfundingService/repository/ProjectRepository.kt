@@ -61,10 +61,10 @@ interface ProjectRepository : JpaRepository<Project, Long> {
 
     @Query(
         value = """
-            SELECT p FROM Project p
+            SELECT p FROM Project p LEFT JOIN p.creator u
             WHERE (CAST(:search AS string) IS NULL
                OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+               OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
               AND (CAST(:categoryId AS long) IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = CAST(:categoryId AS long)))
               AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
@@ -74,10 +74,10 @@ interface ProjectRepository : JpaRepository<Project, Long> {
               )
         """,
         countQuery = """
-            SELECT COUNT(p) FROM Project p
+            SELECT COUNT(p) FROM Project p LEFT JOIN p.creator u
             WHERE (CAST(:search AS string) IS NULL
                OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+               OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
               AND (CAST(:categoryId AS long) IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = CAST(:categoryId AS long)))
               AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
