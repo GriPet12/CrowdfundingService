@@ -1,1 +1,1 @@
-web: npm --prefix frontend start
+web: java -jar backend/target/CrowdfundingService-0.0.1-SNAPSHOT.jar
