@@ -141,7 +141,7 @@ class AdminService(
             "title"        -> "title"
             "goalAmount"   -> "goalAmount"
             "raisedAmount" -> "collectedAmount"
-            else           -> "createdAt"
+            else           -> "projectId"
         }
         val pageable = PageRequest.of(page, size, Sort.by(direction, sortField))
         return projectRepository.findByFilters(
@@ -290,7 +290,7 @@ class AdminService(
     }
 
     @Transactional
-    fun rejectProject(projectId: Long) {
+    fun rejectProject( projectId: Long) {
         val project = projectRepository.findById(projectId).orElseThrow { NoSuchElementException("Project not found") }
         if (project.status != "PENDING") throw IllegalStateException("Project is not in PENDING state")
         project.status = "REJECTED"
