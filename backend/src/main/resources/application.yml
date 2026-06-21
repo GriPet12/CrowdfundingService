@@ -47,11 +47,6 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET:change-me}
             scope: email, profile
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-          # facebook:
-          #   client-id: YOUR_FACEBOOK_APP_ID
-          #   client-secret: YOUR_FACEBOOK_APP_SECRET
-          #   scope: email, public_profile
-          #   redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
 
 jwt:
   secret: ${JWT_SECRET:verySecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm}
