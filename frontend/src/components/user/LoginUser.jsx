@@ -63,7 +63,7 @@ const LoginUser = ({ onSwitchToRegister }) => {
     };
 
     const handleSocialLogin = (provider) => {
-        window.location.href = `${BACKEND_URL}/api/oauth2/authorization/${provider}`;
+        window.location.href = `${BACKEND_URL}/api/login/oauth2/code/${provider}`;
     };
 
     return (

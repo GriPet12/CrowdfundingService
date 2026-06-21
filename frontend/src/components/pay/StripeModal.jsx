@@ -5,7 +5,8 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { useStripePayment } from './StripePaymentContext.jsx';
 import '../../styles/auth.css';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// ТУТ МИ ВИКОРИСТОВУЄМО КЛЮЧ БЕЗПОСЕРЕДНЬО (ВІН ПУБЛІЧНИЙ, ТОМУ ЦЕ БЕЗПЕЧНО)
+const stripePromise = loadStripe('pk_test_51T79sbGq3gDFKntIK4JQkcrmjtGNNVoVOixxtWZ1bYWkp5EYqn3kmrpVgYGJFq5ESn5LeXjrxnOEw356UyrHFAxO00fKaYfrKm');
 
 /* ── Форма всередині Elements ──────────────────────────────────────── */
 const CheckoutForm = ({ amount, onBeforeSubmit, onError }) => {
@@ -104,4 +105,3 @@ const StripeModal = () => {
 };
 
 export default StripeModal;
-
