@@ -141,8 +141,7 @@ class AdminService(
             "title"        -> "title"
             "goalAmount"   -> "goalAmount"
             "raisedAmount" -> "collectedAmount"
-            "projectId"    -> "p.projectId"
-            else           -> "p.projectId"
+            else           -> "createdAt"
         }
         val pageable = PageRequest.of(page, size, Sort.by(direction, sortField))
         return projectRepository.findByFilters(
