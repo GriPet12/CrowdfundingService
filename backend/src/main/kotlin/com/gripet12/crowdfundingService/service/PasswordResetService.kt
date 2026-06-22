@@ -29,7 +29,8 @@ class PasswordResetService(
     fun requestPasswordReset(email: String) {
         val user = userRepository.findByEmail(email.trim()).orElse(null) ?: return
 
-        tokenRepository.findByUserUserId(user.userId!!).ifPresent { existing ->
+        val existing = tokenRepository.findByUserUserId(user.userId!!).orElse(null)
+        if (existing != null) {
             val secondsSinceLastSend = Duration.between(existing.createdAt, LocalDateTime.now()).seconds
             if (secondsSinceLastSend < 60) return
         }
