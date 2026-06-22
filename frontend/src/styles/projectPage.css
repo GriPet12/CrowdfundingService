@@ -433,6 +433,11 @@ video.carousel-image {
         padding: 20px;
     }
 
+    .project-page-donors-section,
+    .project-page-social {
+        padding: 20px;
+    }
+
     .carousel-btn {
         font-size: 28px;
         width: 36px;
@@ -474,9 +479,10 @@ video.carousel-image {
 .project-page-follow-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .project-page-donors-section {
-    max-width: 720px;
-    margin: 32px auto 48px;
-    padding: 0 20px;
+    margin-bottom: 40px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    padding: 32px 40px;
 }
 
 .project-page-donors-title {
@@ -604,9 +610,10 @@ video.carousel-image {
 }
 
 .project-page-social {
-    max-width: 720px;
-    margin: 32px auto 0;
-    padding: 0 20px;
+    margin-bottom: 40px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    padding: 32px 40px;
 }
 
 .project-page-social-title {

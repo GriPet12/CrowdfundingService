@@ -59,13 +59,19 @@ class CommentService(
         return saveComment(comment)
     }
 
-    private fun saveComment(comment: Comment): CommentResponseDto =
-        try {
+    private fun saveComment(comment: Comment): CommentResponseDto {
+        return try {
             commentRepository.save(comment).toDto()
-        } catch (_: DataIntegrityViolationException) {
+        } catch (e: DataIntegrityViolationException) {
+            val message = e.mostSpecificCause?.message ?: e.message ?: ""
+            if (comment.project != null && message.contains("post_id", ignoreCase = true)) {
+                postgresSequenceSync.ensureCommentsSchema()
+                return commentRepository.save(comment.copy(commentId = 0)).toDto()
+            }
             postgresSequenceSync.syncTable("comments", "comment_id")
             commentRepository.save(comment.copy(commentId = 0)).toDto()
         }
+    }
 
     @Transactional
     fun deleteComment(commentId: Long) {

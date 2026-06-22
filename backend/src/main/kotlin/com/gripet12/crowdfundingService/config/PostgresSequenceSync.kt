@@ -24,7 +24,23 @@ class PostgresSequenceSync(
     )
 
     override fun run(args: ApplicationArguments) {
+        ensureCommentsSchema()
         serialIdTables.forEach { (table, idColumn) -> syncTable(table, idColumn) }
+    }
+
+    fun ensureCommentsSchema() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE comments ALTER COLUMN post_id DROP NOT NULL")
+            log.info("comments.post_id is nullable")
+        } catch (e: Exception) {
+            log.debug("comments.post_id migration skipped: {}", e.message)
+        }
+        try {
+            jdbcTemplate.execute("ALTER TABLE comments ADD COLUMN IF NOT EXISTS project_id BIGINT")
+            log.info("comments.project_id column ensured")
+        } catch (e: Exception) {
+            log.warn("Could not ensure comments.project_id: {}", e.message)
+        }
     }
 
     fun syncTable(table: String, idColumn: String) {
