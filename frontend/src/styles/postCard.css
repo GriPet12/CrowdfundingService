@@ -594,6 +594,12 @@
 .post-comment-submit:hover:not(:disabled) { background: #333; }
 .post-comment-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.post-comment-error {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #cc0000;
+}
+
 @media (max-width: 600px) {
     .post-carousel-track { aspect-ratio: 4 / 3; }
     .post-files-grid { grid-template-columns: 1fr 1fr; }

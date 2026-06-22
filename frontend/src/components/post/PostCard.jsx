@@ -223,6 +223,7 @@ const CommentsSection = ({ postId, postAuthorId, open, onCountChange }) => {
     const [loading, setLoading] = useState(false);
     const [text, setText] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const loadComments = async () => {
         if (loaded) return;
@@ -245,6 +246,7 @@ const CommentsSection = ({ postId, postAuthorId, open, onCountChange }) => {
         e.preventDefault();
         if (!text.trim() || !currentUser) return;
         setSubmitting(true);
+        setSubmitError('');
         try {
             const res = await fetch(`/api/posts/${postId}/comments`, {
                 method: 'POST',
@@ -259,7 +261,12 @@ const CommentsSection = ({ postId, postAuthorId, open, onCountChange }) => {
                 setComments(prev => [...prev, newComment]);
                 onCountChange?.(1);
                 setText('');
+            } else {
+                const data = await res.json().catch(() => ({}));
+                setSubmitError(data.message || 'Не вдалося додати коментар. Спробуйте ще раз.');
             }
+        } catch {
+            setSubmitError('Не вдалося додати коментар. Спробуйте ще раз.');
         } finally {
             setSubmitting(false);
         }
@@ -349,6 +356,7 @@ const CommentsSection = ({ postId, postAuthorId, open, onCountChange }) => {
             ) : (
                 <p className="post-comments-login-hint">Увійдіть, щоб залишити коментар.</p>
             )}
+            {submitError && <p className="post-comment-error">{submitError}</p>}
         </div>
     );
 };

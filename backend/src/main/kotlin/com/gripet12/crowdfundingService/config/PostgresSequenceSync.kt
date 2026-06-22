@@ -13,41 +13,47 @@ class PostgresSequenceSync(
 
     private val log = LoggerFactory.getLogger(PostgresSequenceSync::class.java)
 
-    private val serialIdTables = listOf(
-        "author_follows",
-        "project_follows",
-        "post_likes",
-        "comments",
-        "chat_messages",
-        "analytics_logs"
+    private val serialIdTables = mapOf(
+        "author_follows" to "id",
+        "project_follows" to "id",
+        "post_likes" to "id",
+        "comments" to "comment_id",
+        "chat_messages" to "message_id",
+        "analytics_logs" to "log_id"
     )
 
     override fun run(args: ApplicationArguments) {
-        for (table in serialIdTables) {
-            try {
-                val seq = jdbcTemplate.queryForObject(
-                    "SELECT pg_get_serial_sequence(?, 'id')",
-                    String::class.java,
-                    table
-                )
-                if (seq.isNullOrBlank()) continue
+        serialIdTables.forEach { (table, idColumn) -> syncTable(table, idColumn) }
+    }
 
-                val maxId = jdbcTemplate.queryForObject(
-                    "SELECT COALESCE(MAX(id), 0) FROM $table",
-                    Long::class.java
-                ) ?: 0L
-
-                val nextVal = jdbcTemplate.queryForObject(
-                    "SELECT setval(?, GREATEST(?, 1), true)",
-                    Long::class.java,
-                    seq,
-                    maxId
-                )
-
-                log.info("Synced sequence for {} -> next id {}", table, (nextVal ?: 0L) + 1)
-            } catch (e: Exception) {
-                log.warn("Could not sync sequence for {}: {}", table, e.message)
+    fun syncTable(table: String, idColumn: String) {
+        try {
+            val seq = jdbcTemplate.queryForObject(
+                "SELECT pg_get_serial_sequence(?, ?)",
+                String::class.java,
+                table,
+                idColumn
+            )
+            if (seq.isNullOrBlank()) {
+                log.warn("No serial sequence found for {}.{}", table, idColumn)
+                return
             }
+
+            val maxId = jdbcTemplate.queryForObject(
+                "SELECT COALESCE(MAX($idColumn), 0) FROM $table",
+                Long::class.java
+            ) ?: 0L
+
+            val nextVal = jdbcTemplate.queryForObject(
+                "SELECT setval(?, GREATEST(?, 1), true)",
+                Long::class.java,
+                seq,
+                maxId
+            )
+
+            log.info("Synced sequence for {}.{} -> next id {}", table, idColumn, (nextVal ?: 0L) + 1)
+        } catch (e: Exception) {
+            log.warn("Could not sync sequence for {}.{}: {}", table, idColumn, e.message)
         }
     }
 }
