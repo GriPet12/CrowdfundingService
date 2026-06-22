@@ -159,6 +159,25 @@ interface DonateRepository : JpaRepository<Donate, Long> {
     """, nativeQuery = true)
     fun findAllByDonorUserId(@Param("donorId") donorId: Long): List<Array<Any?>>
 
+    @Query(value = """
+        SELECT
+            d.donate_id,
+            COALESCE(p.title, '')                            AS project_title,
+            COALESCE(u.username, 'Анонім')                   AS donor_name,
+            d.reward,
+            d.amount,
+            pay.status,
+            d.create_at,
+            d.is_anonymous
+        FROM donate d
+        LEFT JOIN payments pay ON pay.payment_id = d.payment_payment_id
+        LEFT JOIN projects p   ON p.project_id   = d.project_project_id
+        LEFT JOIN users    u   ON u.user_id       = d.donor_user_id
+        WHERE (d.creator_user_id = :creatorId OR p.creator_id = :creatorId)
+        ORDER BY d.create_at DESC
+    """, nativeQuery = true)
+    fun findAllByCreatorUserId(@Param("creatorId") creatorId: Long): List<Array<Any?>>
+
     @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Donate d JOIN d.payment p WHERE p.status = 'APPROVED'")
     fun sumAllApprovedDonations(): BigDecimal
 

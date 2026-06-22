@@ -468,6 +468,8 @@ const MyPage = () => {
     const [followedAuthors, setFollowedAuthors]   = useState([]);
     const [mySubscriptions, setMySubscriptions] = useState([]);
     const [myDonations, setMyDonations] = useState([]);
+    const [receivedDonations, setReceivedDonations] = useState([]);
+    const [donationsSubTab, setDonationsSubTab] = useState('sent');
     const [pendingProjects, setPendingProjects] = useState([]);
     const [rejectedProjects, setRejectedProjects] = useState([]);
     const initialTab = (location.state?.tab) ?? new URLSearchParams(location.search).get('tab') ?? 'content';
@@ -588,6 +590,12 @@ const MyPage = () => {
         })
             .then(r => r.ok ? r.json() : [])
             .then(setMyDonations)
+            .catch(() => {});
+        fetch('/api/donations/received', {
+            headers: { Authorization: `Bearer ${user.token}` },
+        })
+            .then(r => r.ok ? r.json() : [])
+            .then(setReceivedDonations)
             .catch(() => {});
     }, [activeTab]);
 
@@ -1347,45 +1355,108 @@ const MyPage = () => {
                 )}
                 {activeTab === 'my-donations' && (
                     <div className="my-page-my-donations-tab">
-                        {myDonations.length === 0 ? (
-                            <div className="my-page-empty">
-                                <p>Ви ще не робили жодного донату.</p>
-                            </div>
-                        ) : (
-                            <div className="my-donations-list">
-                                {myDonations.map((don, idx) => (
-                                    <div key={don.donationId ?? idx} className="my-donations-card">
-                                        <div className="my-donations-icon">
-                                            {don.projectTitle ? 'П' : 'А'}
+                        <div className="my-donations-subtabs">
+                            <button
+                                type="button"
+                                className={`my-donations-subtab ${donationsSubTab === 'sent' ? 'active' : ''}`}
+                                onClick={() => setDonationsSubTab('sent')}
+                            >
+                                Надіслані
+                            </button>
+                            <button
+                                type="button"
+                                className={`my-donations-subtab ${donationsSubTab === 'received' ? 'active' : ''}`}
+                                onClick={() => setDonationsSubTab('received')}
+                            >
+                                Отримані
+                            </button>
+                        </div>
+
+                        {donationsSubTab === 'sent' && (
+                            myDonations.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Ви ще не робили жодного донату.</p>
+                                </div>
+                            ) : (
+                                <div className="my-donations-list">
+                                    {myDonations.map((don, idx) => (
+                                        <div key={don.donationId ?? idx} className="my-donations-card">
+                                            <div className="my-donations-icon">
+                                                {don.projectTitle ? 'П' : 'А'}
+                                            </div>
+                                            <div className="my-donations-info">
+                                                <p className="my-donations-target">
+                                                    {don.projectTitle
+                                                        ? <><strong>{don.projectTitle}</strong><span className="my-donations-type">Проект</span></>
+                                                        : <><strong>{don.creatorName ?? 'Автор'}</strong><span className="my-donations-type">Автор</span></>
+                                                    }
+                                                </p>
+                                                {don.rewardName && (
+                                                    <p className="my-donations-reward">Винагорода: {don.rewardName}</p>
+                                                )}
+                                                <p className="my-donations-date">
+                                                    {don.createdAt ? new Date(don.createdAt).toLocaleDateString('uk-UA', {
+                                                        day: '2-digit', month: 'short', year: 'numeric'
+                                                    }) : ''}
+                                                </p>
+                                            </div>
+                                            <div className="my-donations-amount">
+                                                ₴{don.amount}
+                                            </div>
+                                            <div className={`my-donations-status my-donations-status--${(don.paymentStatus ?? '').toLowerCase()}`}>
+                                                {(don.paymentStatus === 'SUCCESS' || don.paymentStatus === 'APPROVED') ? 'Успішно'
+                                                    : don.paymentStatus === 'PENDING' ? 'Обробка'
+                                                    : (don.paymentStatus === 'FAILED' || don.paymentStatus === 'DECLINED') ? 'Помилка'
+                                                    : don.paymentStatus ?? ''}
+                                            </div>
                                         </div>
-                                        <div className="my-donations-info">
-                                            <p className="my-donations-target">
-                                                {don.projectTitle
-                                                    ? <><strong>{don.projectTitle}</strong><span className="my-donations-type">Проект</span></>
-                                                    : <><strong>{don.creatorName ?? 'Автор'}</strong><span className="my-donations-type">Автор</span></>
-                                                }
-                                            </p>
-                                            {don.rewardName && (
-                                                <p className="my-donations-reward">Винагорода: {don.rewardName}</p>
-                                            )}
-                                            <p className="my-donations-date">
-                                                {don.createdAt ? new Date(don.createdAt).toLocaleDateString('uk-UA', {
-                                                    day: '2-digit', month: 'short', year: 'numeric'
-                                                }) : ''}
-                                            </p>
+                                    ))}
+                                </div>
+                            )
+                        )}
+
+                        {donationsSubTab === 'received' && (
+                            receivedDonations.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Вам ще не надходило жодного донату.</p>
+                                </div>
+                            ) : (
+                                <div className="my-donations-list">
+                                    {receivedDonations.map((don, idx) => (
+                                        <div key={don.donationId ?? idx} className="my-donations-card">
+                                            <div className="my-donations-icon my-donations-icon--received">
+                                                {don.projectTitle ? 'П' : '₴'}
+                                            </div>
+                                            <div className="my-donations-info">
+                                                <p className="my-donations-target">
+                                                    <strong>{don.donorName ?? 'Анонім'}</strong>
+                                                    {don.projectTitle
+                                                        ? <span className="my-donations-type">Проект: {don.projectTitle}</span>
+                                                        : <span className="my-donations-type">Прямий донат</span>
+                                                    }
+                                                </p>
+                                                {don.rewardName && (
+                                                    <p className="my-donations-reward">Винагорода: {don.rewardName}</p>
+                                                )}
+                                                <p className="my-donations-date">
+                                                    {don.createdAt ? new Date(don.createdAt).toLocaleDateString('uk-UA', {
+                                                        day: '2-digit', month: 'short', year: 'numeric'
+                                                    }) : ''}
+                                                </p>
+                                            </div>
+                                            <div className="my-donations-amount my-donations-amount--received">
+                                                +₴{don.amount}
+                                            </div>
+                                            <div className={`my-donations-status my-donations-status--${(don.paymentStatus ?? '').toLowerCase()}`}>
+                                                {(don.paymentStatus === 'SUCCESS' || don.paymentStatus === 'APPROVED') ? 'Успішно'
+                                                    : don.paymentStatus === 'PENDING' ? 'Обробка'
+                                                    : (don.paymentStatus === 'FAILED' || don.paymentStatus === 'DECLINED') ? 'Помилка'
+                                                    : don.paymentStatus ?? ''}
+                                            </div>
                                         </div>
-                                        <div className="my-donations-amount">
-                                            ₴{don.amount}
-                                        </div>
-                                        <div className={`my-donations-status my-donations-status--${(don.paymentStatus ?? '').toLowerCase()}`}>
-                                            {(don.paymentStatus === 'SUCCESS' || don.paymentStatus === 'APPROVED') ? 'Успішно'
-                                                : don.paymentStatus === 'PENDING' ? 'Обробка'
-                                                : (don.paymentStatus === 'FAILED' || don.paymentStatus === 'DECLINED') ? 'Помилка'
-                                                : don.paymentStatus ?? ''}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )
                         )}
                     </div>
                 )}

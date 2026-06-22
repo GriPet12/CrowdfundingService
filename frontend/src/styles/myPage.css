@@ -942,6 +942,39 @@
     gap: 10px;
 }
 
+.my-donations-subtabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.my-donations-subtab {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    color: #555;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.my-donations-subtab:hover { border-color: #bbb; color: #222; }
+.my-donations-subtab.active {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+
+.my-donations-icon--received {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.my-donations-amount--received {
+    color: #2e7d32;
+}
+
 .my-donations-card {
     display: flex;
     align-items: center;

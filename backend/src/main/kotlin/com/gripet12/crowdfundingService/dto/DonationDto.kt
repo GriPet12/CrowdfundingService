@@ -7,8 +7,10 @@ data class DonationDto(
     val donationId: Long?,
     val projectTitle: String?,
     val creatorName: String?,
+    val donorName: String? = null,
     val rewardName: String?,
     val amount: BigDecimal,
     val paymentStatus: String?,
-    val createdAt: Timestamp?
+    val createdAt: Timestamp?,
+    val anonymous: Boolean = false
 )
