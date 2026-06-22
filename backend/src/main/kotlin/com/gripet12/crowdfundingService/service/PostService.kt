@@ -12,13 +12,17 @@ import com.gripet12.crowdfundingService.repository.PostRepository
 import com.gripet12.crowdfundingService.repository.SubscriptionRepository
 import com.gripet12.crowdfundingService.repository.SubscriptionTierRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
+import jakarta.persistence.EntityManager
 import org.springframework.context.annotation.Lazy
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class PostService(
+    private val jdbcTemplate: JdbcTemplate,
+    private val entityManager: EntityManager,
     private val postRepository: PostRepository,
     private val subscriptionTierRepository: SubscriptionTierRepository,
     private val fileRepository: FileRepository,
@@ -63,7 +67,16 @@ class PostService(
     fun createPost(dto: CreatePostDto): PostResponseDto {
         val authorId = currentUserId()
         val tier = dto.requiredTierId?.let { subscriptionTierRepository.findByTierId(it) }
-        val files = fileRepository.findAllById(dto.mediaIds).toHashSet()
+        val mediaIds = dto.mediaIds.distinct()
+        val files = if (mediaIds.isEmpty()) {
+            emptySet()
+        } else {
+            val loaded = fileRepository.findAllById(mediaIds).toHashSet()
+            if (loaded.size != mediaIds.size) {
+                throw IllegalArgumentException("Не вдалося знайти прикріплені файли. Спробуйте завантажити їх ще раз.")
+            }
+            loaded
+        }
 
         val post = Post(
             postId = 0,
@@ -76,7 +89,22 @@ class PostService(
             content = files
         )
         val saved = postRepository.save(post)
-        return saved.toResponse(authorId, authorId)  
+        if (mediaIds.isNotEmpty()) {
+            linkFilesToPost(saved.postId, mediaIds)
+        }
+        postRepository.flush()
+        entityManager.clear()
+        val reloaded = postRepository.findByMasterIdIncludingBanned(authorId)
+            .firstOrNull { it.postId == saved.postId }
+            ?: saved
+        return reloaded.toResponse(authorId, authorId)
+    }
+
+    private fun linkFilesToPost(postId: Long, mediaIds: List<Long>) {
+        val sql = "UPDATE files SET post_id = ? WHERE id IN (${mediaIds.joinToString(",") { "?" }})"
+        val args = mutableListOf<Any>(postId)
+        args.addAll(mediaIds)
+        jdbcTemplate.update(sql, *args.toTypedArray())
     }
 
     @Transactional

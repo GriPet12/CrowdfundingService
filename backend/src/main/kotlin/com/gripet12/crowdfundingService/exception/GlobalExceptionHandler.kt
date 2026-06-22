@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 import java.time.LocalDateTime
 import java.util.*
 
@@ -79,6 +80,16 @@ class GlobalExceptionHandler {
             message = ex.message ?: "Invalid state"
         )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleMaxUploadSize(ex: MaxUploadSizeExceededException): ResponseEntity<ErrorResponse> {
+        val errorResponse = ErrorResponse(
+            status = HttpStatus.PAYLOAD_TOO_LARGE.value(),
+            error = "Payload Too Large",
+            message = "Файл занадто великий. Максимальний розмір — 100 МБ"
+        )
+        return ResponseEntity(errorResponse, HttpStatus.PAYLOAD_TOO_LARGE)
     }
 
     @ExceptionHandler(IllegalArgumentException::class)

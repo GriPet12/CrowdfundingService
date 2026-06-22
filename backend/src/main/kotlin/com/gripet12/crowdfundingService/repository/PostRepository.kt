@@ -13,7 +13,7 @@ interface PostRepository : JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.requiredTier LEFT JOIN FETCH p.content WHERE p.masterId = :masterId AND p.masterType = 'USER' AND p.banned = false ORDER BY p.postId DESC")
     fun findByMasterIdOrderByPostIdDesc(masterId: Long): List<Post>
 
-    @Query("SELECT p FROM Post p LEFT JOIN FETCH p.requiredTier WHERE p.masterId = :masterId AND p.masterType = 'USER' ORDER BY p.postId DESC")
+    @Query("SELECT p FROM Post p LEFT JOIN FETCH p.requiredTier LEFT JOIN FETCH p.content WHERE p.masterId = :masterId AND p.masterType = 'USER' ORDER BY p.postId DESC")
     fun findByMasterIdIncludingBanned(masterId: Long): List<Post>
 
     @Query("SELECT p FROM Post p WHERE p.masterId = :masterId AND p.masterType = 'USER'")

@@ -189,6 +189,7 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
                     </svg>
                     Прикріпити файл
                 </button>
+                <span className="my-page-editor-attach-hint">Відео до 100 МБ</span>
                 <input
                     ref={fileRef}
                     type="file"
@@ -588,10 +589,23 @@ const MyPage = () => {
                 headers: { 'Authorization': `Bearer ${currentUser.token}` },
                 body: fd,
             });
-            if (res.ok) {
-                const data = await res.json();
-                uploadedIds.push(data.id ?? data.fileId ?? null);
+            if (!res.ok) {
+                const textBody = await res.text().catch(() => '');
+                let message = `Не вдалося завантажити «${file.name}»`;
+                try {
+                    const data = JSON.parse(textBody);
+                    if (data.message) message = data.message;
+                } catch {
+                    if (textBody) message = textBody;
+                }
+                throw new Error(message);
             }
+            const data = await res.json();
+            uploadedIds.push(data.id ?? data.fileId ?? null);
+        }
+
+        if (files.length > 0 && uploadedIds.filter(Boolean).length !== files.length) {
+            throw new Error('Не всі файли завантажено. Спробуйте ще раз.');
         }
 
         const payload = {

@@ -567,6 +567,11 @@
 }
 .my-page-editor-attach-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
 
+.my-page-editor-attach-hint {
+    font-size: 12px;
+    color: #999;
+}
+
 .my-page-editor-publish-btn {
     margin-left: auto;
     background-color: #1a1a1a;

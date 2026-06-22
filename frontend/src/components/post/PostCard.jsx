@@ -17,8 +17,10 @@ const getExt = (fileName) => (fileName ?? '').split('.').pop().toLowerCase();
 
 const getIcon = (fileName) => EXT_ICONS[getExt(fileName)] ?? null;
 
+const VIDEO_EXTS = new Set(['mp4', 'm4v', 'mov', 'webm', 'avi', 'mkv', 'mpeg', 'mpg']);
+
 const isImage = (f) => f.category === 'PHOTO' || f.mimeType?.startsWith('image/');
-const isVideo = (f) => f.category === 'VIDEO' || f.mimeType?.startsWith('video/');
+const isVideo = (f) => f.category === 'VIDEO' || f.mimeType?.startsWith('video/') || VIDEO_EXTS.has(getExt(f.originalFileName));
 const isAudio = (f) => f.category === 'AUDIO' || f.mimeType?.startsWith('audio/');
 const isOther = (f) => !isImage(f) && !isVideo(f) && !isAudio(f);
 
@@ -169,8 +171,9 @@ const MediaCarousel = ({ slides }) => {
                         key={cur.id}
                         className="post-carousel-media"
                         controls
+                        playsInline
+                        preload="metadata"
                         src={`/api/files/${cur.id}`}
-                        muted
                     />
                 ) : (
                     <img
