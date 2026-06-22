@@ -44,14 +44,14 @@ class SubscriptionService(
     @Transactional(readOnly = true)
     fun getMySubscriptions(): List<SubscriptionDto> {
         val userId = currentUserId()
-        return subscriptionRepository.findAllPaidBySubscriberUserId(userId)
+        return subscriptionRepository.findAllBySubscriberUserId(userId)
             .map { it.toDto() }
     }
 
     @Transactional(readOnly = true)
     fun getReceivedSubscriptions(): List<SubscriptionDto> {
         val userId = currentUserId()
-        return subscriptionRepository.findAllPaidByCreatorUserId(userId)
+        return subscriptionRepository.findAllByCreatorUserId(userId)
             .map { it.toReceivedDto() }
     }
 

@@ -20,22 +20,13 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
     @Query("""
         SELECT s FROM Subscription s
-        JOIN FETCH s.creator c LEFT JOIN FETCH c.image
-        LEFT JOIN FETCH s.subscriptionTier
-        WHERE s.subscrber.userId = :userId AND s.grantType = 'MANUAL'
-        ORDER BY s.subscriptionId DESC
-    """)
-    fun findAllPaidBySubscriberUserId(@Param("userId") userId: Long): List<Subscription>
-
-    @Query("""
-        SELECT s FROM Subscription s
         JOIN FETCH s.subscrber sub LEFT JOIN FETCH sub.image
         JOIN FETCH s.creator c LEFT JOIN FETCH c.image
         LEFT JOIN FETCH s.subscriptionTier
-        WHERE s.creator.userId = :creatorId AND s.grantType = 'MANUAL'
+        WHERE s.creator.userId = :creatorId
         ORDER BY s.subscriptionId DESC
     """)
-    fun findAllPaidByCreatorUserId(@Param("creatorId") creatorId: Long): List<Subscription>
+    fun findAllByCreatorUserId(@Param("creatorId") creatorId: Long): List<Subscription>
 
     fun findByPayment(payment: Payment): Subscription?
 

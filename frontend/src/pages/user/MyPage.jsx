@@ -1441,7 +1441,7 @@ const MyPage = () => {
                         {subscriptionsSubTab === 'sent' && (
                             mySubscriptions.length === 0 ? (
                                 <div className="my-page-empty">
-                                    <p>У вас ще немає оформлених платних підписок.</p>
+                                    <p>У вас ще немає підписок.</p>
                                 </div>
                             ) : (
                                 <div className="my-subs-list">
@@ -1467,6 +1467,9 @@ const MyPage = () => {
                                                     <span className="my-subs-tier-badge">Рівень {sub.tierLevel}</span>
                                                     {sub.tierName}
                                                 </p>
+                                                {sub.grantType === 'AUTO' && (
+                                                    <span className="my-subs-grant-badge my-subs-grant-badge--auto">За донатом</span>
+                                                )}
                                                 {sub.expiresAt && (
                                                     <p className="my-subs-expiry">
                                                         Діє до: <strong>{new Date(sub.expiresAt).toLocaleDateString('uk-UA')}</strong>
@@ -1495,7 +1498,7 @@ const MyPage = () => {
                         {subscriptionsSubTab === 'received' && (
                             receivedSubscriptions.length === 0 ? (
                                 <div className="my-page-empty">
-                                    <p>На вас ще ніхто не оформив платну підписку.</p>
+                                    <p>У вас ще немає підписників.</p>
                                 </div>
                             ) : (
                                 <div className="my-subs-list">
@@ -1521,6 +1524,12 @@ const MyPage = () => {
                                                     <span className="my-subs-tier-badge">Рівень {sub.tierLevel}</span>
                                                     {sub.tierName}
                                                 </p>
+                                                {sub.grantType === 'AUTO' && (
+                                                    <span className="my-subs-grant-badge my-subs-grant-badge--auto">За донатом</span>
+                                                )}
+                                                {sub.grantType === 'MANUAL' && (
+                                                    <span className="my-subs-grant-badge">Платна</span>
+                                                )}
                                                 {sub.expiresAt && (
                                                     <p className="my-subs-expiry">
                                                         Діє до: <strong>{new Date(sub.expiresAt).toLocaleDateString('uk-UA')}</strong>
