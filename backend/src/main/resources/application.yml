@@ -46,7 +46,7 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID:change-me}
             client-secret: ${GOOGLE_CLIENT_SECRET:change-me}
             scope: email, profile
-            redirect-uri: "{baseUrl}/api/login/oauth2/code/{registrationId}"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
 
 jwt:
   secret: ${JWT_SECRET:verySecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm}
@@ -66,3 +66,15 @@ stripe:
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_changeme}
   return-url: ${STRIPE_RETURN_URL:http://localhost:5173}
   currency: ${STRIPE_CURRENCY:uah}
+
+---
+spring:
+  config:
+    activate:
+      on-cloud-platform: heroku
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "https://api.crowd-funding.app/api/login/oauth2/code/{registrationId}"

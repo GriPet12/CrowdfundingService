@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AuthService from './AuthService.jsx';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.crowd-funding.app/';
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://api.crowd-funding.app').replace(/\/$/, '');
 const FACEBOOK_ENABLED = false;
 
 const RESEND_COOLDOWN = 60;
@@ -63,7 +63,7 @@ const LoginUser = ({ onSwitchToRegister }) => {
     };
 
     const handleSocialLogin = (provider) => {
-        window.location.href = `${BACKEND_URL}/api/login/oauth2/code/${provider}`;
+        window.location.href = `${BACKEND_URL}/api/oauth2/authorization/${provider}`;
     };
 
     return (

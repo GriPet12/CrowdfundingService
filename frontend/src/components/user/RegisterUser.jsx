@@ -16,7 +16,7 @@ const getPasswordStrength = (pw) => {
     return { label: 'Надійний', color: '#43a047' };
 };
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8081';
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8081').replace(/\/$/, '');
 const FACEBOOK_ENABLED = false; // ← встановіть true після отримання Facebook App ID/Secret
 
 const RESEND_COOLDOWN = 60;
