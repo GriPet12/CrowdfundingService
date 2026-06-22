@@ -338,18 +338,28 @@ class AdminService(
             from = from,
             to = to,
             pageable = pageable
-        ).map { row ->
-            TransactionDto(
-                id        = row[0] as? Long,
-                type      = "DONATION",
-                fromUser  = row[1] as? String ?: "Анонім",
-                toUser    = (row[2] as? String) ?: (row[3] as? String),
-                amount    = row[4] as BigDecimal,
-                status    = (row[5] as? String) ?: "PENDING",
-                createdAt = (row[6] as? java.sql.Timestamp)?.toLocalDateTime()
-            )
-        }
+        ).map { row -> mapDonationRow(row) }
     }
+
+    @Transactional(readOnly = true)
+    fun getProjectTransactions(projectId: Long, page: Int, size: Int): Page<TransactionDto> {
+        if (!projectRepository.existsById(projectId)) {
+            throw NoSuchElementException("Project not found")
+        }
+        val pageable = PageRequest.of(page, size)
+        return donateRepository.findByProjectIdForAdmin(projectId, pageable).map { row -> mapDonationRow(row) }
+    }
+
+    private fun mapDonationRow(row: Array<Any?>): TransactionDto =
+        TransactionDto(
+            id        = row[0] as? Long,
+            type      = "DONATION",
+            fromUser  = row[1] as? String ?: "Анонім",
+            toUser    = (row[2] as? String) ?: (row[3] as? String),
+            amount    = row[4] as BigDecimal,
+            status    = (row[5] as? String) ?: "PENDING",
+            createdAt = (row[6] as? java.sql.Timestamp)?.toLocalDateTime()
+        )
 
     @Transactional(readOnly = true)
     fun getWithdrawals(

@@ -53,6 +53,34 @@ interface DonateRepository : JpaRepository<Donate, Long> {
         @Param("to") to: LocalDate?,
         pageable: Pageable
     ): Page<Array<Any?>>
+
+    @Query(value = """
+        SELECT
+            d.donate_id,
+            COALESCE(u.username, 'Анонім') AS from_user,
+            p.title                         AS project_title,
+            c.username                      AS creator_name,
+            d.amount,
+            pay.status,
+            d.create_at
+        FROM donate d
+        LEFT JOIN payments  pay ON pay.payment_id  = d.payment_payment_id
+        LEFT JOIN projects  p   ON p.project_id    = d.project_project_id
+        LEFT JOIN users     u   ON u.user_id        = d.donor_user_id
+        LEFT JOIN users     c   ON c.user_id        = p.creator_id
+        WHERE d.project_project_id = :projectId
+        ORDER BY d.donate_id DESC
+    """,
+    countQuery = """
+        SELECT COUNT(d.donate_id)
+        FROM donate d
+        WHERE d.project_project_id = :projectId
+    """,
+    nativeQuery = true)
+    fun findByProjectIdForAdmin(
+        @Param("projectId") projectId: Long,
+        pageable: Pageable
+    ): Page<Array<Any?>>
     fun save(donate: Donate): Donate
     fun findByPayment(payment: Payment): Donate?
 

@@ -276,6 +276,103 @@ const UsersTab = ({ token }) => {
     );
 };
 
+const ProjectTransactionsModal = ({ project, token, onClose }) => {
+    const [txs, setTxs] = useState([]);
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
+
+    const fetchTxs = useCallback(async (pg = 0) => {
+        if (!project?.projectId) return;
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({ page: pg, size: 20 });
+            const res = await fetch(
+                `/api/admin/projects/${project.projectId}/transactions?${params}`,
+                { headers: authHeaders(token) }
+            );
+            if (res.ok) {
+                const data = await res.json();
+                setTxs(data.content ?? []);
+                setTotalPages(data.totalPages ?? 1);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [project?.projectId, token]);
+
+    useEffect(() => {
+        setPage(0);
+        fetchTxs(0);
+    }, [fetchTxs]);
+
+    const statusBadge = (s) => {
+        if (s === 'SUCCESS' || s === 'PAID' || s === 'APPROVED' || s === 'COMPLETED') {
+            return <span className="badge badge-done">{s === 'COMPLETED' ? 'Виконано' : s}</span>;
+        }
+        if (s === 'FAILED' || s === 'REJECTED') return <span className="badge badge-failed">{s}</span>;
+        if (s === 'PENDING') return <span className="badge badge-pending">Очікує</span>;
+        return <span className="badge badge-pending">{s}</span>;
+    };
+
+    if (!project) return null;
+
+    return (
+        <div className="admin-project-tx-overlay" onClick={onClose}>
+            <div className="admin-project-tx-modal" onClick={e => e.stopPropagation()}>
+                <div className="admin-project-tx-header">
+                    <div>
+                        <h3>Транзакції проєкту</h3>
+                        <p className="admin-project-tx-subtitle">
+                            #{project.projectId} · {project.title} · {project.creatorName}
+                        </p>
+                    </div>
+                    <button type="button" className="admin-project-tx-close" onClick={onClose} aria-label="Закрити">✕</button>
+                </div>
+
+                {loading ? (
+                    <div className="admin-loading">Завантаження…</div>
+                ) : txs.length === 0 ? (
+                    <div className="admin-empty">Донатів для цього проєкту ще немає</div>
+                ) : (
+                    <div className="admin-table-wrap admin-project-tx-table-wrap">
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Від</th>
+                                    <th>Кому</th>
+                                    <th>Сума</th>
+                                    <th>Статус</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {txs.map(tx => (
+                                    <tr key={tx.id}>
+                                        <td style={{ color: '#9ca3af', fontSize: 12 }}>{tx.id}</td>
+                                        <td>{tx.fromUser ?? '—'}</td>
+                                        <td>{tx.toUser ?? '—'}</td>
+                                        <td style={{ fontWeight: 700, color: '#059669' }}>{fmtMoney(tx.amount)}</td>
+                                        <td>{statusBadge(tx.status)}</td>
+                                        <td style={{ color: '#9ca3af', fontSize: 12 }}>{fmtDateTime(tx.createdAt)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                <Pagination
+                    page={page}
+                    total={totalPages}
+                    onChange={(p) => { setPage(p); fetchTxs(p); }}
+                />
+            </div>
+        </div>
+    );
+};
+
 const ProjectsTab = ({ token }) => {
     const [projects, setProjects]         = useState([]);
     const [search, setSearch]             = useState('');
@@ -289,6 +386,7 @@ const ProjectsTab = ({ token }) => {
     const [confirmModal, setConfirmModal] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [toast, setToast]               = useState('');
+    const [selectedProject, setSelectedProject] = useState(null);
     const dSearch = useDebounce(search);
 
     const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
@@ -401,7 +499,11 @@ const ProjectsTab = ({ token }) => {
                         </thead>
                         <tbody>
                             {projects.map(p => (
-                                <tr key={p.projectId}>
+                                <tr
+                                    key={p.projectId}
+                                    className="admin-table-row-clickable"
+                                    onClick={() => setSelectedProject(p)}
+                                >
                                     <td style={{color:'#9ca3af',fontSize:12}}>{p.projectId}</td>
                                     <td><strong>{p.title}</strong></td>
                                     <td style={{color:'#6b7280'}}>{p.creatorName}</td>
@@ -413,7 +515,7 @@ const ProjectsTab = ({ token }) => {
                                             {p.banned ? 'Заблокований' : 'Активний'}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td onClick={e => e.stopPropagation()}>
                                         <div className="td-actions">
                                             {p.banned ? (
                                                 <button className="btn-success" disabled={actionLoading}
@@ -443,6 +545,13 @@ const ProjectsTab = ({ token }) => {
             )}
 
             <Pagination page={page} total={totalPages} onChange={handlePage} />
+            {selectedProject && (
+                <ProjectTransactionsModal
+                    project={selectedProject}
+                    token={token}
+                    onClose={() => setSelectedProject(null)}
+                />
+            )}
             {confirmModal && (
                 <ConfirmModal message={confirmModal.msg} confirmLabel={confirmModal.confirmLabel}
                     cancelLabel="Скасувати" onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(null)} />

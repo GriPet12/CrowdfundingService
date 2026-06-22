@@ -113,6 +113,14 @@ class AdminController(
         )
     }
 
+    @GetMapping("/projects/{id}/transactions")
+    fun getProjectTransactions(
+        @PathVariable id: Long,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponseDto<TransactionDto>> =
+        ResponseEntity.ok(adminService.getProjectTransactions(id, page, size).toDto())
+
     @PostMapping("/projects/{id}/ban")
     fun banProject(@PathVariable id: Long): ResponseEntity<Void> {
         adminService.banProject(id)
