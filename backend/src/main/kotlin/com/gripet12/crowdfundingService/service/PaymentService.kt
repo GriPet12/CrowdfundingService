@@ -254,8 +254,8 @@ class PaymentService(
                 projectRepository.increaseCollectedAmount(donate.project.projectId!!, donate.amount)
                 log.info("Increased collectedAmount for project ${donate.project.projectId} by ${donate.amount}")
             }
-            val donorId   = donate.donor?.userId
-            val creatorId = donate.project?.creator?.userId
+            val donorId = donate.donor?.userId
+            val creatorId = donate.project?.creator?.userId ?: donate.creator?.userId
             if (donorId != null && creatorId != null) {
                 subscriptionService.checkAndGrantAutoSubscription(donorId, creatorId)
             }

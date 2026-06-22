@@ -33,9 +33,10 @@ class SubscriptionService(
     }
 
 
-    @Transactional(readOnly = true)
+    @Transactional
     fun getSubscriptionStatusForCreator(creatorId: Long): List<SubscriptionDto> {
         val userId = currentUserId()
+        checkAndGrantAutoSubscription(userId, creatorId)
         return subscriptionRepository.findActiveSubscriptionsBySubscriberAndCreator(userId, creatorId)
             .map { it.toDto() }
     }
@@ -57,9 +58,9 @@ class SubscriptionService(
         log.info("Auto-sub check: donor=$donorId creator=$creatorId totalDonated=$totalDonated")
 
         val eligibleTier = subscriptionTierRepository.findByCreatorId(creatorId)
-            .filter { it.amount <= totalDonated.toLong() }
+            .filter { BigDecimal.valueOf(it.amount) <= totalDonated }
             .maxByOrNull { it.level }
-            ?: return 
+            ?: return
 
         val subscriber = userRepository.getReferenceById(donorId)
         val creator = userRepository.getReferenceById(creatorId)

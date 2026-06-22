@@ -61,10 +61,12 @@ interface DonateRepository : JpaRepository<Donate, Long> {
         FROM Donate d
         JOIN d.payment p
         WHERE d.donor.userId = :donorId
-          AND d.project IS NOT NULL
-          AND d.project.creator.userId = :creatorId
           AND p.status = 'APPROVED'
           AND d.createAt >= :since
+          AND (
+            (d.project IS NOT NULL AND d.project.creator.userId = :creatorId)
+            OR (d.project IS NULL AND d.creator.userId = :creatorId)
+          )
     """)
     fun sumApprovedDonationsByDonorToCreatorSince(
         donorId: Long,
