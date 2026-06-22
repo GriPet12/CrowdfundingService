@@ -14,6 +14,7 @@ import com.gripet12.crowdfundingService.repository.SubscriptionRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
 import com.gripet12.crowdfundingService.repository.WithdrawalRepository
 import com.stripe.Stripe
+import com.stripe.exception.StripeException
 import com.stripe.model.Account
 import com.stripe.model.Event
 import com.stripe.param.AccountCreateParams
@@ -42,7 +43,8 @@ class BalanceService(
     @Value("\${stripe.return-url:http://localhost:5173}") private val returnUrl: String,
     @Value("\${platform.fee-percent:5}") private val platformFeePercent: Int,
     @Value("\${platform.min-withdrawal:100}") private val minWithdrawalAmount: BigDecimal,
-    @Value("\${platform.connect-country:UA}") private val connectCountry: String
+    @Value("\${platform.connect-country:UA}") private val connectCountry: String,
+    @Value("\${platform.connect-enabled:false}") private val connectEnabled: Boolean
 ) {
     private val log = LoggerFactory.getLogger(BalanceService::class.java)
     private val currency = stripeCurrency.lowercase()
@@ -158,7 +160,8 @@ class BalanceService(
             platformFeePercent = platformFeePercent,
             minWithdrawal = minWithdrawalAmount,
             stripeConnected = !user.stripeConnectAccountId.isNullOrBlank(),
-            stripePayoutsEnabled = user.stripePayoutsEnabled
+            stripePayoutsEnabled = user.stripePayoutsEnabled,
+            connectAvailable = connectEnabled
         )
     }
 
@@ -174,49 +177,72 @@ class BalanceService(
         return ConnectStatusDto(
             connected = !user.stripeConnectAccountId.isNullOrBlank(),
             payoutsEnabled = user.stripePayoutsEnabled,
-            accountId = user.stripeConnectAccountId
+            accountId = user.stripeConnectAccountId,
+            connectAvailable = connectEnabled
         )
     }
 
     @Transactional
     fun createConnectOnboarding(): ConnectOnboardingDto {
+        if (!connectEnabled) {
+            throw IllegalArgumentException(
+                "Автоматичні виплати через Stripe Connect ще не налаштовані. " +
+                    "Створіть заявку на виведення нижче — адміністратор обробить її вручну."
+            )
+        }
+
         val user = currentUser()
         if (user.banned) throw IllegalStateException("Заблокований акаунт не може підключати виплати")
 
-        val accountId = user.stripeConnectAccountId ?: run {
-            val account = Account.create(
-                AccountCreateParams.builder()
-                    .setType(AccountCreateParams.Type.EXPRESS)
-                    .setCountry(connectCountry)
-                    .setEmail(user.email)
-                    .setCapabilities(
-                        AccountCreateParams.Capabilities.builder()
-                            .setTransfers(
-                                AccountCreateParams.Capabilities.Transfers.builder()
-                                    .setRequested(true)
-                                    .build()
-                            )
-                            .build()
-                    )
-                    .putMetadata("userId", user.userId.toString())
+        return try {
+            val accountId = user.stripeConnectAccountId ?: run {
+                val account = Account.create(
+                    AccountCreateParams.builder()
+                        .setType(AccountCreateParams.Type.EXPRESS)
+                        .setCountry(connectCountry)
+                        .setEmail(user.email)
+                        .setCapabilities(
+                            AccountCreateParams.Capabilities.builder()
+                                .setTransfers(
+                                    AccountCreateParams.Capabilities.Transfers.builder()
+                                        .setRequested(true)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .putMetadata("userId", user.userId.toString())
+                        .build()
+                )
+                user.stripeConnectAccountId = account.id
+                userRepository.save(user)
+                account.id
+            }
+
+            refreshConnectStatus(user)
+
+            val link = com.stripe.model.AccountLink.create(
+                AccountLinkCreateParams.builder()
+                    .setAccount(accountId)
+                    .setRefreshUrl("$returnUrl/me?tab=balance&connect=refresh")
+                    .setReturnUrl("$returnUrl/me?tab=balance&connect=done")
+                    .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
                     .build()
             )
-            user.stripeConnectAccountId = account.id
-            userRepository.save(user)
-            account.id
+            ConnectOnboardingDto(url = link.url)
+        } catch (ex: StripeException) {
+            log.error("Stripe Connect onboarding failed: ${ex.message}", ex)
+            throw IllegalArgumentException(connectErrorMessage(ex))
         }
+    }
 
-        refreshConnectStatus(user)
-
-        val link = com.stripe.model.AccountLink.create(
-            AccountLinkCreateParams.builder()
-                .setAccount(accountId)
-                .setRefreshUrl("$returnUrl/me?tab=balance&connect=refresh")
-                .setReturnUrl("$returnUrl/me?tab=balance&connect=done")
-                .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
-                .build()
-        )
-        return ConnectOnboardingDto(url = link.url)
+    private fun connectErrorMessage(ex: StripeException): String {
+        val msg = ex.message ?: ""
+        if (msg.contains("signed up for Connect", ignoreCase = true)) {
+            return "Stripe Connect не активовано в акаунті платформи. " +
+                "Адміністратор має увімкнути Connect у Stripe Dashboard. " +
+                "Поки що подайте заявку на виведення — її оброблять вручну."
+        }
+        return ex.userMessage ?: "Не вдалося підключити Stripe: $msg"
     }
 
     @Transactional
@@ -248,14 +274,51 @@ class BalanceService(
         )
 
         val accountId = user.stripeConnectAccountId
-        if (accountId.isNullOrBlank() || !user.stripePayoutsEnabled) {
+        if (!connectEnabled || accountId.isNullOrBlank() || !user.stripePayoutsEnabled) {
             withdrawal.status = "PENDING"
-            withdrawal.failureReason = "Підключіть Stripe для автоматичного виведення"
             withdrawalRepository.save(withdrawal)
+            log.info("Manual withdrawal queued: id=${withdrawal.withdrawalId} userId=${user.userId} amount=$amount")
             return withdrawal.toDto()
         }
 
         return processStripeTransfer(withdrawal, user, accountId)
+    }
+
+    @Transactional
+    fun completeWithdrawalAdmin(withdrawalId: Long) {
+        val withdrawal = withdrawalRepository.findById(withdrawalId)
+            .orElseThrow { IllegalArgumentException("Заявку не знайдено") }
+        if (withdrawal.status != "PENDING") {
+            throw IllegalStateException("Заявку в статусі ${withdrawal.status} не можна підтвердити")
+        }
+        withdrawal.status = "COMPLETED"
+        withdrawal.processedAt = Timestamp(System.currentTimeMillis())
+        withdrawalRepository.save(withdrawal)
+        log.info("Withdrawal completed by admin: id=$withdrawalId")
+    }
+
+    @Transactional
+    fun rejectWithdrawalAdmin(withdrawalId: Long, reason: String?) {
+        val withdrawal = withdrawalRepository.findById(withdrawalId)
+            .orElseThrow { IllegalArgumentException("Заявку не знайдено") }
+        if (withdrawal.status != "PENDING") {
+            throw IllegalStateException("Заявку в статусі ${withdrawal.status} не можна відхилити")
+        }
+        withdrawal.status = "REJECTED"
+        withdrawal.failureReason = reason?.takeIf { it.isNotBlank() } ?: "Відхилено адміністратором"
+        withdrawal.processedAt = Timestamp(System.currentTimeMillis())
+        withdrawalRepository.save(withdrawal)
+
+        balanceEntryRepository.save(
+            BalanceEntry(
+                user = withdrawal.user,
+                amount = withdrawal.amount,
+                entryType = "ADJUSTMENT",
+                idempotencyKey = "withdrawal-reject-${withdrawal.withdrawalId}",
+                description = "Повернення коштів після відхилення виведення #${withdrawal.withdrawalId}"
+            )
+        )
+        log.info("Withdrawal rejected by admin: id=$withdrawalId")
     }
 
     private fun processStripeTransfer(withdrawal: Withdrawal, user: User, accountId: String): WithdrawalDto {

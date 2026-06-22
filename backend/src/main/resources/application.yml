@@ -72,6 +72,7 @@ platform:
   fee-percent: ${PLATFORM_FEE_PERCENT:5}
   min-withdrawal: ${PLATFORM_MIN_WITHDRAWAL:100}
   connect-country: ${STRIPE_CONNECT_COUNTRY:UA}
+  connect-enabled: ${STRIPE_CONNECT_ENABLED:false}
 
 ---
 spring:

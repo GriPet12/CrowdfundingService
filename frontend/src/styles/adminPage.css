@@ -236,6 +236,39 @@
 .btn-danger:hover { background: #b91c1c; }
 .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
 
+.admin-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.btn-success-sm,
+.btn-danger-sm {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-success-sm {
+    background: #059669;
+    color: #fff;
+}
+
+.btn-success-sm:hover:not(:disabled) { background: #047857; }
+
+.btn-danger-sm {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn-danger-sm:hover:not(:disabled) { background: #fecaca; }
+
+.btn-success-sm:disabled,
+.btn-danger-sm:disabled { opacity: .5; cursor: not-allowed; }
+
 .btn-warn {
     padding: 6px 14px;
     background: #d97706;

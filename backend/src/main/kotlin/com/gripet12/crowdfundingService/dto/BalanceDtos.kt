@@ -10,7 +10,8 @@ data class BalanceSummaryDto(
     val platformFeePercent: Int,
     val minWithdrawal: BigDecimal,
     val stripeConnected: Boolean,
-    val stripePayoutsEnabled: Boolean
+    val stripePayoutsEnabled: Boolean,
+    val connectAvailable: Boolean
 )
 
 data class WithdrawalRequestDto(
@@ -34,5 +35,6 @@ data class ConnectOnboardingDto(
 data class ConnectStatusDto(
     val connected: Boolean,
     val payoutsEnabled: Boolean,
-    val accountId: String?
+    val accountId: String?,
+    val connectAvailable: Boolean
 )

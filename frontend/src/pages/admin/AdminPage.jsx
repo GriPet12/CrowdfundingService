@@ -759,6 +759,8 @@ const TransactionsTab = ({ token }) => {
     const [page, setPage]             = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading]       = useState(false);
+    const [actionLoading, setActionLoading] = useState(null);
+    const [toast, setToast] = useState('');
     const dSearch = useDebounce(search);
 
     const filtersRef = useRef({ type, search: dSearch, from, to });
@@ -791,6 +793,32 @@ const TransactionsTab = ({ token }) => {
     useEffect(() => { setPage(0); fetchTxs(0); }, [dSearch, type, from, to]); 
     const handlePage = (p) => { setPage(p); fetchTxs(p); };
 
+    const handleWithdrawalAction = async (id, action) => {
+        setActionLoading(id);
+        try {
+            const url = action === 'complete'
+                ? `/api/admin/withdrawals/${id}/complete`
+                : `/api/admin/withdrawals/${id}/reject`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+                body: action === 'reject' ? JSON.stringify({ reason: 'Відхилено адміністратором' }) : undefined,
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.message || 'Помилка операції');
+            }
+            setToast(action === 'complete' ? 'Виплату підтверджено' : 'Заявку відхилено, кошти повернуто');
+            fetchSummary();
+            fetchTxs(page);
+        } catch (err) {
+            setToast(err.message);
+        } finally {
+            setActionLoading(null);
+            setTimeout(() => setToast(''), 3000);
+        }
+    };
+
     const txBadge = (t) => {
         const map = {
             DONATION:    <span className="badge badge-donate">Донат</span>,
@@ -801,10 +829,15 @@ const TransactionsTab = ({ token }) => {
     };
 
     const statusBadge = (s) => {
-        if (s === 'SUCCESS' || s === 'PAID') return <span className="badge badge-done">{s}</span>;
-        if (s === 'FAILED')  return <span className="badge badge-failed">{s}</span>;
+        if (s === 'SUCCESS' || s === 'PAID' || s === 'APPROVED' || s === 'COMPLETED') {
+            return <span className="badge badge-done">{s === 'COMPLETED' ? 'Виконано' : s}</span>;
+        }
+        if (s === 'FAILED' || s === 'REJECTED') return <span className="badge badge-failed">{s}</span>;
+        if (s === 'PENDING') return <span className="badge badge-pending">Очікує</span>;
         return <span className="badge badge-pending">{s}</span>;
     };
+
+    const showActions = type === 'WITHDRAWAL' || txs.some(tx => tx.type === 'WITHDRAWAL' && tx.status === 'PENDING');
 
     return (
         <div>
@@ -868,6 +901,7 @@ const TransactionsTab = ({ token }) => {
                                 <th>Сума</th>
                                 <th>Статус</th>
                                 <th>Дата</th>
+                                {showActions && <th>Дії</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -880,6 +914,28 @@ const TransactionsTab = ({ token }) => {
                                     <td style={{fontWeight:700,color:'#059669'}}>{fmtMoney(tx.amount)}</td>
                                     <td>{statusBadge(tx.status)}</td>
                                     <td style={{color:'#9ca3af',fontSize:12}}>{fmtDateTime(tx.createdAt)}</td>
+                                    {showActions && (
+                                        <td>
+                                            {tx.type === 'WITHDRAWAL' && tx.status === 'PENDING' ? (
+                                                <div className="admin-row-actions">
+                                                    <button
+                                                        className="btn-success-sm"
+                                                        disabled={actionLoading === tx.id}
+                                                        onClick={() => handleWithdrawalAction(tx.id, 'complete')}
+                                                    >
+                                                        {actionLoading === tx.id ? '…' : 'Виплатити'}
+                                                    </button>
+                                                    <button
+                                                        className="btn-danger-sm"
+                                                        disabled={actionLoading === tx.id}
+                                                        onClick={() => handleWithdrawalAction(tx.id, 'reject')}
+                                                    >
+                                                        Відхилити
+                                                    </button>
+                                                </div>
+                                            ) : '—'}
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -887,6 +943,7 @@ const TransactionsTab = ({ token }) => {
                 </div>
             )}
             <Pagination page={page} total={totalPages} onChange={handlePage} />
+            {toast && <div className="admin-toast">{toast}</div>}
         </div>
     );
 };

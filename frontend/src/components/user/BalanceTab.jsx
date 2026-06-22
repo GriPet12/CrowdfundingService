@@ -30,6 +30,7 @@ const BalanceTab = ({ token }) => {
     const [success, setSuccess] = useState('');
 
     const headers = { Authorization: `Bearer ${token}` };
+    const connectAvailable = balance?.connectAvailable ?? connectStatus?.connectAvailable ?? false;
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -68,12 +69,9 @@ const BalanceTab = ({ token }) => {
                 method: 'POST',
                 headers,
             });
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                throw new Error(data.message || 'Не вдалося відкрити Stripe');
-            }
-            const { url } = await res.json();
-            window.location.href = url;
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'Не вдалося відкрити Stripe');
+            window.location.href = data.url;
         } catch (err) {
             setError(err.message);
         } finally {
@@ -103,7 +101,7 @@ const BalanceTab = ({ token }) => {
                 data.status === 'COMPLETED'
                     ? `Виведено ${fmtMoney(data.amount)} на ваш Stripe-акаунт`
                     : data.status === 'PENDING'
-                        ? `Заявку на ${fmtMoney(data.amount)} прийнято. ${data.failureReason || ''}`
+                        ? `Заявку на ${fmtMoney(data.amount)} прийнято. Адміністратор обробить виплату вручну.`
                         : `Заявку створено (${statusLabel(data.status)})`
             );
             setAmount('');
@@ -149,29 +147,43 @@ const BalanceTab = ({ token }) => {
                 </p>
             )}
 
-            <div className="balance-stripe-section">
-                <h4 className="balance-section-title">Виплати через Stripe</h4>
-                {connectStatus?.payoutsEnabled ? (
-                    <div className="balance-stripe-ready">
-                        <span className="balance-stripe-badge">✓ Stripe підключено</span>
-                        <span className="balance-stripe-hint">Виведення надходять на ваш банківський рахунок через Stripe</span>
-                    </div>
-                ) : (
-                    <div className="balance-stripe-setup">
-                        <p className="balance-stripe-hint">
-                            Підключіть Stripe, щоб автоматично отримувати виплати на картку або рахунок.
-                        </p>
-                        <button
-                            type="button"
-                            className="balance-connect-btn"
-                            onClick={handleConnect}
-                            disabled={connecting}
-                        >
-                            {connecting ? 'Підключення…' : 'Підключити Stripe'}
-                        </button>
-                    </div>
-                )}
-            </div>
+            {connectAvailable && (
+                <div className="balance-stripe-section">
+                    <h4 className="balance-section-title">Автовиплати через Stripe Connect</h4>
+                    {connectStatus?.payoutsEnabled ? (
+                        <div className="balance-stripe-ready">
+                            <span className="balance-stripe-badge">✓ Stripe підключено</span>
+                            <span className="balance-stripe-hint">
+                                Виведення надходять на ваш банківський рахунок автоматично
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="balance-stripe-setup">
+                            <p className="balance-stripe-hint">
+                                Підключіть Stripe для миттєвих виплат на картку або рахунок.
+                            </p>
+                            <button
+                                type="button"
+                                className="balance-connect-btn"
+                                onClick={handleConnect}
+                                disabled={connecting}
+                            >
+                                {connecting ? 'Підключення…' : 'Підключити Stripe'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {!connectAvailable && (
+                <div className="balance-info-box">
+                    <strong>Ручне виведення</strong>
+                    <p>
+                        Подайте заявку на виведення — адміністратор платформи переведе кошти
+                        на вашу картку протягом 1–3 робочих днів.
+                    </p>
+                </div>
+            )}
 
             <form className="balance-withdraw-form" onSubmit={handleWithdraw}>
                 <h4 className="balance-section-title">Вивести кошти</h4>
@@ -192,7 +204,7 @@ const BalanceTab = ({ token }) => {
                         className="balance-withdraw-btn"
                         disabled={withdrawing || available < minWithdrawal}
                     >
-                        {withdrawing ? 'Обробка…' : 'Вивести'}
+                        {withdrawing ? 'Обробка…' : 'Подати заявку'}
                     </button>
                 </div>
                 {available < minWithdrawal && (
@@ -219,7 +231,7 @@ const BalanceTab = ({ token }) => {
                                 </div>
                                 <div className="balance-history-meta">
                                     {new Date(w.createdAt).toLocaleString('uk-UA')}
-                                    {w.failureReason && (
+                                    {w.failureReason && w.status !== 'PENDING' && (
                                         <span className="balance-history-reason"> · {w.failureReason}</span>
                                     )}
                                 </div>

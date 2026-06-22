@@ -67,6 +67,27 @@
     color: #1a1a1a;
 }
 
+.balance-info-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 16px 20px;
+}
+
+.balance-info-box strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #1e40af;
+    font-size: 14px;
+}
+
+.balance-info-box p {
+    margin: 0;
+    font-size: 13px;
+    color: #1e3a8a;
+    line-height: 1.5;
+}
+
 .balance-stripe-section,
 .balance-withdraw-form,
 .balance-history {

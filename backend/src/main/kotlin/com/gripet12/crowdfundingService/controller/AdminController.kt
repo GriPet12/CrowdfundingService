@@ -2,6 +2,7 @@ package com.gripet12.crowdfundingService.controller
 
 import com.gripet12.crowdfundingService.dto.*
 import com.gripet12.crowdfundingService.service.AdminService
+import com.gripet12.crowdfundingService.service.BalanceService
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -19,7 +20,10 @@ private fun <T> Page<T>.toDto() = PageResponseDto(
 @RestController
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
-class AdminController(private val adminService: AdminService) {
+class AdminController(
+    private val adminService: AdminService,
+    private val balanceService: BalanceService
+) {
 
     @GetMapping("/users")
     fun getUsers(
@@ -179,4 +183,19 @@ class AdminController(private val adminService: AdminService) {
 
     @GetMapping("/transactions/summary")
     fun getTransactionSummary(): ResponseEntity<TransactionSummaryDto> = ResponseEntity.ok(adminService.getTransactionSummary())
+
+    @PostMapping("/withdrawals/{id}/complete")
+    fun completeWithdrawal(@PathVariable id: Long): ResponseEntity<Void> {
+        balanceService.completeWithdrawalAdmin(id)
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/withdrawals/{id}/reject")
+    fun rejectWithdrawal(
+        @PathVariable id: Long,
+        @RequestBody(required = false) body: Map<String, String>?
+    ): ResponseEntity<Void> {
+        balanceService.rejectWithdrawalAdmin(id, body?.get("reason"))
+        return ResponseEntity.ok().build()
+    }
 }
