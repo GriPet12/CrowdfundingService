@@ -42,12 +42,63 @@ class PostService(
     private fun currentUserId(): Long =
         currentUserIdOrNull() ?: throw IllegalStateException("Not authenticated")
 
-    private fun hasAccess(viewerId: Long?, authorId: Long, requiredTierLevel: Int?): Boolean {
-        if (requiredTierLevel == null) return true           
-        if (viewerId == null) return false                   
-        if (viewerId == authorId) return true                
+    private fun hasAccess(viewerId: Long?, authorId: Long, post: Post): Boolean {
+        if (post.visibility == "PRIVATE") {
+            return viewerId != null && viewerId == authorId
+        }
+        val level = post.requiredTier?.level ?: return true
+        if (viewerId == null) return false
+        if (viewerId == authorId) return true
         return subscriptionRepository.findActiveSubscriptionsBySubscriberAndCreator(viewerId, authorId)
-            .any { (it.subscriptionTier?.level ?: 0) >= requiredTierLevel }
+            .any { (it.subscriptionTier?.level ?: 0) >= level }
+    }
+
+    private data class ResolvedPostAccess(val visibility: String, val tier: com.gripet12.crowdfundingService.model.SubscriptionTier?)
+
+    private fun resolvePostAccess(visibility: String, requiredTierId: Long?, authorId: Long): ResolvedPostAccess {
+        return when (visibility.uppercase()) {
+            "PRIVATE" -> ResolvedPostAccess("PRIVATE", null)
+            "SUBSCRIBERS", "TIER" -> {
+                val tierId = requiredTierId
+                    ?: throw IllegalArgumentException("Оберіть рівень підписки")
+                val tier = subscriptionTierRepository.findByTierIdAndCreatorId(tierId, authorId)
+                    ?: throw IllegalArgumentException("Невірний рівень підписки")
+                ResolvedPostAccess("SUBSCRIBERS", tier)
+            }
+            else -> ResolvedPostAccess("PUBLIC", null)
+        }
+    }
+
+    private fun syncPostAccess(postId: Long, access: ResolvedPostAccess) {
+        jdbcTemplate.update("UPDATE posts SET visibility = ? WHERE post_id = ?", access.visibility, postId)
+        val tierId = access.tier?.tierId
+        if (tierId == null) {
+            clearRequiredTierColumn(postId)
+        } else {
+            setRequiredTierColumn(postId, tierId)
+        }
+    }
+
+    private fun clearRequiredTierColumn(postId: Long) {
+        for (column in REQUIRED_TIER_COLUMNS) {
+            try {
+                jdbcTemplate.update("UPDATE posts SET $column = NULL WHERE post_id = ?", postId)
+                return
+            } catch (_: Exception) {
+                // try next legacy column name
+            }
+        }
+    }
+
+    private fun setRequiredTierColumn(postId: Long, tierId: Long) {
+        for (column in REQUIRED_TIER_COLUMNS) {
+            try {
+                jdbcTemplate.update("UPDATE posts SET $column = ? WHERE post_id = ?", tierId, postId)
+                return
+            } catch (_: Exception) {
+                // try next legacy column name
+            }
+        }
     }
 
     @Transactional
@@ -61,13 +112,14 @@ class PostService(
             postRepository.findByMasterIdIncludingBanned(authorId)
         else
             postRepository.findByMasterIdOrderByPostIdDesc(authorId)
+                .filter { it.visibility != "PRIVATE" }
         return posts.map { it.toResponse(authorId, viewerId) }
     }
 
     @Transactional
     fun createPost(dto: CreatePostDto): PostResponseDto {
         val authorId = currentUserId()
-        val tier = dto.requiredTierId?.let { subscriptionTierRepository.findByTierId(it) }
+        val access = resolvePostAccess(dto.visibility, dto.requiredTierId, authorId)
         val mediaIds = dto.mediaIds.distinct()
         val files = loadMediaFiles(mediaIds)
 
@@ -75,14 +127,15 @@ class PostService(
             postId = 0,
             masterId = authorId,
             masterType = "USER",
-            visibility = if (tier == null) "PUBLIC" else "SUBSCRIBERS",
+            visibility = access.visibility,
             title = dto.title,
             description = dto.content,
-            requiredTier = tier,
+            requiredTier = access.tier,
             content = files
         )
         val saved = postRepository.save(post)
         syncPostFiles(saved.postId, mediaIds)
+        syncPostAccess(saved.postId, access)
         return reloadPost(saved.postId, authorId)
     }
 
@@ -93,19 +146,20 @@ class PostService(
             ?: throw NoSuchElementException("Post not found")
         if (post.masterId != userId) throw IllegalAccessException("Access denied")
 
-        val tier = dto.requiredTierId?.let { subscriptionTierRepository.findByTierId(it) }
+        val access = resolvePostAccess(dto.visibility, dto.requiredTierId, userId)
         val mediaIds = dto.mediaIds.distinct()
         val files = loadMediaFiles(mediaIds)
 
         val updated = post.copy(
             title = dto.title,
             description = dto.content,
-            visibility = if (tier == null) "PUBLIC" else "SUBSCRIBERS",
-            requiredTier = tier,
+            visibility = access.visibility,
+            requiredTier = access.tier,
             content = files
         )
         postRepository.save(updated)
         syncPostFiles(postId, mediaIds)
+        syncPostAccess(postId, access)
         return reloadPost(postId, userId)
     }
 
@@ -179,7 +233,7 @@ class PostService(
 
     private fun Post.toResponse(authorId: Long, viewerId: Long?): PostResponseDto {
         val level = requiredTier?.level
-        val access = hasAccess(viewerId, authorId, level)
+        val access = hasAccess(viewerId, authorId, this)
 
         val showContent = access && !banned
         val fileList = if (showContent)
@@ -206,5 +260,9 @@ class PostService(
             likedByMe = likedByMe,
             commentCount = commentCount
         )
+    }
+
+    companion object {
+        private val REQUIRED_TIER_COLUMNS = listOf("required_tier_id", "required_tier_tier_id")
     }
 }

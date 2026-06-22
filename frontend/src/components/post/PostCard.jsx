@@ -270,7 +270,9 @@ const PostCard = ({ post, onDelete, onEdit }) => {
                     {banned && (
                         <span className="post-access-badge post-access-badge--banned">Заблоковано</span>
                     )}
-                    {!banned && (post.requiredTierLevel != null ? (
+                    {!banned && post.visibility === 'PRIVATE' ? (
+                        <span className="post-access-badge post-access-badge--private">Тільки я</span>
+                    ) : !banned && (post.requiredTierLevel != null ? (
                         <span className="post-access-badge post-access-badge--locked">
                             {post.requiredTierName ?? `Рівень ${post.requiredTierLevel}`}
                         </span>

@@ -18,6 +18,12 @@ const VIDEO_EXTS = new Set(['mp4', 'm4v', 'mov', 'webm', 'avi', 'mkv', 'mpeg', '
 const isServerImage = (f) => f.category === 'PHOTO' || f.mimeType?.startsWith('image/');
 const isServerVideo = (f) => f.category === 'VIDEO' || f.mimeType?.startsWith('video/') || VIDEO_EXTS.has((f.originalFileName ?? '').split('.').pop().toLowerCase());
 
+const resolveVisibility = (visibilityMode) => {
+    if (visibilityMode === 'private') return 'PRIVATE';
+    if (visibilityMode === 'tier') return 'SUBSCRIBERS';
+    return 'PUBLIC';
+};
+
 const uploadPostFiles = async (files, token) => {
     const uploadedIds = [];
     for (const file of files) {
@@ -78,13 +84,17 @@ const ContentEditor = ({ onPublish, onUpdate, editPost, onCancelEdit, tiers = []
         setText(editPost.description || '');
         setFiles([]);
         setExistingFiles(editPost.files ?? []);
-        if (editPost.requiredTierId) {
+        if (editPost.visibility === 'PRIVATE') {
+            setVisibilityMode('private');
+            setRequiredTierId('');
+        } else if (editPost.visibility === 'SUBSCRIBERS' || editPost.requiredTierId || editPost.requiredTierLevel != null) {
             setVisibilityMode('tier');
-            setRequiredTierId(String(editPost.requiredTierId));
-        } else if (editPost.requiredTierLevel != null) {
-            const tier = tiers.find(t => t.level === editPost.requiredTierLevel);
-            setVisibilityMode('tier');
-            setRequiredTierId(tier ? String(tier.tierId) : '');
+            if (editPost.requiredTierId) {
+                setRequiredTierId(String(editPost.requiredTierId));
+            } else {
+                const tier = tiers.find(t => t.level === editPost.requiredTierLevel);
+                setRequiredTierId(tier ? String(tier.tierId) : '');
+            }
         } else {
             setVisibilityMode('public');
             setRequiredTierId('');
@@ -104,6 +114,14 @@ const ContentEditor = ({ onPublish, onUpdate, editPost, onCancelEdit, tiers = []
 
     const handleSubmit = async () => {
         if (!title.trim() && !text.trim() && files.length === 0 && existingFiles.length === 0) return;
+        if (visibilityMode === 'tier' && !requiredTierId) {
+            setPublishError('Оберіть рівень підписки');
+            return;
+        }
+        if (visibilityMode === 'donation') {
+            setPublishError('Доступ за сумою донату поки не підтримується');
+            return;
+        }
         setPublishing(true);
         setPublishError('');
         const payload = {
@@ -111,9 +129,8 @@ const ContentEditor = ({ onPublish, onUpdate, editPost, onCancelEdit, tiers = []
             text,
             files,
             existingFileIds: existingFiles.map(f => f.id),
-            visibilityMode,
+            visibility: resolveVisibility(visibilityMode),
             requiredTierId: visibilityMode === 'tier' ? (requiredTierId || null) : null,
-            minDonationAmount: visibilityMode === 'donation' ? (Number(minDonationAmount) || null) : null,
         };
         try {
             if (isEditing) {
@@ -693,18 +710,15 @@ const MyPage = () => {
         }
     };
 
-    const handlePublish = async ({ title, text, files, visibilityMode, requiredTierId, minDonationAmount }) => {
+    const handlePublish = async ({ title, text, files, visibility, requiredTierId }) => {
         const uploadedIds = await uploadPostFiles(files, currentUser.token);
 
         const payload = {
             title,
             content: text,
+            visibility,
             requiredTierId: requiredTierId ? Number(requiredTierId) : null,
-            minDonationAmount: minDonationAmount ? Number(minDonationAmount) : null,
-            isPrivate: visibilityMode === 'private',
             mediaIds: uploadedIds,
-            likeCount: 0,
-            commentCount: 0,
         };
         const res = await fetch('/api/posts', {
             method: 'POST',
@@ -725,14 +739,13 @@ const MyPage = () => {
         }
     };
 
-    const handleUpdatePost = async (postId, { title, text, files, existingFileIds, visibilityMode, requiredTierId, minDonationAmount }) => {
+    const handleUpdatePost = async (postId, { title, text, files, existingFileIds, visibility, requiredTierId }) => {
         const uploadedIds = await uploadPostFiles(files, currentUser.token);
         const payload = {
             title,
             content: text,
+            visibility,
             requiredTierId: requiredTierId ? Number(requiredTierId) : null,
-            minDonationAmount: minDonationAmount ? Number(minDonationAmount) : null,
-            isPrivate: visibilityMode === 'private',
             mediaIds: [...existingFileIds, ...uploadedIds],
         };
         const res = await fetch(`/api/posts/${postId}`, {

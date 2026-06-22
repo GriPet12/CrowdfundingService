@@ -22,6 +22,7 @@ data class Post(
     val description: String,
 
     @ManyToOne
+    @JoinColumn(name = "required_tier_id")
     val requiredTier: SubscriptionTier? = null,
 
     @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
