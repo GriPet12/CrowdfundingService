@@ -3,6 +3,7 @@ package com.gripet12.crowdfundingService.controller
 import com.gripet12.crowdfundingService.dto.CommentResponseDto
 import com.gripet12.crowdfundingService.dto.CreatePostDto
 import com.gripet12.crowdfundingService.dto.PostResponseDto
+import com.gripet12.crowdfundingService.dto.UpdatePostDto
 import com.gripet12.crowdfundingService.service.CommentService
 import com.gripet12.crowdfundingService.service.PostService
 import org.springframework.http.ResponseEntity
@@ -22,6 +23,13 @@ class PostController(
     @PostMapping
     fun createPost(@RequestBody dto: CreatePostDto): ResponseEntity<PostResponseDto> =
         ResponseEntity.ok(postService.createPost(dto))
+
+    @PutMapping("/{postId}")
+    fun updatePost(
+        @PathVariable postId: Long,
+        @RequestBody dto: UpdatePostDto
+    ): ResponseEntity<PostResponseDto> =
+        ResponseEntity.ok(postService.updatePost(postId, dto))
 
     @DeleteMapping("/{postId}")
     fun deletePost(@PathVariable postId: Long): ResponseEntity<Void> {

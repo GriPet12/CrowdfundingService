@@ -572,6 +572,25 @@
     color: #999;
 }
 
+.my-page-editor--editing {
+    border-color: #1565c0;
+    box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.12);
+}
+
+.my-page-editor-cancel-btn {
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #555;
+    padding: 9px 16px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+.my-page-editor-cancel-btn:hover:not(:disabled) { border-color: #888; color: #333; }
+.my-page-editor-cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .my-page-editor-publish-btn {
     margin-left: auto;
     background-color: #1a1a1a;

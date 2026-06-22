@@ -3,6 +3,7 @@ package com.gripet12.crowdfundingService.service
 import com.gripet12.crowdfundingService.dto.CreatePostDto
 import com.gripet12.crowdfundingService.dto.PostFileDto
 import com.gripet12.crowdfundingService.dto.PostResponseDto
+import com.gripet12.crowdfundingService.dto.UpdatePostDto
 import com.gripet12.crowdfundingService.model.Post
 import com.gripet12.crowdfundingService.model.PostLike
 import com.gripet12.crowdfundingService.repository.CommentRepository
@@ -68,15 +69,7 @@ class PostService(
         val authorId = currentUserId()
         val tier = dto.requiredTierId?.let { subscriptionTierRepository.findByTierId(it) }
         val mediaIds = dto.mediaIds.distinct()
-        val files = if (mediaIds.isEmpty()) {
-            emptySet()
-        } else {
-            val loaded = fileRepository.findAllById(mediaIds).toHashSet()
-            if (loaded.size != mediaIds.size) {
-                throw IllegalArgumentException("Не вдалося знайти прикріплені файли. Спробуйте завантажити їх ще раз.")
-            }
-            loaded
-        }
+        val files = loadMediaFiles(mediaIds)
 
         val post = Post(
             postId = 0,
@@ -89,15 +82,63 @@ class PostService(
             content = files
         )
         val saved = postRepository.save(post)
-        if (mediaIds.isNotEmpty()) {
-            linkFilesToPost(saved.postId, mediaIds)
+        syncPostFiles(saved.postId, mediaIds)
+        return reloadPost(saved.postId, authorId)
+    }
+
+    @Transactional
+    fun updatePost(postId: Long, dto: UpdatePostDto): PostResponseDto {
+        val userId = currentUserId()
+        val post = postRepository.findByPostIdWithContent(postId)
+            ?: throw NoSuchElementException("Post not found")
+        if (post.masterId != userId) throw IllegalAccessException("Access denied")
+
+        val tier = dto.requiredTierId?.let { subscriptionTierRepository.findByTierId(it) }
+        val mediaIds = dto.mediaIds.distinct()
+        val files = loadMediaFiles(mediaIds)
+
+        val updated = post.copy(
+            title = dto.title,
+            description = dto.content,
+            visibility = if (tier == null) "PUBLIC" else "SUBSCRIBERS",
+            requiredTier = tier,
+            content = files
+        )
+        postRepository.save(updated)
+        syncPostFiles(postId, mediaIds)
+        return reloadPost(postId, userId)
+    }
+
+    private fun loadMediaFiles(mediaIds: List<Long>): Set<com.gripet12.crowdfundingService.model.UploadedFile> {
+        if (mediaIds.isEmpty()) return emptySet()
+        val loaded = fileRepository.findAllById(mediaIds).toHashSet()
+        if (loaded.size != mediaIds.size) {
+            throw IllegalArgumentException("Не вдалося знайти прикріплені файли. Спробуйте завантажити їх ще раз.")
         }
+        return loaded
+    }
+
+    private fun reloadPost(postId: Long, authorId: Long): PostResponseDto {
         postRepository.flush()
         entityManager.clear()
-        val reloaded = postRepository.findByMasterIdIncludingBanned(authorId)
-            .firstOrNull { it.postId == saved.postId }
-            ?: saved
+        val reloaded = postRepository.findByPostIdWithContent(postId)
+            ?: throw NoSuchElementException("Post not found")
         return reloaded.toResponse(authorId, authorId)
+    }
+
+    private fun syncPostFiles(postId: Long, mediaIds: List<Long>) {
+        if (mediaIds.isEmpty()) {
+            jdbcTemplate.update("UPDATE files SET post_id = NULL WHERE post_id = ?", postId)
+            return
+        }
+        val placeholders = mediaIds.joinToString(",") { "?" }
+        val unlinkArgs = mutableListOf<Any>(postId)
+        unlinkArgs.addAll(mediaIds)
+        jdbcTemplate.update(
+            "UPDATE files SET post_id = NULL WHERE post_id = ? AND id NOT IN ($placeholders)",
+            *unlinkArgs.toTypedArray()
+        )
+        linkFilesToPost(postId, mediaIds)
     }
 
     private fun linkFilesToPost(postId: Long, mediaIds: List<Long>) {
@@ -156,6 +197,7 @@ class PostService(
             description = if (showContent) description else "",
             requiredTierLevel = level,
             requiredTierName = requiredTier?.name,
+            requiredTierId = requiredTier?.tierId,
             hasAccess = access,
             banned = banned,
             files = fileList,

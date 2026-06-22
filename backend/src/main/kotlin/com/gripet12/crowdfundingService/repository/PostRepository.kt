@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param
 interface PostRepository : JpaRepository<Post, Long> {
     fun findByPostId(postId: Long): Post?
 
+    @Query("SELECT p FROM Post p LEFT JOIN FETCH p.requiredTier LEFT JOIN FETCH p.content WHERE p.postId = :postId")
+    fun findByPostIdWithContent(@Param("postId") postId: Long): Post?
+
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.requiredTier LEFT JOIN FETCH p.content WHERE p.masterId = :masterId AND p.masterType = 'USER' AND p.banned = false ORDER BY p.postId DESC")
     fun findByMasterIdOrderByPostIdDesc(masterId: Long): List<Post>
 

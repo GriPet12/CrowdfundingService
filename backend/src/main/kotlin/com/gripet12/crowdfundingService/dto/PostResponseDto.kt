@@ -8,6 +8,7 @@ data class PostResponseDto(
 
     val requiredTierLevel: Int?,
     val requiredTierName: String?,
+    val requiredTierId: Long? = null,
 
     val hasAccess: Boolean,
 

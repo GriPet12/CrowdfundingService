@@ -13,10 +13,46 @@ import '../../styles/myPage.css';
 import '../../styles/projectItem.css';
 import '../../styles/postCard.css';
 
-const ContentEditor = ({ onPublish, tiers = [] }) => {
+const VIDEO_EXTS = new Set(['mp4', 'm4v', 'mov', 'webm', 'avi', 'mkv', 'mpeg', 'mpg']);
+
+const isServerImage = (f) => f.category === 'PHOTO' || f.mimeType?.startsWith('image/');
+const isServerVideo = (f) => f.category === 'VIDEO' || f.mimeType?.startsWith('video/') || VIDEO_EXTS.has((f.originalFileName ?? '').split('.').pop().toLowerCase());
+
+const uploadPostFiles = async (files, token) => {
+    const uploadedIds = [];
+    for (const file of files) {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await fetch('/api/files/upload', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: fd,
+        });
+        if (!res.ok) {
+            const textBody = await res.text().catch(() => '');
+            let message = `Не вдалося завантажити «${file.name}»`;
+            try {
+                const data = JSON.parse(textBody);
+                if (data.message) message = data.message;
+            } catch {
+                if (textBody) message = textBody;
+            }
+            throw new Error(message);
+        }
+        const data = await res.json();
+        uploadedIds.push(data.id ?? data.fileId ?? null);
+    }
+    if (files.length > 0 && uploadedIds.filter(Boolean).length !== files.length) {
+        throw new Error('Не всі файли завантажено. Спробуйте ще раз.');
+    }
+    return uploadedIds.filter(Boolean);
+};
+
+const ContentEditor = ({ onPublish, onUpdate, editPost, onCancelEdit, tiers = [] }) => {
     const [title, setTitle] = useState('');
     const [text, setText] = useState('');
     const [files, setFiles] = useState([]);
+    const [existingFiles, setExistingFiles] = useState([]);
     
     const [visibilityMode, setVisibilityMode] = useState('public');
     const [requiredTierId, setRequiredTierId] = useState('');
@@ -24,6 +60,38 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
     const [publishing, setPublishing] = useState(false);
     const [publishError, setPublishError] = useState('');
     const fileRef = useRef();
+    const isEditing = !!editPost;
+
+    useEffect(() => {
+        if (!editPost) {
+            setTitle('');
+            setText('');
+            setFiles([]);
+            setExistingFiles([]);
+            setVisibilityMode('public');
+            setRequiredTierId('');
+            setMinDonationAmount('');
+            setPublishError('');
+            return;
+        }
+        setTitle(editPost.title || '');
+        setText(editPost.description || '');
+        setFiles([]);
+        setExistingFiles(editPost.files ?? []);
+        if (editPost.requiredTierId) {
+            setVisibilityMode('tier');
+            setRequiredTierId(String(editPost.requiredTierId));
+        } else if (editPost.requiredTierLevel != null) {
+            const tier = tiers.find(t => t.level === editPost.requiredTierLevel);
+            setVisibilityMode('tier');
+            setRequiredTierId(tier ? String(tier.tierId) : '');
+        } else {
+            setVisibilityMode('public');
+            setRequiredTierId('');
+        }
+        setMinDonationAmount('');
+        setPublishError('');
+    }, [editPost, tiers]);
 
     const handleFiles = (e) => {
         const selected = Array.from(e.target.files);
@@ -32,41 +100,49 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
     };
 
     const removeFile = (i) => setFiles(prev => prev.filter((_, idx) => idx !== i));
+    const removeExistingFile = (id) => setExistingFiles(prev => prev.filter(f => f.id !== id));
 
-    const handlePublish = async () => {
-        if (!title.trim() && !text.trim() && files.length === 0) return;
+    const handleSubmit = async () => {
+        if (!title.trim() && !text.trim() && files.length === 0 && existingFiles.length === 0) return;
         setPublishing(true);
         setPublishError('');
+        const payload = {
+            title,
+            text,
+            files,
+            existingFileIds: existingFiles.map(f => f.id),
+            visibilityMode,
+            requiredTierId: visibilityMode === 'tier' ? (requiredTierId || null) : null,
+            minDonationAmount: visibilityMode === 'donation' ? (Number(minDonationAmount) || null) : null,
+        };
         try {
-            await onPublish({
-                title,
-                text,
-                files,
-                visibilityMode,
-                requiredTierId: visibilityMode === 'tier' ? (requiredTierId || null) : null,
-                minDonationAmount: visibilityMode === 'donation' ? (Number(minDonationAmount) || null) : null,
-            });
-            setTitle('');
-            setText('');
-            setFiles([]);
-            setVisibilityMode('public');
-            setRequiredTierId('');
-            setMinDonationAmount('');
+            if (isEditing) {
+                await onUpdate(editPost.postId, payload);
+            } else {
+                await onPublish(payload);
+                setTitle('');
+                setText('');
+                setFiles([]);
+                setVisibilityMode('public');
+                setRequiredTierId('');
+                setMinDonationAmount('');
+            }
             setPublishError('');
         } catch (err) {
-            setPublishError(err.message || 'Не вдалося опублікувати пост. Спробуйте ще раз.');
+            setPublishError(err.message || (isEditing ? 'Не вдалося зберегти пост.' : 'Не вдалося опублікувати пост. Спробуйте ще раз.'));
         } finally {
             setPublishing(false);
         }
     };
 
     const fileIcon = (file) => {
-        if (file.type.startsWith('video/')) return (
+        const type = file.type || '';
+        if (type.startsWith('video/')) return (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
             </svg>
         );
-        if (file.type.startsWith('image/')) return (
+        if (type.startsWith('image/')) return (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
             </svg>
@@ -79,8 +155,8 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
     };
 
     return (
-        <div className="my-page-editor">
-            <h3 className="my-page-editor-heading">Новий пост</h3>
+        <div className={`my-page-editor ${isEditing ? 'my-page-editor--editing' : ''}`}>
+            <h3 className="my-page-editor-heading">{isEditing ? 'Редагування поста' : 'Новий пост'}</h3>
 
             <input
                 className="my-page-editor-title"
@@ -147,8 +223,34 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
                 </div>
             )}
 
-            {files.length > 0 && (
+            {(existingFiles.length > 0 || files.length > 0) && (
                 <div className="my-page-editor-attachments">
+                    {existingFiles.map((f) => (
+                        <div key={`existing-${f.id}`} className="my-page-editor-attachment">
+                            {isServerImage(f) ? (
+                                <img
+                                    src={`/api/files/${f.id}`}
+                                    alt={f.originalFileName}
+                                    className="my-page-editor-preview-img"
+                                />
+                            ) : isServerVideo(f) ? (
+                                <video
+                                    src={`/api/files/${f.id}`}
+                                    className="my-page-editor-preview-video"
+                                    muted
+                                />
+                            ) : (
+                                <div className="my-page-editor-preview-file">
+                                    {fileIcon({ type: f.mimeType || '' })}<span>{f.originalFileName}</span>
+                                </div>
+                            )}
+                            <button
+                                className="my-page-editor-remove"
+                                onClick={() => removeExistingFile(f.id)}
+                                title="Видалити"
+                            >✕</button>
+                        </div>
+                    ))}
                     {files.map((f, i) => (
                         <div key={i} className="my-page-editor-attachment">
                             {f.type.startsWith('image/') ? (
@@ -200,11 +302,21 @@ const ContentEditor = ({ onPublish, tiers = [] }) => {
                 />
                 <button
                     className="my-page-editor-publish-btn"
-                    onClick={handlePublish}
-                    disabled={publishing || (!title.trim() && !text.trim() && files.length === 0)}
+                    onClick={handleSubmit}
+                    disabled={publishing || (!title.trim() && !text.trim() && files.length === 0 && existingFiles.length === 0)}
                 >
-                    {publishing ? 'Публікація…' : 'Опублікувати'}
+                    {publishing ? (isEditing ? 'Збереження…' : 'Публікація…') : (isEditing ? 'Зберегти' : 'Опублікувати')}
                 </button>
+                {isEditing && (
+                    <button
+                        type="button"
+                        className="my-page-editor-cancel-btn"
+                        onClick={onCancelEdit}
+                        disabled={publishing}
+                    >
+                        Скасувати
+                    </button>
+                )}
             </div>
             {publishError && (
                 <p className="my-page-editor-error">{publishError}</p>
@@ -326,6 +438,8 @@ const MyPage = () => {
     const [projects, setProjects] = useState([]);
     const [posts, setPosts] = useState([]);
     const [postsVisible, setPostsVisible] = useState(10);
+    const [editingPost, setEditingPost] = useState(null);
+    const editorRef = useRef(null);
     const [myTiers, setMyTiers] = useState([]);
     const [followedProjects, setFollowedProjects] = useState([]);
     const [followedAuthors, setFollowedAuthors]   = useState([]);
@@ -580,33 +694,7 @@ const MyPage = () => {
     };
 
     const handlePublish = async ({ title, text, files, visibilityMode, requiredTierId, minDonationAmount }) => {
-        const uploadedIds = [];
-        for (const file of files) {
-            const fd = new FormData();
-            fd.append('file', file);
-            const res = await fetch('/api/files/upload', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${currentUser.token}` },
-                body: fd,
-            });
-            if (!res.ok) {
-                const textBody = await res.text().catch(() => '');
-                let message = `Не вдалося завантажити «${file.name}»`;
-                try {
-                    const data = JSON.parse(textBody);
-                    if (data.message) message = data.message;
-                } catch {
-                    if (textBody) message = textBody;
-                }
-                throw new Error(message);
-            }
-            const data = await res.json();
-            uploadedIds.push(data.id ?? data.fileId ?? null);
-        }
-
-        if (files.length > 0 && uploadedIds.filter(Boolean).length !== files.length) {
-            throw new Error('Не всі файли завантажено. Спробуйте ще раз.');
-        }
+        const uploadedIds = await uploadPostFiles(files, currentUser.token);
 
         const payload = {
             title,
@@ -614,7 +702,7 @@ const MyPage = () => {
             requiredTierId: requiredTierId ? Number(requiredTierId) : null,
             minDonationAmount: minDonationAmount ? Number(minDonationAmount) : null,
             isPrivate: visibilityMode === 'private',
-            mediaIds: uploadedIds.filter(Boolean),
+            mediaIds: uploadedIds,
             likeCount: 0,
             commentCount: 0,
         };
@@ -637,6 +725,35 @@ const MyPage = () => {
         }
     };
 
+    const handleUpdatePost = async (postId, { title, text, files, existingFileIds, visibilityMode, requiredTierId, minDonationAmount }) => {
+        const uploadedIds = await uploadPostFiles(files, currentUser.token);
+        const payload = {
+            title,
+            content: text,
+            requiredTierId: requiredTierId ? Number(requiredTierId) : null,
+            minDonationAmount: minDonationAmount ? Number(minDonationAmount) : null,
+            isPrivate: visibilityMode === 'private',
+            mediaIds: [...existingFileIds, ...uploadedIds],
+        };
+        const res = await fetch(`/api/posts/${postId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.token}`,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+            const updated = await res.json();
+            setPosts(prev => prev.map(p => p.postId === postId ? updated : p));
+            setEditingPost(null);
+        } else {
+            const msg = await res.text().catch(() => '');
+            throw new Error(msg || `Помилка сервера: ${res.status}`);
+        }
+    };
+
     const handleDeletePost = async (postId) => {
         const res = await fetch(`/api/posts/${postId}`, {
             method: 'DELETE',
@@ -644,7 +761,15 @@ const MyPage = () => {
         });
         if (res.ok || res.status === 204) {
             setPosts(prev => prev.filter(p => p.postId !== postId));
+            if (editingPost?.postId === postId) setEditingPost(null);
         }
+    };
+
+    const handleEditPost = (post) => {
+        setEditingPost(post);
+        requestAnimationFrame(() => {
+            editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     };
 
     if (!currentUser) return null;
@@ -842,12 +967,25 @@ const MyPage = () => {
 
                 {activeTab === 'content' && (
                     <div className="my-page-content-tab">
-                        <ContentEditor onPublish={handlePublish} tiers={myTiers} />
+                        <div ref={editorRef}>
+                            <ContentEditor
+                                onPublish={handlePublish}
+                                onUpdate={handleUpdatePost}
+                                editPost={editingPost}
+                                onCancelEdit={() => setEditingPost(null)}
+                                tiers={myTiers}
+                            />
+                        </div>
 
                         {posts.length > 0 && (
                             <div className="my-page-posts">
                                 {posts.slice(0, postsVisible).map((post) => (
-                                    <PostCard key={post.postId} post={post} onDelete={handleDeletePost} />
+                                    <PostCard
+                                        key={post.postId}
+                                        post={post}
+                                        onDelete={handleDeletePost}
+                                        onEdit={handleEditPost}
+                                    />
                                 ))}
                             </div>
                         )}

@@ -59,6 +59,26 @@
 }
 .post-card-delete:hover { color: #c62828; background: #fdecea; }
 
+.post-card-owner-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.post-card-edit {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #bbb;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+}
+.post-card-edit:hover { color: #1565c0; background: #e3f2fd; }
+
 .post-card-locked-body {
     display: flex;
     flex-direction: column;
