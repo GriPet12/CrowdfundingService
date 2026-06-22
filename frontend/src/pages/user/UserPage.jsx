@@ -52,16 +52,17 @@ const UserPage = () => {
     }, [id]);
 
     useEffect(() => {
-        if (!currentUser || !id) return;
+        if (!currentUser?.token || !id) return;
         fetch(`/api/follows/authors/${id}/status`, {
             headers: { Authorization: `Bearer ${currentUser.token}` },
         })
             .then(r => r.ok ? r.json() : null)
             .then(data => { if (data) setFollowingAuthor(data.following); })
             .catch(() => {});
-    }, [id]); 
+    }, [id, currentUser?.token]);
 
     const handleFollowAuthor = async () => {
+        if (!currentUser?.token) return;
         setFollowAuthorLoading(true);
         try {
             const res = await fetch(`/api/follows/authors/${id}`, {
@@ -71,8 +72,9 @@ const UserPage = () => {
             if (res.ok) {
                 const newVal = (await res.json()).following;
                 setFollowingAuthor(newVal);
-                
                 if (newVal) analyticsService.creatorFollow(id);
+            } else if (res.status === 409) {
+                setFollowingAuthor(true);
             }
         } finally {
             setFollowAuthorLoading(false);

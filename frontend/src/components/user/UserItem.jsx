@@ -29,6 +29,9 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
                 setFollowing(newVal);
                 if (newVal) analyticsService.creatorFollow(user.id);
                 onFollowChange?.(user.id, newVal);
+            } else if (res.status === 409) {
+                setFollowing(true);
+                onFollowChange?.(user.id, true);
             }
         } finally {
             setFollowLoading(false);

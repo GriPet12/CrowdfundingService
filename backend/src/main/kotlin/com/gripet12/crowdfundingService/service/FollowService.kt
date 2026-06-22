@@ -10,6 +10,7 @@ import com.gripet12.crowdfundingService.repository.ProjectFollowRepository
 import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.SubscriptionRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -24,8 +25,11 @@ class FollowService(
 ) {
 
     private fun currentUserId(): Long {
-        val username = SecurityContextHolder.getContext().authentication.name
-        return userRepository.findByUsername(username)
+        val auth = SecurityContextHolder.getContext().authentication
+        if (auth == null || !auth.isAuthenticated || auth.name == "anonymousUser") {
+            throw IllegalArgumentException("Authentication required")
+        }
+        return userRepository.findByUsername(auth.name)
             .orElseThrow { IllegalStateException("User not found") }
             .userId!!
     }
@@ -109,15 +113,24 @@ class FollowService(
     fun toggleAuthorFollow(creatorId: Long): Boolean {
         val followerId = currentUserId()
         if (followerId == creatorId) throw IllegalArgumentException("Cannot follow yourself")
+        if (!userRepository.existsById(creatorId)) throw IllegalArgumentException("Creator not found")
+
         val existing = authorFollowRepository.findByFollowerUserIdAndCreatorUserId(followerId, creatorId)
         return if (existing != null) {
             authorFollowRepository.delete(existing)
+            authorFollowRepository.flush()
             false
         } else {
             val follower = userRepository.getReferenceById(followerId)
             val creator  = userRepository.getReferenceById(creatorId)
-            authorFollowRepository.save(AuthorFollow(follower = follower, creator = creator))
-            true
+            try {
+                authorFollowRepository.save(AuthorFollow(follower = follower, creator = creator))
+                authorFollowRepository.flush()
+                true
+            } catch (_: DataIntegrityViolationException) {
+                // Concurrent request or stale UI state — follow already exists
+                true
+            }
         }
     }
 

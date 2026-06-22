@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.Query
 
 interface AuthorFollowRepository : JpaRepository<AuthorFollow, Long> {
 
+    @Query("SELECT af FROM AuthorFollow af WHERE af.follower.userId = :followerId AND af.creator.userId = :creatorId")
     fun findByFollowerUserIdAndCreatorUserId(followerId: Long, creatorId: Long): AuthorFollow?
 
+    @Query("SELECT COUNT(af) > 0 FROM AuthorFollow af WHERE af.follower.userId = :followerId AND af.creator.userId = :creatorId")
     fun existsByFollowerUserIdAndCreatorUserId(followerId: Long, creatorId: Long): Boolean
 
     @Query("SELECT af FROM AuthorFollow af JOIN FETCH af.creator c LEFT JOIN FETCH c.image WHERE af.follower.userId = :userId")
