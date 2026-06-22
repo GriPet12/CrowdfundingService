@@ -409,3 +409,73 @@
     line-height: 1.5;
 }
 
+.auth-forgot-link-wrap {
+    margin: 8px 0 0;
+    text-align: right;
+}
+
+.auth-forgot-link {
+    font-size: 13px;
+    color: #666;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-forgot-link:hover {
+    color: #1a1a1a;
+    text-decoration: underline;
+}
+
+.auth-page {
+    max-width: 440px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.auth-page-card {
+    background: #fff;
+    border: 1px solid #ebebeb;
+    border-radius: 12px;
+    padding: 28px 24px 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.auth-page-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: #1a1a1a;
+    margin: 0 0 8px;
+    text-align: center;
+}
+
+.auth-page-subtitle {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+    margin: 0 0 20px;
+    text-align: center;
+}
+
+.auth-page-footer {
+    margin: 20px 0 0;
+    text-align: center;
+    font-size: 13px;
+}
+
+.auth-page-footer a {
+    color: #666;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-page-footer a:hover {
+    color: #1a1a1a;
+    text-decoration: underline;
+}
+
+.auth-page-link-btn {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 8px;
+}

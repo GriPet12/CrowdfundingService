@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import AuthService from './AuthService.jsx';
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://api.crowd-funding.app').replace(/\/$/, '');
@@ -6,7 +7,7 @@ const FACEBOOK_ENABLED = false;
 
 const RESEND_COOLDOWN = 60;
 
-const LoginUser = ({ onSwitchToRegister }) => {
+const LoginUser = ({ onSwitchToRegister, onClose }) => {
     const [data, setData] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -128,6 +129,11 @@ const LoginUser = ({ onSwitchToRegister }) => {
                 <label className="form-label">Пароль</label>
                 <input type="password" className="form-input" placeholder="Введіть ваш пароль"
                     value={data.password} onChange={e => setData({...data, password: e.target.value})} required />
+                <p className="auth-forgot-link-wrap">
+                    <Link to="/forgot-password" className="auth-forgot-link" onClick={() => onClose?.()}>
+                        Забули пароль?
+                    </Link>
+                </p>
             </div>
             <button type="submit" className="btn-submit" disabled={loading}>
                 {loading ? 'Вхід…' : 'Увійти'}

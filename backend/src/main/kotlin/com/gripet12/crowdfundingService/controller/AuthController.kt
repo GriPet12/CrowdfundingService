@@ -2,10 +2,13 @@ package com.gripet12.crowdfundingService.controller
 
 import com.gripet12.crowdfundingService.dto.AuthRequest
 import com.gripet12.crowdfundingService.dto.AuthResponse
+import com.gripet12.crowdfundingService.dto.ForgotPasswordRequest
 import com.gripet12.crowdfundingService.dto.RegisterRequest
+import com.gripet12.crowdfundingService.dto.ResetPasswordRequest
 import com.gripet12.crowdfundingService.service.AuthService
 import com.gripet12.crowdfundingService.service.EmailNotVerifiedException
 import com.gripet12.crowdfundingService.service.EmailService
+import com.gripet12.crowdfundingService.service.PasswordResetService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -15,7 +18,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/auth")
 class AuthController(
     private val authService: AuthService,
-    private val emailService: EmailService
+    private val emailService: EmailService,
+    private val passwordResetService: PasswordResetService
 ) {
 
     @PostMapping("/login")
@@ -63,6 +67,22 @@ class AuthController(
             } else {
                 ResponseEntity.badRequest().body(mapOf("error" to msg))
             }
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest): ResponseEntity<Map<String, String>> {
+        passwordResetService.requestPasswordReset(request.email)
+        return ResponseEntity.ok(mapOf("message" to "RESET_EMAIL_SENT"))
+    }
+
+    @PostMapping("/reset-password")
+    fun resetPassword(@Valid @RequestBody request: ResetPasswordRequest): ResponseEntity<Map<String, String>> {
+        return try {
+            passwordResetService.resetPassword(request.token, request.newPassword)
+            ResponseEntity.ok(mapOf("message" to "PASSWORD_RESET"))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "INVALID_TOKEN")))
         }
     }
 }

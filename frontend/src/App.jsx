@@ -16,6 +16,8 @@ const CreateProjectPage  = lazy(() => import("./pages/project/CreateProjectPage.
 const EditProjectPage    = lazy(() => import("./pages/project/EditProjectPage.jsx"));
 const AdminPage       = lazy(() => import("./pages/admin/AdminPage.jsx"));
 const VerifyEmailPage = lazy(() => import("./pages/user/VerifyEmailPage.jsx"));
+const ForgotPasswordPage = lazy(() => import("./pages/user/ForgotPasswordPage.jsx"));
+const ResetPasswordPage = lazy(() => import("./pages/user/ResetPasswordPage.jsx"));
 const OAuth2CallbackPage = lazy(() => import("./pages/user/OAuth2CallbackPage.jsx"));
 const PaymentResultPage  = lazy(() => import("./pages/pay/PaymentResultPage.jsx"));
 
@@ -60,6 +62,8 @@ function App() {
                   <Route path="/me"          element={<MyPage />} />
                   <Route path="/admin"       element={<AdminPage />} />
                   <Route path="/verify-email" element={<VerifyEmailPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                   <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
                   <Route path="/payment/result" element={<PaymentResultPage />} />
               </Routes>
