@@ -4,6 +4,7 @@ import com.gripet12.crowdfundingService.dto.*
 import com.gripet12.crowdfundingService.model.Category
 import com.gripet12.crowdfundingService.model.enums.Role
 import com.gripet12.crowdfundingService.repository.*
+import com.gripet12.crowdfundingService.util.searchPattern
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -48,7 +49,7 @@ class AdminService(
             else    -> 0
         }
         return userRepository.findByFilters(
-            search = search?.takeIf { it.isNotBlank() },
+            searchPattern = searchPattern(search),
             filterBanned = filterBanned,
             filterRole = filterRole,
             pageable = pageable
@@ -145,7 +146,7 @@ class AdminService(
         }
         val pageable = PageRequest.of(page, size, Sort.by(direction, sortField))
         return projectRepository.findByFilters(
-            search = search?.takeIf { it.isNotBlank() },
+            searchPattern = searchPattern(search),
             categoryId = categoryId,
             filterBanned = if (showBanned) 2 else 0,
             pageable = pageable
@@ -195,7 +196,7 @@ class AdminService(
     fun getPosts(search: String?, showBanned: Boolean, page: Int, size: Int): Page<AdminPostDto> {
         val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         return postRepository.findByFilters(
-            search = search?.takeIf { it.isNotBlank() },
+            searchPattern = searchPattern(search),
             filterBanned = if (showBanned) 2 else 0,
             pageable = pageable
         ).map { p ->
@@ -263,7 +264,7 @@ class AdminService(
     ): Page<AdminProjectDto> {
         val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         return projectRepository.findByFiltersAdmin(
-            search = search?.takeIf { it.isNotBlank() },
+            searchPattern = searchPattern(search),
             status = "PENDING",
             pageable = pageable
         ).map { p ->

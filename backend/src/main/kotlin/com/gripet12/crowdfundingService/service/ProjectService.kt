@@ -10,6 +10,7 @@ import com.gripet12.crowdfundingService.repository.CategoryRepository
 import com.gripet12.crowdfundingService.repository.FileRepository
 import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
+import com.gripet12.crowdfundingService.util.searchPattern
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -56,7 +57,7 @@ class ProjectService(
                     creatorId, listOf("PENDING", "REJECTED"), pageable
                 )
             search != null || categoryId != null ->
-                projectRepository.findByFilters(search, categoryId, 0, pageable)
+                projectRepository.findByFilters(searchPattern(search), categoryId, 0, pageable)
             else ->
                 projectRepository.findByStatusNotIn(listOf("PENDING", "REJECTED"), pageable)
         }

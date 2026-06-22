@@ -62,9 +62,9 @@ interface ProjectRepository : JpaRepository<Project, Long> {
     @Query(
         value = """
             SELECT p FROM Project p LEFT JOIN p.creator u
-            WHERE (:search IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+            WHERE (:searchPattern IS NULL
+               OR LOWER(p.title) LIKE :searchPattern
+               OR LOWER(u.username) LIKE :searchPattern)
               AND (:categoryId IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = :categoryId))
               AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
@@ -75,9 +75,9 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         """,
         countQuery = """
             SELECT COUNT(p) FROM Project p LEFT JOIN p.creator u
-            WHERE (:search IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+            WHERE (:searchPattern IS NULL
+               OR LOWER(p.title) LIKE :searchPattern
+               OR LOWER(u.username) LIKE :searchPattern)
               AND (:categoryId IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = :categoryId))
               AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
@@ -88,7 +88,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         """
     )
     fun findByFilters(
-        @Param("search") search: String?,
+        @Param("searchPattern") searchPattern: String?,
         @Param("categoryId") categoryId: Long?,
         @Param("filterBanned") filterBanned: Int,
         pageable: Pageable
@@ -98,20 +98,20 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         value = """
             SELECT p FROM Project p
             WHERE (:status IS NULL OR p.status = :status)
-              AND (:search IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:searchPattern IS NULL
+               OR LOWER(p.title) LIKE :searchPattern
+               OR LOWER(p.creator.username) LIKE :searchPattern)
         """,
         countQuery = """
             SELECT COUNT(p) FROM Project p
             WHERE (:status IS NULL OR p.status = :status)
-              AND (:search IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:searchPattern IS NULL
+               OR LOWER(p.title) LIKE :searchPattern
+               OR LOWER(p.creator.username) LIKE :searchPattern)
         """
     )
     fun findByFiltersAdmin(
-        @Param("search") search: String?,
+        @Param("searchPattern") searchPattern: String?,
         @Param("status") status: String?,
         pageable: Pageable
     ): Page<Project>

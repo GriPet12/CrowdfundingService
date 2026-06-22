@@ -24,9 +24,9 @@ interface UserRepository : JpaRepository<User, Long> {
     @Query(
         value = """
             SELECT u FROM User u
-            WHERE (:search IS NULL
-                   OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
-                   OR LOWER(u.email)    LIKE LOWER(CONCAT('%', :search, '%')))
+            WHERE (:searchPattern IS NULL
+                   OR LOWER(u.username) LIKE :searchPattern
+                   OR LOWER(u.email)    LIKE :searchPattern)
               AND (
                    :filterBanned = 0
                    OR (:filterBanned = 1 AND u.banned = false)
@@ -40,9 +40,9 @@ interface UserRepository : JpaRepository<User, Long> {
         """,
         countQuery = """
             SELECT COUNT(u) FROM User u
-            WHERE (:search IS NULL
-                   OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
-                   OR LOWER(u.email)    LIKE LOWER(CONCAT('%', :search, '%')))
+            WHERE (:searchPattern IS NULL
+                   OR LOWER(u.username) LIKE :searchPattern
+                   OR LOWER(u.email)    LIKE :searchPattern)
               AND (
                    :filterBanned = 0
                    OR (:filterBanned = 1 AND u.banned = false)
@@ -56,7 +56,7 @@ interface UserRepository : JpaRepository<User, Long> {
         """
     )
     fun findByFilters(
-        @Param("search") search: String?,
+        @Param("searchPattern") searchPattern: String?,
         @Param("filterBanned") filterBanned: Int,
         @Param("filterRole") filterRole: Int,
         pageable: Pageable
@@ -67,17 +67,17 @@ interface UserRepository : JpaRepository<User, Long> {
             SELECT u FROM User u
             WHERE u.banned = false
               AND u.isPrivate = false
-              AND (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:searchPattern IS NULL OR LOWER(u.username) LIKE :searchPattern)
         """,
         countQuery = """
             SELECT COUNT(u) FROM User u
             WHERE u.banned = false
               AND u.isPrivate = false
-              AND (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:searchPattern IS NULL OR LOWER(u.username) LIKE :searchPattern)
         """
     )
     fun findActiveCreators(
-        @Param("search") search: String?,
+        @Param("searchPattern") searchPattern: String?,
         pageable: Pageable
     ): Page<User>
 }

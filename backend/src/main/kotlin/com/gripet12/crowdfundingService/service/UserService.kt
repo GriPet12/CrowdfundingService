@@ -7,6 +7,7 @@ import com.gripet12.crowdfundingService.dto.UserDto
 import com.gripet12.crowdfundingService.model.User
 import com.gripet12.crowdfundingService.repository.FileRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
+import com.gripet12.crowdfundingService.util.searchPattern
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -116,7 +117,7 @@ class UserService(
         val pageable: Pageable = PageRequest.of(page, size, Sort.by(direction, sortField))
 
         val usersPage = userRepository.findActiveCreators(
-            search = if (search.isNullOrBlank()) null else search,
+            searchPattern = searchPattern(search),
             pageable = pageable
         )
 
