@@ -466,9 +466,11 @@ const MyPage = () => {
     const [myTiers, setMyTiers] = useState([]);
     const [followedProjects, setFollowedProjects] = useState([]);
     const [followedAuthors, setFollowedAuthors]   = useState([]);
+    const [receivedProjectFollows, setReceivedProjectFollows] = useState([]);
+    const [receivedAuthorFollows, setReceivedAuthorFollows] = useState([]);
+    const [followingSubTab, setFollowingSubTab] = useState('sent');
+    const [authorsSubTab, setAuthorsSubTab] = useState('sent');
     const [mySubscriptions, setMySubscriptions] = useState([]);
-    const [receivedSubscriptions, setReceivedSubscriptions] = useState([]);
-    const [subscriptionsSubTab, setSubscriptionsSubTab] = useState('sent');
     const [myDonations, setMyDonations] = useState([]);
     const [receivedDonations, setReceivedDonations] = useState([]);
     const [donationsSubTab, setDonationsSubTab] = useState('sent');
@@ -560,6 +562,12 @@ const MyPage = () => {
             .then(r => r.ok ? r.json() : [])
             .then(setFollowedProjects)
             .catch(() => {});
+        fetch('/api/follows/projects/received', {
+            headers: { Authorization: `Bearer ${user.token}` },
+        })
+            .then(r => r.ok ? r.json() : [])
+            .then(setReceivedProjectFollows)
+            .catch(() => {});
     }, [activeTab]);
 
     useEffect(() => {
@@ -571,6 +579,12 @@ const MyPage = () => {
             .then(r => r.ok ? r.json() : [])
             .then(setFollowedAuthors)
             .catch(() => {});
+        fetch('/api/follows/authors/received', {
+            headers: { Authorization: `Bearer ${user.token}` },
+        })
+            .then(r => r.ok ? r.json() : [])
+            .then(setReceivedAuthorFollows)
+            .catch(() => {});
     }, [activeTab]);
 
     useEffect(() => {
@@ -581,12 +595,6 @@ const MyPage = () => {
         })
             .then(r => r.ok ? r.json() : [])
             .then(setMySubscriptions)
-            .catch(() => {});
-        fetch('/api/subscriptions/received', {
-            headers: { Authorization: `Bearer ${user.token}` },
-        })
-            .then(r => r.ok ? r.json() : [])
-            .then(setReceivedSubscriptions)
             .catch(() => {});
     }, [activeTab]);
 
@@ -1257,183 +1265,207 @@ const MyPage = () => {
 
                 {activeTab === 'following' && (
                     <div className="my-page-following-tab">
-                        {followedProjects.length === 0 ? (
-                            <div className="my-page-empty">
-                                <p>Ви ще не відстежуєте жодного проекту. Натисніть ☆ на картці проекту.</p>
-                            </div>
-                        ) : (
-                            <div className="projects-grid">
-                                {followedProjects.map(p => (
-                                    <ProjectItem
-                                        key={p.projectId}
-                                        project={p}
-                                        initialFollowing={true}
-                                        onFollowChange={(id, isFollowing) => {
-                                            if (!isFollowing)
-                                                setFollowedProjects(prev => prev.filter(x => x.projectId !== id));
-                                        }}
-                                    />
-                                ))}
-                            </div>
+                        <div className="my-donations-subtabs">
+                            <button
+                                type="button"
+                                className={`my-donations-subtab ${followingSubTab === 'sent' ? 'active' : ''}`}
+                                onClick={() => setFollowingSubTab('sent')}
+                            >
+                                Надіслані
+                            </button>
+                            <button
+                                type="button"
+                                className={`my-donations-subtab ${followingSubTab === 'received' ? 'active' : ''}`}
+                                onClick={() => setFollowingSubTab('received')}
+                            >
+                                Отримані
+                            </button>
+                        </div>
+
+                        {followingSubTab === 'sent' && (
+                            followedProjects.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Ви ще не відстежуєте жодного проекту. Натисніть ☆ на картці проекту.</p>
+                                </div>
+                            ) : (
+                                <div className="projects-grid">
+                                    {followedProjects.map(p => (
+                                        <ProjectItem
+                                            key={p.projectId}
+                                            project={p}
+                                            initialFollowing={true}
+                                            onFollowChange={(id, isFollowing) => {
+                                                if (!isFollowing)
+                                                    setFollowedProjects(prev => prev.filter(x => x.projectId !== id));
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )
+                        )}
+
+                        {followingSubTab === 'received' && (
+                            receivedProjectFollows.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Жоден користувач ще не відстежує ваші проекти.</p>
+                                </div>
+                            ) : (
+                                <div className="my-donations-list">
+                                    {receivedProjectFollows.map((item, idx) => (
+                                        <div
+                                            key={`${item.followerId}-${item.projectId}-${idx}`}
+                                            className="my-donations-card my-follows-card"
+                                            onClick={() => navigate(`/project/${item.projectId}`)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => e.key === 'Enter' && navigate(`/project/${item.projectId}`)}
+                                        >
+                                            <div className="my-donations-icon my-donations-icon--received">☆</div>
+                                            <div className="my-donations-info">
+                                                <p className="my-donations-target">
+                                                    <strong>{item.followerName}</strong>
+                                                    <span className="my-donations-type">відстежує проект</span>
+                                                </p>
+                                                <p className="my-donations-reward">{item.projectTitle}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
                         )}
                     </div>
                 )}
 
                 {activeTab === 'authors' && (
                     <div className="my-page-authors-tab">
-                        {followedAuthors.length === 0 ? (
-                            <div className="my-page-empty">
-                                <p>Ви ще не підписані на жодного автора. Натисніть «☆ Підписатися» на сторінці автора.</p>
-                            </div>
-                        ) : (
-                            <div className="authors-grid">
-                                {followedAuthors.map(u => (
-                                    <UserItem
-                                        key={u.id}
-                                        user={u}
-                                        initialFollowing={true}
-                                        onFollowChange={(id, isFollowing) => {
-                                            if (!isFollowing)
-                                                setFollowedAuthors(prev => prev.filter(x => x.id !== id));
-                                        }}
-                                    />
-                                ))}
-                            </div>
+                        <div className="my-donations-subtabs">
+                            <button
+                                type="button"
+                                className={`my-donations-subtab ${authorsSubTab === 'sent' ? 'active' : ''}`}
+                                onClick={() => setAuthorsSubTab('sent')}
+                            >
+                                Надіслані
+                            </button>
+                            <button
+                                type="button"
+                                className={`my-donations-subtab ${authorsSubTab === 'received' ? 'active' : ''}`}
+                                onClick={() => setAuthorsSubTab('received')}
+                            >
+                                Отримані
+                            </button>
+                        </div>
+
+                        {authorsSubTab === 'sent' && (
+                            followedAuthors.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Ви ще не відстежуєте жодного автора. Натисніть «☆ Підписатися» на сторінці автора.</p>
+                                </div>
+                            ) : (
+                                <div className="authors-grid">
+                                    {followedAuthors.map(u => (
+                                        <UserItem
+                                            key={u.id}
+                                            user={u}
+                                            initialFollowing={true}
+                                            onFollowChange={(id, isFollowing) => {
+                                                if (!isFollowing)
+                                                    setFollowedAuthors(prev => prev.filter(x => x.id !== id));
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )
+                        )}
+
+                        {authorsSubTab === 'received' && (
+                            receivedAuthorFollows.length === 0 ? (
+                                <div className="my-page-empty">
+                                    <p>Жоден користувач ще не відстежує вас як автора.</p>
+                                </div>
+                            ) : (
+                                <div className="my-follows-followers-grid">
+                                    {receivedAuthorFollows.map(u => (
+                                        <button
+                                            key={u.id}
+                                            type="button"
+                                            className="my-follows-follower-card"
+                                            onClick={() => navigate(`/author/${u.id}`)}
+                                        >
+                                            <div className="my-follows-follower-avatar">
+                                                {u.imageId ? (
+                                                    <img
+                                                        src={`/api/files/${u.imageId}/preview?w=160`}
+                                                        alt={u.username}
+                                                        loading="lazy"
+                                                    />
+                                                ) : (
+                                                    <span>{u.username?.charAt(0).toUpperCase() ?? '?'}</span>
+                                                )}
+                                            </div>
+                                            <span className="my-follows-follower-name">{u.username}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )
                         )}
                     </div>
                 )}
 
                 {activeTab === 'my-subscriptions' && (
                     <div className="my-page-my-subscriptions-tab">
-                        <div className="my-donations-subtabs">
-                            <button
-                                type="button"
-                                className={`my-donations-subtab ${subscriptionsSubTab === 'sent' ? 'active' : ''}`}
-                                onClick={() => setSubscriptionsSubTab('sent')}
-                            >
-                                Надіслані
-                            </button>
-                            <button
-                                type="button"
-                                className={`my-donations-subtab ${subscriptionsSubTab === 'received' ? 'active' : ''}`}
-                                onClick={() => setSubscriptionsSubTab('received')}
-                            >
-                                Отримані
-                            </button>
-                        </div>
-
-                        {subscriptionsSubTab === 'sent' && (
-                            mySubscriptions.length === 0 ? (
-                                <div className="my-page-empty">
-                                    <p>У вас ще немає активних підписок.</p>
-                                </div>
-                            ) : (
-                                <div className="my-subs-list">
-                                    {mySubscriptions.map(sub => {
-                                        const days = sub.expiresAt
-                                            ? Math.ceil((new Date(sub.expiresAt) - new Date()) / (1000 * 60 * 60 * 24))
-                                            : null;
-                                        return (
-                                        <div key={sub.subscriptionId} className={`my-subs-card ${!sub.isActive ? 'my-subs-card--expired' : ''}`}>
-                                            <div className="my-subs-avatar">
-                                                {sub.creatorImageId ? (
-                                                    <img
-                                                        src={`/api/files/${sub.creatorImageId}`}
-                                                        alt={sub.creatorName}
-                                                    />
-                                                ) : (
-                                                    <span>{sub.creatorName?.charAt(0).toUpperCase()}</span>
-                                                )}
-                                            </div>
-                                            <div className="my-subs-info">
-                                                <p className="my-subs-creator">{sub.creatorName}</p>
-                                                <p className="my-subs-tier">
-                                                    <span className="my-subs-tier-badge">Рівень {sub.tierLevel}</span>
-                                                    {sub.tierName}
-                                                </p>
-                                                {sub.grantType === 'AUTO' && (
-                                                    <span className="my-subs-grant-badge my-subs-grant-badge--auto">Авто</span>
-                                                )}
-                                                {sub.expiresAt && (
-                                                    <p className="my-subs-expiry">
-                                                        Діє до: <strong>{new Date(sub.expiresAt).toLocaleDateString('uk-UA')}</strong>
-                                                        {sub.isActive && days !== null && (
-                                                            <span className={`my-subs-days-left ${days <= 7 ? 'my-subs-days-left--warn' : ''}`}>
-                                                                {days > 0 ? ` · ${days} дн.` : ' · Закінчується сьогодні'}
-                                                            </span>
-                                                        )}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="my-subs-price">
-                                                ₴{sub.tierPrice}
-                                                <span className="my-subs-period">/міс</span>
-                                            </div>
-                                            <div className={`my-subs-status ${sub.isActive ? 'my-subs-status--active' : 'my-subs-status--expired'}`}>
-                                                {sub.isActive ? 'Активна' : 'Закінчилась'}
-                                            </div>
+                        {mySubscriptions.length === 0 ? (
+                            <div className="my-page-empty">
+                                <p>У вас ще немає активних підписок.</p>
+                            </div>
+                        ) : (
+                            <div className="my-subs-list">
+                                {mySubscriptions.map(sub => {
+                                    const days = sub.expiresAt
+                                        ? Math.ceil((new Date(sub.expiresAt) - new Date()) / (1000 * 60 * 60 * 24))
+                                        : null;
+                                    return (
+                                    <div key={sub.subscriptionId} className={`my-subs-card ${!sub.isActive ? 'my-subs-card--expired' : ''}`}>
+                                        <div className="my-subs-avatar">
+                                            {sub.creatorImageId ? (
+                                                <img
+                                                    src={`/api/files/${sub.creatorImageId}`}
+                                                    alt={sub.creatorName}
+                                                />
+                                            ) : (
+                                                <span>{sub.creatorName?.charAt(0).toUpperCase()}</span>
+                                            )}
                                         </div>
-                                        );
-                                    })}
-                                </div>
-                            )
-                        )}
-
-                        {subscriptionsSubTab === 'received' && (
-                            receivedSubscriptions.length === 0 ? (
-                                <div className="my-page-empty">
-                                    <p>У вас ще немає підписників.</p>
-                                </div>
-                            ) : (
-                                <div className="my-subs-list">
-                                    {receivedSubscriptions.map(sub => {
-                                        const days = sub.expiresAt
-                                            ? Math.ceil((new Date(sub.expiresAt) - new Date()) / (1000 * 60 * 60 * 24))
-                                            : null;
-                                        return (
-                                        <div key={sub.subscriptionId} className={`my-subs-card ${!sub.isActive ? 'my-subs-card--expired' : ''}`}>
-                                            <div className="my-subs-avatar my-subs-avatar--received">
-                                                {sub.subscriberImageId ? (
-                                                    <img
-                                                        src={`/api/files/${sub.subscriberImageId}`}
-                                                        alt={sub.subscriberName}
-                                                    />
-                                                ) : (
-                                                    <span>{sub.subscriberName?.charAt(0).toUpperCase() ?? '?'}</span>
-                                                )}
-                                            </div>
-                                            <div className="my-subs-info">
-                                                <p className="my-subs-creator">{sub.subscriberName ?? 'Підписник'}</p>
-                                                <p className="my-subs-tier">
-                                                    <span className="my-subs-tier-badge">Рівень {sub.tierLevel}</span>
-                                                    {sub.tierName}
+                                        <div className="my-subs-info">
+                                            <p className="my-subs-creator">{sub.creatorName}</p>
+                                            <p className="my-subs-tier">
+                                                <span className="my-subs-tier-badge">Рівень {sub.tierLevel}</span>
+                                                {sub.tierName}
+                                            </p>
+                                            {sub.grantType === 'AUTO' && (
+                                                <span className="my-subs-grant-badge my-subs-grant-badge--auto">Авто</span>
+                                            )}
+                                            {sub.expiresAt && (
+                                                <p className="my-subs-expiry">
+                                                    Діє до: <strong>{new Date(sub.expiresAt).toLocaleDateString('uk-UA')}</strong>
+                                                    {sub.isActive && days !== null && (
+                                                        <span className={`my-subs-days-left ${days <= 7 ? 'my-subs-days-left--warn' : ''}`}>
+                                                            {days > 0 ? ` · ${days} дн.` : ' · Закінчується сьогодні'}
+                                                        </span>
+                                                    )}
                                                 </p>
-                                                {sub.grantType === 'MANUAL' && (
-                                                    <span className="my-subs-grant-badge">Вручну</span>
-                                                )}
-                                                {sub.expiresAt && (
-                                                    <p className="my-subs-expiry">
-                                                        Діє до: <strong>{new Date(sub.expiresAt).toLocaleDateString('uk-UA')}</strong>
-                                                        {sub.isActive && days !== null && (
-                                                            <span className={`my-subs-days-left ${days <= 7 ? 'my-subs-days-left--warn' : ''}`}>
-                                                                {days > 0 ? ` · ${days} дн.` : ' · Закінчується сьогодні'}
-                                                            </span>
-                                                        )}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="my-subs-price my-subs-price--received">
-                                                +₴{sub.tierPrice}
-                                                <span className="my-subs-period">/міс</span>
-                                            </div>
-                                            <div className={`my-subs-status ${sub.isActive ? 'my-subs-status--active' : 'my-subs-status--expired'}`}>
-                                                {sub.isActive ? 'Активна' : 'Закінчилась'}
-                                            </div>
+                                            )}
                                         </div>
-                                        );
-                                    })}
-                                </div>
-                            )
+                                        <div className="my-subs-price">
+                                            ₴{sub.tierPrice}
+                                            <span className="my-subs-period">/міс</span>
+                                        </div>
+                                        <div className={`my-subs-status ${sub.isActive ? 'my-subs-status--active' : 'my-subs-status--expired'}`}>
+                                            {sub.isActive ? 'Активна' : 'Закінчилась'}
+                                        </div>
+                                    </div>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 )}

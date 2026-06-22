@@ -1,6 +1,7 @@
 package com.gripet12.crowdfundingService.controller
 
 import com.gripet12.crowdfundingService.dto.PreviewProjectDto
+import com.gripet12.crowdfundingService.dto.ReceivedProjectFollowDto
 import com.gripet12.crowdfundingService.dto.SubscriptionDto
 import com.gripet12.crowdfundingService.dto.UserDto
 import com.gripet12.crowdfundingService.service.FollowService
@@ -27,6 +28,10 @@ class FollowController(private val followService: FollowService) {
     fun getFollowedProjects(): ResponseEntity<List<PreviewProjectDto>> =
         ResponseEntity.ok(followService.getFollowedProjects())
 
+    @GetMapping("/projects/received")
+    fun getReceivedProjectFollows(): ResponseEntity<List<ReceivedProjectFollowDto>> =
+        ResponseEntity.ok(followService.getReceivedProjectFollows())
+
     @PostMapping("/projects/batch-status")
     fun batchProjectStatus(@RequestBody ids: List<Long>): ResponseEntity<Set<Long>> =
         ResponseEntity.ok(followService.getFollowedProjectIds(ids))
@@ -46,6 +51,10 @@ class FollowController(private val followService: FollowService) {
     @GetMapping("/authors")
     fun getFollowedAuthors(): ResponseEntity<List<UserDto>> =
         ResponseEntity.ok(followService.getFollowedAuthors())
+
+    @GetMapping("/authors/received")
+    fun getReceivedAuthorFollows(): ResponseEntity<List<UserDto>> =
+        ResponseEntity.ok(followService.getReceivedAuthorFollows())
 
     @PostMapping("/authors/batch-status")
     fun batchAuthorStatus(@RequestBody ids: List<Long>): ResponseEntity<Set<Long>> =

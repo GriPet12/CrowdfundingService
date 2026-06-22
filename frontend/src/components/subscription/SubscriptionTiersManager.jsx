@@ -44,7 +44,12 @@ const SubscriptionTiersManager = () => {
                 }),
             });
             if (!res.ok) {
-                setFormError('Не вдалося створити рівень. Спробуйте ще раз.');
+                let message = 'Не вдалося створити рівень. Спробуйте ще раз.';
+                try {
+                    const data = await res.json();
+                    if (data.message) message = data.message;
+                } catch { /* ignore */ }
+                setFormError(message);
                 return;
             }
             const created = await res.json();

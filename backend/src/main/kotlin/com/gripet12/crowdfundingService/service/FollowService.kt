@@ -1,6 +1,7 @@
 package com.gripet12.crowdfundingService.service
 
 import com.gripet12.crowdfundingService.dto.PreviewProjectDto
+import com.gripet12.crowdfundingService.dto.ReceivedProjectFollowDto
 import com.gripet12.crowdfundingService.dto.SubscriptionDto
 import com.gripet12.crowdfundingService.dto.UserDto
 import com.gripet12.crowdfundingService.model.AuthorFollow
@@ -77,6 +78,39 @@ class FollowService(
                 hotnessScore = p.hotnessScore,
                 mainImage = p.mainImage?.id,
                 categories = p.categories.map { it?.categoryName }.toSet()
+            )
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun getReceivedProjectFollows(): List<ReceivedProjectFollowDto> {
+        val userId = currentUserId()
+        return followRepository.findAllByProjectCreatorUserId(userId).map { pf ->
+            val follower = pf.user
+            val project = pf.project
+            ReceivedProjectFollowDto(
+                followerId = follower.userId!!,
+                followerName = follower.username,
+                followerImageId = follower.image?.id,
+                projectId = project.projectId!!,
+                projectTitle = project.title
+            )
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun getReceivedAuthorFollows(): List<UserDto> {
+        val userId = currentUserId()
+        return authorFollowRepository.findAllByCreatorUserId(userId).map { af ->
+            val f = af.follower
+            UserDto(
+                id        = f.userId,
+                username  = f.username,
+                password  = "",
+                email     = f.email,
+                isVerified = f.isVerified,
+                imageId   = f.image?.id,
+                roles     = f.roles
             )
         }
     }

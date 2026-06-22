@@ -15,6 +15,15 @@ interface ProjectFollowRepository : JpaRepository<ProjectFollow, Long> {
     @Query("SELECT pf FROM ProjectFollow pf JOIN FETCH pf.project p JOIN FETCH p.creator WHERE pf.user.userId = :userId")
     fun findAllByUserUserId(userId: Long): List<ProjectFollow>
 
+    @Query("""
+        SELECT pf FROM ProjectFollow pf
+        JOIN FETCH pf.user u LEFT JOIN FETCH u.image
+        JOIN FETCH pf.project p
+        WHERE p.creator.userId = :creatorId
+        ORDER BY pf.id DESC
+    """)
+    fun findAllByProjectCreatorUserId(@Param("creatorId") creatorId: Long): List<ProjectFollow>
+
     @Query("SELECT pf.project.projectId FROM ProjectFollow pf WHERE pf.user.userId = :userId AND pf.project.projectId IN :projectIds")
     fun findFollowedProjectIds(userId: Long, projectIds: List<Long>): List<Long>
 

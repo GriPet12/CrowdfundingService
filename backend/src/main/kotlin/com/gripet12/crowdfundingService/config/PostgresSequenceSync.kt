@@ -16,6 +16,7 @@ class PostgresSequenceSync(
     private val serialIdTables = mapOf(
         "author_follows" to "id",
         "project_follows" to "id",
+        "subscription_tiers" to "tier_id",
         "post_likes" to "id",
         "project_likes" to "id",
         "comments" to "comment_id",
