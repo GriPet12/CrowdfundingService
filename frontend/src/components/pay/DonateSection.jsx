@@ -18,7 +18,7 @@ const DonateSection = ({
     inputClass      = 'donate-input',
     confirmClass    = 'donate-button-confirm',
     confirmLabel    = '✓',
-    placeholder     = 'Сума',
+    placeholder     = 'Мін. ₴25',
     onDonate        = null,
 }) => {
     const [isDonating, setIsDonating] = useState(false);
@@ -131,7 +131,7 @@ const DonateSection = ({
                         className={inputClass}
                         placeholder={placeholder}
                         value={amount}
-                        min="1"
+                        min="25"
                         onChange={(e) => setAmount(e.target.value)}
                     />
                     <WayForPayForm

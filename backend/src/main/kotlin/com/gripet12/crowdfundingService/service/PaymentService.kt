@@ -11,6 +11,7 @@ import com.gripet12.crowdfundingService.repository.SubscriptionRepository
 import com.gripet12.crowdfundingService.repository.SubscriptionTierRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
 import com.stripe.Stripe
+import com.stripe.exception.StripeException
 import com.stripe.model.Charge
 import com.stripe.model.Event
 import com.stripe.model.PaymentIntent
@@ -39,7 +40,8 @@ class PaymentService(
     @Value("\${stripe.secret-key}") private val stripeSecretKey: String,
     @Value("\${stripe.webhook-secret}") private val webhookSecret: String,
     @Value("\${stripe.return-url:http://localhost:5173}") private val returnUrl: String,
-    @Value("\${stripe.currency:uah}") private val stripeCurrency: String
+    @Value("\${stripe.currency:uah}") private val stripeCurrency: String,
+    @Value("\${stripe.min-payment:25}") private val minPaymentAmount: java.math.BigDecimal
 ) {
     private val log = LoggerFactory.getLogger(PaymentService::class.java)
     private val currency = stripeCurrency.lowercase()
@@ -56,6 +58,8 @@ class PaymentService(
      */
     @Transactional
     fun generatePaymentData(request: PaymentRequest, type: String): Map<String, String> {
+        validatePaymentAmount(request.amount)
+
         val orderReference = createPayment(request, type)
 
         // Stripe amounts are in the smallest currency unit (kopiyky for UAH, cents for USD…)
@@ -68,7 +72,11 @@ class PaymentService(
             .putMetadata("type", type)
             .build()
 
-        val intent = PaymentIntent.create(params)
+        val intent = try {
+            PaymentIntent.create(params)
+        } catch (ex: StripeException) {
+            throw mapStripePaymentError(ex)
+        }
         log.info("Created PaymentIntent ${intent.id} for orderReference=$orderReference amount=${request.amount} $currency")
 
         return mapOf(
@@ -79,6 +87,25 @@ class PaymentService(
             "currency"         to currency,
             "returnUrl"        to returnUrl
         )
+    }
+
+    private fun validatePaymentAmount(amount: Double) {
+        val value = java.math.BigDecimal.valueOf(amount)
+        if (value < minPaymentAmount) {
+            throw IllegalArgumentException(
+                "Мінімальна сума платежу — ₴${minPaymentAmount.stripTrailingZeros().toPlainString()} (обмеження Stripe)"
+            )
+        }
+    }
+
+    private fun mapStripePaymentError(ex: StripeException): IllegalArgumentException {
+        val code = ex.code ?: ""
+        val message = when (code) {
+            "amount_too_small" ->
+                "Мінімальна сума платежу — ₴${minPaymentAmount.stripTrailingZeros().toPlainString()} (обмеження Stripe)"
+            else -> ex.userMessage ?: ex.message ?: "Не вдалося створити платіж"
+        }
+        return IllegalArgumentException(message)
     }
 
     @Transactional

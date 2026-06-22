@@ -217,7 +217,7 @@ const ProjectPage = () => {
                             inputClass="projectpage-donate-input"
                             confirmClass="projectpage-donate-confirm"
                             confirmLabel="✓"
-                            placeholder="Сума (₴)"
+                            placeholder="Мін. ₴25"
                             onDonate={() => analyticsService.projectDonate(project.projectId)}
                         />
                         ) : (

@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { useStripePayment } from './StripePaymentContext.jsx';
 
 /* ── Кнопка оплати — тригерить модалку через context ──────────────── */
+const MIN_DONATION_UAH = 25;
+
 const WayForPayForm = ({
     amount,
     type           = 'DONATION',
@@ -20,6 +22,10 @@ const WayForPayForm = ({
             alert('Введіть суму більше 0');
             return;
         }
+        if (amount < MIN_DONATION_UAH) {
+            setInitError(`Мінімальна сума платежу — ₴${MIN_DONATION_UAH} (обмеження Stripe)`);
+            return;
+        }
         setLoading(true);
         setInitError('');
 
@@ -32,7 +38,14 @@ const WayForPayForm = ({
 
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
-                setInitError(`Статус: ${res.status}${text ? ` — ${text}` : ''}`);
+                let message = text;
+                try {
+                    const data = JSON.parse(text);
+                    if (data.message) message = data.message;
+                } catch {
+                    // keep raw text
+                }
+                setInitError(message || `Помилка платежу (${res.status})`);
                 return;
             }
 
@@ -51,7 +64,7 @@ const WayForPayForm = ({
             <button
                 type="button"
                 onClick={initPayment}
-                disabled={loading || !amount || amount <= 0}
+                disabled={loading || !amount || amount <= 0 || amount < MIN_DONATION_UAH}
                 className={confirmClass}
                 title="Підтвердити оплату"
             >

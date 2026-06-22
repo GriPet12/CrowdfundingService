@@ -67,6 +67,7 @@ stripe:
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_changeme}
   return-url: ${STRIPE_RETURN_URL:http://localhost:5173}
   currency: ${STRIPE_CURRENCY:uah}
+  min-payment: ${STRIPE_MIN_PAYMENT:25}
 
 platform:
   fee-percent: ${PLATFORM_FEE_PERCENT:5}
