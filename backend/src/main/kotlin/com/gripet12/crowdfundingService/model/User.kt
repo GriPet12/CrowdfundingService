@@ -42,6 +42,12 @@ data class User(
     @Column(nullable = false, columnDefinition = "boolean not null default false")
     var banned: Boolean = false,
 
+    @Column(name = "stripe_connect_account_id", length = 120)
+    var stripeConnectAccountId: String? = null,
+
+    @Column(name = "stripe_payouts_enabled", nullable = false, columnDefinition = "boolean not null default false")
+    var stripePayoutsEnabled: Boolean = false,
+
     @Column(name = "created_at", nullable = false,
         columnDefinition = "timestamp not null default now()")
     val createdAt: LocalDateTime = LocalDateTime.now()

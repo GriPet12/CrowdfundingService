@@ -1,0 +1,221 @@
+.balance-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 720px;
+}
+
+.balance-tab-loading {
+    padding: 40px 0;
+    text-align: center;
+    color: #666;
+}
+
+.balance-cards {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 700px) {
+    .balance-cards { grid-template-columns: 1fr; }
+}
+
+.balance-card {
+    background: #f9f9f9;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.balance-card--main {
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+    border-color: #a7f3d0;
+}
+
+.balance-card-label {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.balance-card-value {
+    font-size: 32px;
+    font-weight: 900;
+    color: #059669;
+    letter-spacing: -0.02em;
+}
+
+.balance-card-value--sm {
+    font-size: 22px;
+    color: #1a1a1a;
+}
+
+.balance-fee-note {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.balance-section-title {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.balance-stripe-section,
+.balance-withdraw-form,
+.balance-history {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.balance-stripe-ready {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.balance-stripe-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: #059669;
+    font-size: 14px;
+}
+
+.balance-stripe-hint {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.balance-connect-btn {
+    margin-top: 12px;
+    background: #635bff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.balance-connect-btn:hover:not(:disabled) { background: #4f46e5; }
+.balance-connect-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.balance-withdraw-row {
+    display: flex;
+    gap: 10px;
+}
+
+.balance-withdraw-input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 16px;
+}
+
+.balance-withdraw-btn {
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.balance-withdraw-btn:hover:not(:disabled) { background: #333; }
+.balance-withdraw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.balance-hint {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.balance-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.balance-message--error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.balance-message--success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.balance-empty {
+    margin: 0;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.balance-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.balance-history-item {
+    padding: 12px 14px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #f3f4f6;
+}
+
+.balance-history-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.balance-history-amount {
+    font-weight: 800;
+    font-size: 16px;
+    color: #1a1a1a;
+}
+
+.balance-history-status {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+.balance-history-status--completed { background: #d1fae5; color: #047857; }
+.balance-history-status--pending,
+.balance-history-status--processing { background: #fef3c7; color: #b45309; }
+.balance-history-status--failed,
+.balance-history-status--rejected { background: #fee2e2; color: #b91c1c; }
+
+.balance-history-meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.balance-history-reason {
+    color: #b45309;
+}

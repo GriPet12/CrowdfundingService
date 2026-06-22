@@ -19,6 +19,7 @@ interface UserRepository : JpaRepository<User, Long> {
     fun existsByUsername(username: String): Boolean
     fun existsByEmail(email: String): Boolean
     fun findByUserId(userId: Long): User
+    fun findByStripeConnectAccountId(stripeConnectAccountId: String): User?
     override fun findAll(pageable: Pageable): Page<User>
 
     @Query(

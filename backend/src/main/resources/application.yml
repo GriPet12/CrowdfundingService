@@ -68,6 +68,11 @@ stripe:
   return-url: ${STRIPE_RETURN_URL:http://localhost:5173}
   currency: ${STRIPE_CURRENCY:uah}
 
+platform:
+  fee-percent: ${PLATFORM_FEE_PERCENT:5}
+  min-withdrawal: ${PLATFORM_MIN_WITHDRAWAL:100}
+  connect-country: ${STRIPE_CONNECT_COUNTRY:UA}
+
 ---
 spring:
   config:

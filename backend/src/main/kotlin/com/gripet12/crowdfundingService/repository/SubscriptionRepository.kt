@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -63,4 +64,10 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
     @Query("SELECT COUNT(s) FROM Subscription s JOIN s.payment p WHERE p.status = 'APPROVED'")
     fun countAllApprovedSubscriptions(): Long
+
+    @Query("""
+        SELECT s FROM Subscription s JOIN FETCH s.payment p JOIN FETCH s.creator
+        WHERE s.creator.userId = :creatorId AND p.status = 'APPROVED'
+    """)
+    fun findAllApprovedPaidForCreator(@Param("creatorId") creatorId: Long): List<Subscription>
 }

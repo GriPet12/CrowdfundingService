@@ -34,6 +34,7 @@ class PaymentService(
     private val subscriptionTierRepository: SubscriptionTierRepository,
     private val subscriptionRepository: SubscriptionRepository,
     @Lazy private val subscriptionService: SubscriptionService,
+    @Lazy private val balanceService: BalanceService,
     @Lazy private val self: PaymentService,
     @Value("\${stripe.secret-key}") private val stripeSecretKey: String,
     @Value("\${stripe.webhook-secret}") private val webhookSecret: String,
@@ -203,6 +204,8 @@ class PaymentService(
                 self.declinePayment(orderReference)
             }
 
+            "account.updated" -> balanceService.handleAccountUpdated(event)
+
             else -> log.debug("Ignored Stripe event type: ${event.type}")
         }
     }
@@ -263,6 +266,10 @@ class PaymentService(
             subscription.expiresAt = LocalDate.now().plusMonths(1)
             subscriptionRepository.save(subscription)
             log.info("Activated subscription ${subscription.subscriptionId}")
+        }
+
+        if (!alreadyApproved) {
+            balanceService.creditFromApprovedPayment(freshPayment)
         }
     }
 

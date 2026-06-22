@@ -8,6 +8,7 @@ import AuthorChat from '../../components/user/AuthorChat.jsx';
 import PostCard from '../../components/post/PostCard.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import StatsTab from '../../components/user/StatsTab.jsx';
+import BalanceTab from '../../components/user/BalanceTab.jsx';
 import '../../styles/myPage.css';
 import '../../styles/projectItem.css';
 import '../../styles/postCard.css';
@@ -774,6 +775,7 @@ const MyPage = () => {
                     {[
                         { key: 'content',          label: 'Контент' },
                         { key: 'stats',            label: 'Статистика' },
+                        { key: 'balance',          label: 'Баланс' },
                         { key: 'chat',             label: 'Чат' },
                         { key: 'projects',         label: 'Проекти' },
                         { key: 'moderation',       label: 'На розгляді' },
@@ -835,6 +837,12 @@ const MyPage = () => {
                 {activeTab === 'stats' && (
                     <div className="my-page-stats-tab">
                         <StatsTab userId={currentUser.id} token={currentUser.token} />
+                    </div>
+                )}
+
+                {activeTab === 'balance' && (
+                    <div className="my-page-balance-tab">
+                        <BalanceTab token={currentUser.token} />
                     </div>
                 )}
 

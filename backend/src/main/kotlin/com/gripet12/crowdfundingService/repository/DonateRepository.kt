@@ -137,6 +137,15 @@ interface DonateRepository : JpaRepository<Donate, Long> {
     @Query("SELECT COUNT(d) FROM Donate d JOIN d.payment p WHERE p.status = 'APPROVED'")
     fun countAllApprovedDonations(): Long
 
+    @Query("""
+        SELECT d FROM Donate d JOIN FETCH d.payment p
+        LEFT JOIN FETCH d.project pr LEFT JOIN FETCH pr.creator
+        LEFT JOIN FETCH d.creator
+        WHERE p.status = 'APPROVED'
+          AND ((d.creator.userId = :creatorId) OR (d.project.creator.userId = :creatorId))
+    """)
+    fun findAllApprovedForCreator(@Param("creatorId") creatorId: Long): List<Donate>
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM Donate d WHERE d.project.projectId = :projectId")
     fun deleteByProjectProjectId(@Param("projectId") projectId: Long)

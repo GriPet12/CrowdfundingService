@@ -21,7 +21,8 @@ class AdminService(
     private val postRepository: PostRepository,
     private val categoryRepository: CategoryRepository,
     private val subscriptionRepository: SubscriptionRepository,
-    private val donateRepository: DonateRepository
+    private val donateRepository: DonateRepository,
+    private val withdrawalRepository: WithdrawalRepository
 ) {
 
     @Transactional(readOnly = true)
@@ -305,6 +306,26 @@ class AdminService(
     ): Page<TransactionDto> {
         val normalizedType = type?.uppercase()
 
+        if (normalizedType == "WITHDRAWAL") {
+            val pageable = PageRequest.of(page, size)
+            return withdrawalRepository.findByFilters(
+                search = search?.takeIf { it.isNotBlank() },
+                from = from,
+                to = to,
+                pageable = pageable
+            ).map { row ->
+                TransactionDto(
+                    id        = row[0] as? Long,
+                    type      = "WITHDRAWAL",
+                    fromUser  = row[1] as? String,
+                    toUser    = "Банківський рахунок",
+                    amount    = row[2] as BigDecimal,
+                    status    = (row[3] as? String) ?: "PENDING",
+                    createdAt = (row[4] as? java.sql.Timestamp)?.toLocalDateTime()
+                )
+            }
+        }
+
         if (normalizedType == "SUBSCRIPTION") {
             val subPageable = PageRequest.of(page, size)
             return subscriptionRepository.findAllScalar(subPageable).map { row ->
@@ -345,16 +366,18 @@ class AdminService(
         val donationsCount      = donateRepository.countAllApprovedDonations()
         val totalSubscriptions  = subscriptionRepository.sumAllApprovedSubscriptions()
         val subscriptionsCount  = subscriptionRepository.countAllApprovedSubscriptions()
+        val totalWithdrawals    = withdrawalRepository.sumAllCompleted()
+        val withdrawalsCount    = withdrawalRepository.countAllCompleted()
 
         return TransactionSummaryDto(
             totalDonations     = totalDonations,
             donationsCount     = donationsCount,
-            totalWithdrawals   = BigDecimal.ZERO,
-            withdrawalsCount   = 0L,
+            totalWithdrawals   = totalWithdrawals,
+            withdrawalsCount   = withdrawalsCount,
             totalSubscriptions = totalSubscriptions,
             subscriptionsCount = subscriptionsCount,
             totalVolume        = totalDonations + totalSubscriptions,
-            totalCount         = donationsCount + subscriptionsCount
+            totalCount         = donationsCount + subscriptionsCount + withdrawalsCount
         )
     }
 }
