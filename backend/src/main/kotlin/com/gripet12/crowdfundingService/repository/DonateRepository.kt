@@ -103,6 +103,25 @@ interface DonateRepository : JpaRepository<Donate, Long> {
         @Param("since") since: Timestamp
     ): BigDecimal
 
+    @Query(
+        value = """
+        SELECT COALESCE(SUM(d.amount), 0)
+        FROM donate d
+        INNER JOIN payments p ON p.payment_id = d.payment_payment_id
+        WHERE d.donor_user_id = :donorId
+          AND d.creator_user_id = :creatorId
+          AND d.project_project_id IS NULL
+          AND p.status = 'APPROVED'
+          AND d.create_at >= :since
+        """,
+        nativeQuery = true
+    )
+    fun sumApprovedDirectDonationsByDonorToCreatorSince(
+        @Param("donorId") donorId: Long,
+        @Param("creatorId") creatorId: Long,
+        @Param("since") since: Timestamp
+    ): BigDecimal
+
 
     @Query("""
         SELECT COALESCE(SUM(d.amount), 0)

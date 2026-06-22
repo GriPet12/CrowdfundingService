@@ -58,14 +58,14 @@ class SubscriptionService(
     @Transactional
     fun checkAndGrantAutoSubscription(donorId: Long, creatorId: Long) {
         val since = Timestamp.valueOf(LocalDateTime.now().minusDays(30))
-        val totalDonated: BigDecimal = donateRepository.sumApprovedDonationsByDonorToCreatorSince(
+        val directDonated: BigDecimal = donateRepository.sumApprovedDirectDonationsByDonorToCreatorSince(
             donorId, creatorId, since
         )
 
-        log.info("Auto-sub check: donor=$donorId creator=$creatorId totalDonated=$totalDonated")
+        log.info("Auto-sub check: donor=$donorId creator=$creatorId directDonatedLast30Days=$directDonated")
 
         val eligibleTier = subscriptionTierRepository.findByCreatorId(creatorId)
-            .filter { BigDecimal.valueOf(it.amount) <= totalDonated }
+            .filter { BigDecimal.valueOf(it.amount) <= directDonated }
             .maxByOrNull { it.level }
             ?: return
 
