@@ -12,6 +12,7 @@ import com.gripet12.crowdfundingService.repository.PostRepository
 import com.gripet12.crowdfundingService.repository.SubscriptionRepository
 import com.gripet12.crowdfundingService.repository.SubscriptionTierRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
+import org.springframework.context.annotation.Lazy
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -24,7 +25,8 @@ class PostService(
     private val subscriptionRepository: SubscriptionRepository,
     private val userRepository: UserRepository,
     private val postLikeRepository: PostLikeRepository,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
+    @Lazy private val subscriptionService: SubscriptionService
 ) {
     private fun currentUserIdOrNull(): Long? {
         val auth = SecurityContextHolder.getContext().authentication
@@ -43,9 +45,12 @@ class PostService(
             .any { (it.subscriptionTier?.level ?: 0) >= requiredTierLevel }
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     fun getPostsByAuthor(authorId: Long): List<PostResponseDto> {
         val viewerId = currentUserIdOrNull()
+        if (viewerId != null && viewerId != authorId) {
+            subscriptionService.checkAndGrantAutoSubscription(viewerId, authorId)
+        }
         val isOwner = viewerId != null && viewerId == authorId
         val posts = if (isOwner)
             postRepository.findByMasterIdIncludingBanned(authorId)

@@ -56,22 +56,23 @@ interface DonateRepository : JpaRepository<Donate, Long> {
     fun save(donate: Donate): Donate
     fun findByPayment(payment: Payment): Donate?
 
-    @Query("""
+    @Query(
+        value = """
         SELECT COALESCE(SUM(d.amount), 0)
-        FROM Donate d
-        JOIN d.payment p
-        WHERE d.donor.userId = :donorId
+        FROM donate d
+        INNER JOIN payments p ON p.payment_id = d.payment_payment_id
+        LEFT JOIN projects pr ON pr.project_id = d.project_project_id
+        WHERE d.donor_user_id = :donorId
           AND p.status = 'APPROVED'
-          AND d.createAt >= :since
-          AND (
-            (d.project IS NOT NULL AND d.project.creator.userId = :creatorId)
-            OR (d.project IS NULL AND d.creator.userId = :creatorId)
-          )
-    """)
+          AND d.create_at >= :since
+          AND (d.creator_user_id = :creatorId OR pr.creator_id = :creatorId)
+        """,
+        nativeQuery = true
+    )
     fun sumApprovedDonationsByDonorToCreatorSince(
-        donorId: Long,
-        creatorId: Long,
-        since: Timestamp
+        @Param("donorId") donorId: Long,
+        @Param("creatorId") creatorId: Long,
+        @Param("since") since: Timestamp
     ): BigDecimal
 
 

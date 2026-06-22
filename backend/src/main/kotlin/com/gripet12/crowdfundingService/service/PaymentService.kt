@@ -236,29 +236,25 @@ class PaymentService(
             log.warn("approvePayment: Payment not found for orderReference=$orderReference")
             return
         }
-        if (payment.status == "APPROVED") {
-            log.warn("Payment $orderReference already APPROVED, skipping")
-            return
+        val alreadyApproved = payment.status == "APPROVED"
+        if (!alreadyApproved) {
+            // Direct UPDATE — bypasses Hibernate dirty-check issues with data classes
+            val updated = paymentRepository.updateStatusByOrderReference(orderReference, "APPROVED")
+            log.info("Payment $orderReference → APPROVED (rows updated: $updated)")
+        } else {
+            log.info("Payment $orderReference already APPROVED — rechecking auto-subscription")
         }
-
-        // Direct UPDATE — bypasses Hibernate dirty-check issues with data classes
-        val updated = paymentRepository.updateStatusByOrderReference(orderReference, "APPROVED")
-        log.info("Payment $orderReference → APPROVED (rows updated: $updated)")
 
         // Re-fetch after the direct UPDATE so the entity is fresh (not stale from L1 cache)
         val freshPayment = paymentRepository.findByOrderReference(orderReference)!!
 
         val donate = donateRepository.findByPayment(freshPayment)
         if (donate != null) {
-            if (donate.project != null) {
+            if (!alreadyApproved && donate.project != null) {
                 projectRepository.increaseCollectedAmount(donate.project.projectId!!, donate.amount)
                 log.info("Increased collectedAmount for project ${donate.project.projectId} by ${donate.amount}")
             }
-            val donorId = donate.donor?.userId
-            val creatorId = donate.project?.creator?.userId ?: donate.creator?.userId
-            if (donorId != null && creatorId != null) {
-                subscriptionService.checkAndGrantAutoSubscription(donorId, creatorId)
-            }
+            maybeGrantAutoSubscription(donate)
         }
 
         val subscription = subscriptionRepository.findByPayment(freshPayment)
@@ -268,6 +264,12 @@ class PaymentService(
             subscriptionRepository.save(subscription)
             log.info("Activated subscription ${subscription.subscriptionId}")
         }
+    }
+
+    private fun maybeGrantAutoSubscription(donate: Donate) {
+        val donorId = donate.donor?.userId ?: return
+        val creatorId = donate.creator?.userId ?: donate.project?.creator?.userId ?: return
+        subscriptionService.checkAndGrantAutoSubscription(donorId, creatorId)
     }
 
     @Transactional
