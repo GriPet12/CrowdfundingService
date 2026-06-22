@@ -109,35 +109,39 @@ class FollowService(
         return authorFollowRepository.findFollowedAuthorIds(userId, creatorIds).toSet()
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = [DataIntegrityViolationException::class])
     fun toggleAuthorFollow(creatorId: Long): Boolean {
         val followerId = currentUserId()
         if (followerId == creatorId) throw IllegalArgumentException("Cannot follow yourself")
         if (!userRepository.existsById(creatorId)) throw IllegalArgumentException("Creator not found")
 
-        val existing = authorFollowRepository.findByFollowerUserIdAndCreatorUserId(followerId, creatorId)
-        return if (existing != null) {
-            authorFollowRepository.delete(existing)
-            authorFollowRepository.flush()
-            false
-        } else {
-            val follower = userRepository.getReferenceById(followerId)
-            val creator  = userRepository.getReferenceById(creatorId)
-            try {
-                authorFollowRepository.save(AuthorFollow(follower = follower, creator = creator))
+        if (isFollowingAuthorPair(followerId, creatorId)) {
+            val existing = authorFollowRepository.findByFollowerUserIdAndCreatorUserId(followerId, creatorId)
+            if (existing != null) {
+                authorFollowRepository.delete(existing)
                 authorFollowRepository.flush()
-                true
-            } catch (_: DataIntegrityViolationException) {
-                // Concurrent request or stale UI state — follow already exists
-                true
             }
+            return false
+        }
+
+        val follower = userRepository.getReferenceById(followerId)
+        val creator  = userRepository.getReferenceById(creatorId)
+        try {
+            authorFollowRepository.save(AuthorFollow(follower = follower, creator = creator))
+            authorFollowRepository.flush()
+            return true
+        } catch (_: DataIntegrityViolationException) {
+            return isFollowingAuthorPair(followerId, creatorId)
         }
     }
+
+    private fun isFollowingAuthorPair(followerId: Long, creatorId: Long): Boolean =
+        authorFollowRepository.countByFollowerUserIdAndCreatorUserId(followerId, creatorId) > 0
 
     @Transactional(readOnly = true)
     fun isFollowingAuthor(creatorId: Long): Boolean {
         val followerId = currentUserId()
-        return authorFollowRepository.existsByFollowerUserIdAndCreatorUserId(followerId, creatorId)
+        return isFollowingAuthorPair(followerId, creatorId)
     }
 
     @Transactional(readOnly = true)
