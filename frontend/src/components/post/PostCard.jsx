@@ -272,6 +272,10 @@ const PostCard = ({ post, onDelete, onEdit }) => {
                     )}
                     {!banned && post.visibility === 'PRIVATE' ? (
                         <span className="post-access-badge post-access-badge--private">Тільки я</span>
+                    ) : !banned && post.visibility === 'DONATION' ? (
+                        <span className="post-access-badge post-access-badge--donation">
+                            Донат від ₴{post.minDonationAmount}
+                        </span>
                     ) : !banned && (post.requiredTierLevel != null ? (
                         <span className="post-access-badge post-access-badge--locked">
                             {post.requiredTierName ?? `Рівень ${post.requiredTierLevel}`}
@@ -336,13 +340,25 @@ const PostCard = ({ post, onDelete, onEdit }) => {
                     <div className="post-card-lock-icon">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <p className="post-card-lock-title">Контент доступний підписникам</p>
-                    <p className="post-card-lock-hint">
-                        Для перегляду потрібна підписка{' '}
-                        <strong>
-                            {post.requiredTierName ? `«${post.requiredTierName}»` : `Рівень ${post.requiredTierLevel}`}
-                        </strong>
-                    </p>
+                    {post.visibility === 'DONATION' ? (
+                        <>
+                            <p className="post-card-lock-title">Контент доступний меценатам</p>
+                            <p className="post-card-lock-hint">
+                                Для перегляду потрібен сумарний донат автору від{' '}
+                                <strong>₴{post.minDonationAmount}</strong>
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p className="post-card-lock-title">Контент доступний підписникам</p>
+                            <p className="post-card-lock-hint">
+                                Для перегляду потрібна підписка{' '}
+                                <strong>
+                                    {post.requiredTierName ? `«${post.requiredTierName}»` : `Рівень ${post.requiredTierLevel}`}
+                                </strong>
+                            </p>
+                        </>
+                    )}
                 </div>
             ) : (
                 <div className="post-card-body">

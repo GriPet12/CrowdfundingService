@@ -25,7 +25,17 @@ class PostgresSequenceSync(
 
     override fun run(args: ApplicationArguments) {
         ensureCommentsSchema()
+        ensurePostsSchema()
         serialIdTables.forEach { (table, idColumn) -> syncTable(table, idColumn) }
+    }
+
+    fun ensurePostsSchema() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE posts ADD COLUMN IF NOT EXISTS min_donation_amount NUMERIC(19, 2)")
+            log.info("posts.min_donation_amount column ensured")
+        } catch (e: Exception) {
+            log.warn("Could not ensure posts.min_donation_amount: {}", e.message)
+        }
     }
 
     fun ensureCommentsSchema() {

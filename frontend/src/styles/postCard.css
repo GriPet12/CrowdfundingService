@@ -44,6 +44,7 @@
 }
 .post-access-badge--public  { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
 .post-access-badge--private { background:#eceff1; color:#455a64; border:1px solid #b0bec5; }
+.post-access-badge--donation { background:#f3e5f5; color:#6a1b9a; border:1px solid #ce93d8; }
 .post-access-badge--locked  { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; }
 .post-access-badge--banned  { background:#fdecea; color:#c62828; border:1px solid #ef9a9a; }
 

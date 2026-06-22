@@ -21,6 +21,7 @@ const isServerVideo = (f) => f.category === 'VIDEO' || f.mimeType?.startsWith('v
 const resolveVisibility = (visibilityMode) => {
     if (visibilityMode === 'private') return 'PRIVATE';
     if (visibilityMode === 'tier') return 'SUBSCRIBERS';
+    if (visibilityMode === 'donation') return 'DONATION';
     return 'PUBLIC';
 };
 
@@ -87,6 +88,10 @@ const ContentEditor = ({ onPublish, onUpdate, editPost, onCancelEdit, tiers = []
         if (editPost.visibility === 'PRIVATE') {
             setVisibilityMode('private');
             setRequiredTierId('');
+        } else if (editPost.visibility === 'DONATION' || editPost.minDonationAmount != null) {
+            setVisibilityMode('donation');
+            setMinDonationAmount(editPost.minDonationAmount != null ? String(editPost.minDonationAmount) : '');
+            setRequiredTierId('');
         } else if (editPost.visibility === 'SUBSCRIBERS' || editPost.requiredTierId || editPost.requiredTierLevel != null) {
             setVisibilityMode('tier');
             if (editPost.requiredTierId) {
@@ -118,8 +123,8 @@ const ContentEditor = ({ onPublish, onUpdate, editPost, onCancelEdit, tiers = []
             setPublishError('Оберіть рівень підписки');
             return;
         }
-        if (visibilityMode === 'donation') {
-            setPublishError('Доступ за сумою донату поки не підтримується');
+        if (visibilityMode === 'donation' && (!minDonationAmount || Number(minDonationAmount) <= 0)) {
+            setPublishError('Вкажіть мінімальну суму донату');
             return;
         }
         setPublishing(true);
@@ -131,6 +136,7 @@ const ContentEditor = ({ onPublish, onUpdate, editPost, onCancelEdit, tiers = []
             existingFileIds: existingFiles.map(f => f.id),
             visibility: resolveVisibility(visibilityMode),
             requiredTierId: visibilityMode === 'tier' ? (requiredTierId || null) : null,
+            minDonationAmount: visibilityMode === 'donation' ? Number(minDonationAmount) : null,
         };
         try {
             if (isEditing) {
@@ -710,7 +716,7 @@ const MyPage = () => {
         }
     };
 
-    const handlePublish = async ({ title, text, files, visibility, requiredTierId }) => {
+    const handlePublish = async ({ title, text, files, visibility, requiredTierId, minDonationAmount }) => {
         const uploadedIds = await uploadPostFiles(files, currentUser.token);
 
         const payload = {
@@ -718,6 +724,7 @@ const MyPage = () => {
             content: text,
             visibility,
             requiredTierId: requiredTierId ? Number(requiredTierId) : null,
+            minDonationAmount: minDonationAmount != null ? Number(minDonationAmount) : null,
             mediaIds: uploadedIds,
         };
         const res = await fetch('/api/posts', {
@@ -739,13 +746,14 @@ const MyPage = () => {
         }
     };
 
-    const handleUpdatePost = async (postId, { title, text, files, existingFileIds, visibility, requiredTierId }) => {
+    const handleUpdatePost = async (postId, { title, text, files, existingFileIds, visibility, requiredTierId, minDonationAmount }) => {
         const uploadedIds = await uploadPostFiles(files, currentUser.token);
         const payload = {
             title,
             content: text,
             visibility,
             requiredTierId: requiredTierId ? Number(requiredTierId) : null,
+            minDonationAmount: minDonationAmount != null ? Number(minDonationAmount) : null,
             mediaIds: [...existingFileIds, ...uploadedIds],
         };
         const res = await fetch(`/api/posts/${postId}`, {

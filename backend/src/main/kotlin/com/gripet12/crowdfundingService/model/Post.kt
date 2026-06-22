@@ -1,6 +1,7 @@
 package com.gripet12.crowdfundingService.model
 
 import jakarta.persistence.*
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -24,6 +25,9 @@ data class Post(
     @ManyToOne
     @JoinColumn(name = "required_tier_id")
     val requiredTier: SubscriptionTier? = null,
+
+    @Column(name = "min_donation_amount")
+    val minDonationAmount: BigDecimal? = null,
 
     @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")

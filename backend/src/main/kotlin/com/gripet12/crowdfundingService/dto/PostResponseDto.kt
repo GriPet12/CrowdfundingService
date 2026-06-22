@@ -1,5 +1,7 @@
 package com.gripet12.crowdfundingService.dto
 
+import java.math.BigDecimal
+
 data class PostResponseDto(
     val postId: Long,
     val masterId: Long,
@@ -9,6 +11,7 @@ data class PostResponseDto(
     val requiredTierLevel: Int?,
     val requiredTierName: String?,
     val requiredTierId: Long? = null,
+    val minDonationAmount: BigDecimal? = null,
 
     val hasAccess: Boolean,
 

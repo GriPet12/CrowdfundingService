@@ -7,6 +7,7 @@ import com.gripet12.crowdfundingService.dto.UpdatePostDto
 import com.gripet12.crowdfundingService.model.Post
 import com.gripet12.crowdfundingService.model.PostLike
 import com.gripet12.crowdfundingService.repository.CommentRepository
+import com.gripet12.crowdfundingService.repository.DonateRepository
 import com.gripet12.crowdfundingService.repository.FileRepository
 import com.gripet12.crowdfundingService.repository.PostLikeRepository
 import com.gripet12.crowdfundingService.repository.PostRepository
@@ -19,6 +20,8 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.sql.Timestamp
 
 @Service
 class PostService(
@@ -27,6 +30,7 @@ class PostService(
     private val postRepository: PostRepository,
     private val subscriptionTierRepository: SubscriptionTierRepository,
     private val fileRepository: FileRepository,
+    private val donateRepository: DonateRepository,
     private val subscriptionRepository: SubscriptionRepository,
     private val userRepository: UserRepository,
     private val postLikeRepository: PostLikeRepository,
@@ -43,34 +47,68 @@ class PostService(
         currentUserIdOrNull() ?: throw IllegalStateException("Not authenticated")
 
     private fun hasAccess(viewerId: Long?, authorId: Long, post: Post): Boolean {
-        if (post.visibility == "PRIVATE") {
-            return viewerId != null && viewerId == authorId
+        if (viewerId != null && viewerId == authorId) return true
+
+        return when (post.visibility) {
+            "PRIVATE" -> false
+            "DONATION" -> {
+                if (viewerId == null) return false
+                val min = post.minDonationAmount ?: return false
+                val total = donateRepository.sumApprovedDonationsByDonorToCreatorSince(
+                    viewerId, authorId, ALL_TIME_SINCE
+                )
+                total >= min
+            }
+            "SUBSCRIBERS" -> {
+                val level = post.requiredTier?.level ?: return false
+                if (viewerId == null) return false
+                subscriptionRepository.findActiveSubscriptionsBySubscriberAndCreator(viewerId, authorId)
+                    .any { (it.subscriptionTier?.level ?: 0) >= level }
+            }
+            else -> true
         }
-        val level = post.requiredTier?.level ?: return true
-        if (viewerId == null) return false
-        if (viewerId == authorId) return true
-        return subscriptionRepository.findActiveSubscriptionsBySubscriberAndCreator(viewerId, authorId)
-            .any { (it.subscriptionTier?.level ?: 0) >= level }
     }
 
-    private data class ResolvedPostAccess(val visibility: String, val tier: com.gripet12.crowdfundingService.model.SubscriptionTier?)
+    private data class ResolvedPostAccess(
+        val visibility: String,
+        val tier: com.gripet12.crowdfundingService.model.SubscriptionTier?,
+        val minDonationAmount: BigDecimal?
+    )
 
-    private fun resolvePostAccess(visibility: String, requiredTierId: Long?, authorId: Long): ResolvedPostAccess {
+    private fun resolvePostAccess(
+        visibility: String,
+        requiredTierId: Long?,
+        minDonationAmount: BigDecimal?,
+        authorId: Long
+    ): ResolvedPostAccess {
         return when (visibility.uppercase()) {
-            "PRIVATE" -> ResolvedPostAccess("PRIVATE", null)
+            "PRIVATE" -> ResolvedPostAccess("PRIVATE", null, null)
+            "DONATION" -> {
+                val min = minDonationAmount
+                    ?: throw IllegalArgumentException("Вкажіть мінімальну суму донату")
+                if (min <= BigDecimal.ZERO) {
+                    throw IllegalArgumentException("Мінімальна сума донату має бути більше 0")
+                }
+                ResolvedPostAccess("DONATION", null, min)
+            }
             "SUBSCRIBERS", "TIER" -> {
                 val tierId = requiredTierId
                     ?: throw IllegalArgumentException("Оберіть рівень підписки")
                 val tier = subscriptionTierRepository.findByTierIdAndCreatorId(tierId, authorId)
                     ?: throw IllegalArgumentException("Невірний рівень підписки")
-                ResolvedPostAccess("SUBSCRIBERS", tier)
+                ResolvedPostAccess("SUBSCRIBERS", tier, null)
             }
-            else -> ResolvedPostAccess("PUBLIC", null)
+            else -> ResolvedPostAccess("PUBLIC", null, null)
         }
     }
 
     private fun syncPostAccess(postId: Long, access: ResolvedPostAccess) {
-        jdbcTemplate.update("UPDATE posts SET visibility = ? WHERE post_id = ?", access.visibility, postId)
+        jdbcTemplate.update(
+            "UPDATE posts SET visibility = ?, min_donation_amount = ? WHERE post_id = ?",
+            access.visibility,
+            access.minDonationAmount,
+            postId
+        )
         val tierId = access.tier?.tierId
         if (tierId == null) {
             clearRequiredTierColumn(postId)
@@ -119,7 +157,7 @@ class PostService(
     @Transactional
     fun createPost(dto: CreatePostDto): PostResponseDto {
         val authorId = currentUserId()
-        val access = resolvePostAccess(dto.visibility, dto.requiredTierId, authorId)
+        val access = resolvePostAccess(dto.visibility, dto.requiredTierId, dto.minDonationAmount, authorId)
         val mediaIds = dto.mediaIds.distinct()
         val files = loadMediaFiles(mediaIds)
 
@@ -131,6 +169,7 @@ class PostService(
             title = dto.title,
             description = dto.content,
             requiredTier = access.tier,
+            minDonationAmount = access.minDonationAmount,
             content = files
         )
         val saved = postRepository.save(post)
@@ -146,7 +185,7 @@ class PostService(
             ?: throw NoSuchElementException("Post not found")
         if (post.masterId != userId) throw IllegalAccessException("Access denied")
 
-        val access = resolvePostAccess(dto.visibility, dto.requiredTierId, userId)
+        val access = resolvePostAccess(dto.visibility, dto.requiredTierId, dto.minDonationAmount, userId)
         val mediaIds = dto.mediaIds.distinct()
         val files = loadMediaFiles(mediaIds)
 
@@ -155,6 +194,7 @@ class PostService(
             description = dto.content,
             visibility = access.visibility,
             requiredTier = access.tier,
+            minDonationAmount = access.minDonationAmount,
             content = files
         )
         postRepository.save(updated)
@@ -252,6 +292,7 @@ class PostService(
             requiredTierLevel = level,
             requiredTierName = requiredTier?.name,
             requiredTierId = requiredTier?.tierId,
+            minDonationAmount = minDonationAmount,
             hasAccess = access,
             banned = banned,
             files = fileList,
@@ -264,5 +305,6 @@ class PostService(
 
     companion object {
         private val REQUIRED_TIER_COLUMNS = listOf("required_tier_id", "required_tier_tier_id")
+        private val ALL_TIME_SINCE = Timestamp(0)
     }
 }
