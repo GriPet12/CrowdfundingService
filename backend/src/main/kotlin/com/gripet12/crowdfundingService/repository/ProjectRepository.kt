@@ -62,10 +62,10 @@ interface ProjectRepository : JpaRepository<Project, Long> {
     @Query(
         value = """
             SELECT p FROM Project p LEFT JOIN p.creator u
-            WHERE (CAST(:search AS string) IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-               OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
-              AND (CAST(:categoryId AS long) IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = CAST(:categoryId AS long)))
+            WHERE (:search IS NULL
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:categoryId IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = :categoryId))
               AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
                 (:filterBanned = 0 AND p.banned = false)
@@ -75,10 +75,10 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         """,
         countQuery = """
             SELECT COUNT(p) FROM Project p LEFT JOIN p.creator u
-            WHERE (CAST(:search AS string) IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-               OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
-              AND (CAST(:categoryId AS long) IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = CAST(:categoryId AS long)))
+            WHERE (:search IS NULL
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:categoryId IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = :categoryId))
               AND p.status NOT IN ('PENDING', 'REJECTED')
               AND (
                 (:filterBanned = 0 AND p.banned = false)
@@ -98,16 +98,16 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         value = """
             SELECT p FROM Project p
             WHERE (:status IS NULL OR p.status = :status)
-              AND (CAST(:search AS string) IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+              AND (:search IS NULL
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', :search, '%')))
         """,
         countQuery = """
             SELECT COUNT(p) FROM Project p
             WHERE (:status IS NULL OR p.status = :status)
-              AND (CAST(:search AS string) IS NULL
-               OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+              AND (:search IS NULL
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(p.creator.username) LIKE LOWER(CONCAT('%', :search, '%')))
         """
     )
     fun findByFiltersAdmin(

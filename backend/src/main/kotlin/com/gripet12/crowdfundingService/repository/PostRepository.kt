@@ -23,8 +23,8 @@ interface PostRepository : JpaRepository<Post, Long> {
         value = """
             SELECT p FROM Post p
             WHERE p.masterType = 'USER'
-              AND (CAST(:search AS string) IS NULL
-                   OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+              AND (:search IS NULL
+                   OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')))
               AND (
                 (:filterBanned = 0 AND p.banned = false)
                 OR (:filterBanned = 1 AND p.banned = true AND p.bannedWithUser = false)
@@ -34,8 +34,8 @@ interface PostRepository : JpaRepository<Post, Long> {
         countQuery = """
             SELECT COUNT(p) FROM Post p
             WHERE p.masterType = 'USER'
-              AND (CAST(:search AS string) IS NULL
-                   OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+              AND (:search IS NULL
+                   OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')))
               AND (
                 (:filterBanned = 0 AND p.banned = false)
                 OR (:filterBanned = 1 AND p.banned = true AND p.bannedWithUser = false)

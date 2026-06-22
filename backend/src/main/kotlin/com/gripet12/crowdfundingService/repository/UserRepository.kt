@@ -24,9 +24,9 @@ interface UserRepository : JpaRepository<User, Long> {
     @Query(
         value = """
             SELECT u FROM User u
-            WHERE (CAST(:search AS string) IS NULL
-                   OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-                   OR LOWER(u.email)    LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+            WHERE (:search IS NULL
+                   OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(u.email)    LIKE LOWER(CONCAT('%', :search, '%')))
               AND (
                    :filterBanned = 0
                    OR (:filterBanned = 1 AND u.banned = false)
@@ -40,9 +40,9 @@ interface UserRepository : JpaRepository<User, Long> {
         """,
         countQuery = """
             SELECT COUNT(u) FROM User u
-            WHERE (CAST(:search AS string) IS NULL
-                   OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
-                   OR LOWER(u.email)    LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+            WHERE (:search IS NULL
+                   OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(u.email)    LIKE LOWER(CONCAT('%', :search, '%')))
               AND (
                    :filterBanned = 0
                    OR (:filterBanned = 1 AND u.banned = false)
@@ -67,13 +67,13 @@ interface UserRepository : JpaRepository<User, Long> {
             SELECT u FROM User u
             WHERE u.banned = false
               AND u.isPrivate = false
-              AND (CAST(:search AS string) IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+              AND (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
         """,
         countQuery = """
             SELECT COUNT(u) FROM User u
             WHERE u.banned = false
               AND u.isPrivate = false
-              AND (CAST(:search AS string) IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
+              AND (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
         """
     )
     fun findActiveCreators(
