@@ -94,7 +94,14 @@ class PaymentService(
             val donorUser = if (request.isAnonymous || request.donateId == 0L) null
                             else userRepository.getReferenceById(request.donateId)
 
-            val project = if (request.project > 0L) projectRepository.getReferenceById(request.project) else null
+            val project = if (request.project > 0L) {
+                projectRepository.findById(request.project)
+                    .orElseThrow { IllegalArgumentException("Project not found") }
+            } else null
+
+            if (project != null && (project.status != "ACTIVE" || project.banned)) {
+                throw IllegalStateException("Project is not available for donations")
+            }
 
             val creatorUser = if (project == null && request.creator > 0L)
                 userRepository.getReferenceById(request.creator) else null

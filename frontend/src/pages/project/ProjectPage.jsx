@@ -184,6 +184,7 @@ const ProjectPage = () => {
                     </div>
 
                     <div className="project-page-donate">
+                        {project.status === 'ACTIVE' ? (
                         <DonateSection
                             type="DONATION"
                             projectId={project.projectId}
@@ -209,9 +210,17 @@ const ProjectPage = () => {
                             placeholder="Сума (₴)"
                             onDonate={() => analyticsService.projectDonate(project.projectId)}
                         />
+                        ) : (
+                            <p className="project-page-unavailable-msg">
+                                {project.status === 'PENDING'
+                                    ? 'Проєкт на розгляді — донати поки недоступні.'
+                                    : 'Донати до цього проєкту недоступні.'}
+                            </p>
+                        )}
                     </div>
 
-                    {currentUser && !currentUser.banned && String(currentUser.id) !== String(project.creator) && (
+                    {currentUser && !currentUser.banned && project.status === 'ACTIVE'
+                        && String(currentUser.id) !== String(project.creator) && (
                         <button
                             className={`project-page-follow-btn ${following ? 'project-page-follow-btn--active' : ''}`}
                             onClick={handleFollowProject}

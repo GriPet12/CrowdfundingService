@@ -33,7 +33,7 @@ class RecommendationService(
     @Transactional(readOnly = true)
     fun getProjectRecommendations(userId: Long?, pageable: Pageable): Page<PreviewProjectDto> {
         val allProjects = projectRepository.findAll()
-            .filter { it.status != "CANCELLED" }
+            .filter { it.status == "ACTIVE" && !it.banned }
 
         if (userId == null) {
 

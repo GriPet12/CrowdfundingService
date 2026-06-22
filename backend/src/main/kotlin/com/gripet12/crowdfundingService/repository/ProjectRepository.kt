@@ -66,7 +66,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
                OR LOWER(p.title) LIKE :searchPattern
                OR LOWER(u.username) LIKE :searchPattern)
               AND (:categoryId IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = :categoryId))
-              AND p.status NOT IN ('PENDING', 'REJECTED')
+              AND p.status = 'ACTIVE'
               AND (
                 (:filterBanned = 0 AND p.banned = false)
                 OR (:filterBanned = 1 AND p.banned = true AND p.bannedWithUser = false)
@@ -79,7 +79,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
                OR LOWER(p.title) LIKE :searchPattern
                OR LOWER(u.username) LIKE :searchPattern)
               AND (:categoryId IS NULL OR EXISTS (SELECT 1 FROM p.categories c WHERE c.categoryId = :categoryId))
-              AND p.status NOT IN ('PENDING', 'REJECTED')
+              AND p.status = 'ACTIVE'
               AND (
                 (:filterBanned = 0 AND p.banned = false)
                 OR (:filterBanned = 1 AND p.banned = true AND p.bannedWithUser = false)

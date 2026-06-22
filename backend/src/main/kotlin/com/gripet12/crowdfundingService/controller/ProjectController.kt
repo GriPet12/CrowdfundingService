@@ -48,7 +48,10 @@ class ProjectController(
         ResponseEntity.ok(projectService.createProject(dto))
 
     @GetMapping("/{id}")
-    fun getProject(@PathVariable id: Long) = projectService.getProject(id)
+    fun getProject(@PathVariable id: Long): ResponseEntity<ProjectDto> {
+        val project = projectService.getProject(id)
+        return if (project != null) ResponseEntity.ok(project) else ResponseEntity.notFound().build()
+    }
 
     @PutMapping("/{id}")
     fun updateProject(

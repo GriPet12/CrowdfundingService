@@ -57,17 +57,14 @@ class ProjectService(
         val direction = if (sortDir.lowercase() == "asc") Sort.Direction.ASC else Sort.Direction.DESC
         val pageable: Pageable = PageRequest.of(page, size, Sort.by(direction, safeSort))
 
-        // Both owner and visitors see only ACTIVE projects (non-PENDING, non-REJECTED).
-        // PENDING/REJECTED are accessible only via the dedicated moderation tab.
+        // Public listings show only approved (ACTIVE) projects.
         val projectsPage = when {
             creatorId != null ->
-                projectRepository.findByCreatorUserIdAndStatusNotInPageable(
-                    creatorId, listOf("PENDING", "REJECTED"), pageable
-                )
+                projectRepository.findByCreatorUserIdAndStatus(creatorId, "ACTIVE", pageable)
             search != null || categoryId != null ->
                 projectRepository.findByFilters(searchPattern(search), categoryId, 0, pageable)
             else ->
-                projectRepository.findByStatusNotIn(listOf("PENDING", "REJECTED"), pageable)
+                projectRepository.findByStatus("ACTIVE", pageable)
         }
 
         return toPageResponse(projectsPage)
@@ -105,8 +102,18 @@ class ProjectService(
     }
 
     @Transactional(readOnly = true)
-    fun getProject(id: Long): ProjectDto? =
-        projectRepository.findById(id).orElse(null)?.toProjectDto()
+    fun getProject(id: Long): ProjectDto? {
+        val project = projectRepository.findById(id).orElse(null) ?: return null
+        if (project.status == "ACTIVE" && !project.banned) return project.toProjectDto()
+
+        val auth = SecurityContextHolder.getContext().authentication
+        if (auth != null && auth.isAuthenticated && auth.name != "anonymousUser") {
+            val user = userRepository.findByUsername(auth.name).orElse(null)
+            if (user?.userId == project.creator.userId) return project.toProjectDto()
+            if (auth.authorities.any { it.authority == "ROLE_ADMIN" }) return project.toProjectDto()
+        }
+        return null
+    }
 
     @Transactional
     fun createProject(dto: CreateProjectDto): ProjectDto {

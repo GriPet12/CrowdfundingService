@@ -59,8 +59,10 @@ class FollowService(
     @Transactional(readOnly = true)
     fun getFollowedProjects(): List<PreviewProjectDto> {
         val userId = currentUserId()
-        return followRepository.findAllByUserUserId(userId).map { pf ->
-            val p = pf.project
+        return followRepository.findAllByUserUserId(userId)
+            .map { it.project }
+            .filter { it.status == "ACTIVE" && !it.banned }
+            .map { p ->
             PreviewProjectDto(
                 projectId = p.projectId,
                 creatorId = p.creator.userId,
