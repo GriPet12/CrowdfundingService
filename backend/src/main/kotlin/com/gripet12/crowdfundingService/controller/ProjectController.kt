@@ -1,10 +1,12 @@
 package com.gripet12.crowdfundingService.controller
 
+import com.gripet12.crowdfundingService.dto.CommentResponseDto
 import com.gripet12.crowdfundingService.dto.CreateProjectDto
 import com.gripet12.crowdfundingService.dto.PageResponseDto
 import com.gripet12.crowdfundingService.dto.PreviewProjectDto
 import com.gripet12.crowdfundingService.dto.ProjectDonorDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
+import com.gripet12.crowdfundingService.service.CommentService
 import com.gripet12.crowdfundingService.service.ProjectService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -13,7 +15,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/projects")
 class ProjectController(
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val commentService: CommentService
 ) {
 
     @GetMapping
@@ -60,6 +63,32 @@ class ProjectController(
         @RequestBody dto: CreateProjectDto
     ): ResponseEntity<ProjectDto> =
         ResponseEntity.ok(projectService.updateProject(id, dto))
+
+    @PostMapping("/{id}/like")
+    @PreAuthorize("isAuthenticated()")
+    fun toggleLike(@PathVariable id: Long): ResponseEntity<Map<String, Any>> =
+        ResponseEntity.ok(projectService.toggleLike(id))
+
+    @GetMapping("/{id}/comments")
+    fun getComments(@PathVariable id: Long): ResponseEntity<List<CommentResponseDto>> =
+        ResponseEntity.ok(commentService.getProjectComments(id))
+
+    @PostMapping("/{id}/comments")
+    @PreAuthorize("isAuthenticated()")
+    fun addComment(
+        @PathVariable id: Long,
+        @RequestBody body: Map<String, String>
+    ): ResponseEntity<CommentResponseDto> {
+        val text = body["text"] ?: return ResponseEntity.badRequest().build()
+        return ResponseEntity.ok(commentService.addProjectComment(id, text))
+    }
+
+    @DeleteMapping("/comments/{commentId}")
+    @PreAuthorize("isAuthenticated()")
+    fun deleteComment(@PathVariable commentId: Long): ResponseEntity<Void> {
+        commentService.deleteComment(commentId)
+        return ResponseEntity.noContent().build()
+    }
 
     @GetMapping("/{id}/donors")
     fun getProjectDonors(@PathVariable id: Long): ResponseEntity<List<ProjectDonorDto>> =

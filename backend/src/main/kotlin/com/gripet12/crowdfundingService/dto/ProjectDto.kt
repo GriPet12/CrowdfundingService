@@ -25,5 +25,11 @@ data class ProjectDto(
 
     val media: Set<MediaDto> = HashSet(),
 
-    val categories: Set<String?> = HashSet()
+    val categories: Set<String?> = HashSet(),
+
+    val likeCount: Long = 0,
+
+    val likedByMe: Boolean = false,
+
+    val commentCount: Long = 0
 )

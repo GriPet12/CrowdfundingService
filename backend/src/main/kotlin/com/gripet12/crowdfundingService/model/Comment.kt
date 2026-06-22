@@ -15,8 +15,12 @@ data class Comment(
     val author: User,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    val post: Post,
+    @JoinColumn(name = "post_id")
+    val post: Post? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    val project: Project? = null,
 
     @Column(nullable = false, length = 2000)
     val commentText: String,

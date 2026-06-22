@@ -7,12 +7,15 @@ import com.gripet12.crowdfundingService.dto.PreviewProjectDto
 import com.gripet12.crowdfundingService.dto.ProjectDonorDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
 import com.gripet12.crowdfundingService.model.Project
+import com.gripet12.crowdfundingService.model.ProjectLike
 import com.gripet12.crowdfundingService.repository.AnalyticsLogRepository
 import org.hibernate.Hibernate
 import com.gripet12.crowdfundingService.repository.CategoryRepository
+import com.gripet12.crowdfundingService.repository.CommentRepository
 import com.gripet12.crowdfundingService.repository.DonateRepository
 import com.gripet12.crowdfundingService.repository.FileRepository
 import com.gripet12.crowdfundingService.repository.ProjectFollowRepository
+import com.gripet12.crowdfundingService.repository.ProjectLikeRepository
 import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.RewardRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
@@ -36,8 +39,16 @@ class ProjectService(
     private val projectFollowRepository: ProjectFollowRepository,
     private val rewardRepository: RewardRepository,
     private val donateRepository: DonateRepository,
+    private val commentRepository: CommentRepository,
+    private val projectLikeRepository: ProjectLikeRepository,
     @Lazy private val balanceService: BalanceService
 ) {
+
+    private fun currentUserIdOrNull(): Long? {
+        val auth = SecurityContextHolder.getContext().authentication
+        if (auth == null || !auth.isAuthenticated || auth.name == "anonymousUser") return null
+        return userRepository.findByUsername(auth.name).orElse(null)?.userId
+    }
 
     private fun currentUserId(): Long {
         val username = SecurityContextHolder.getContext().authentication.name
@@ -122,6 +133,29 @@ class ProjectService(
             if (auth.authorities.any { it.authority == "ROLE_ADMIN" }) return project.toProjectDto()
         }
         return null
+    }
+
+    @Transactional
+    fun toggleLike(projectId: Long): Map<String, Any> {
+        val userId = currentUserId()
+        val project = projectRepository.findById(projectId)
+            .orElseThrow { NoSuchElementException("Project not found") }
+        if (project.status != "ACTIVE" || project.banned) {
+            throw IllegalStateException("Project is not available")
+        }
+        val user = userRepository.findByUserId(userId)
+        val existing = projectLikeRepository.findByProjectProjectIdAndUserUserId(projectId, userId)
+        val likedByMe = if (existing != null) {
+            projectLikeRepository.delete(existing)
+            false
+        } else {
+            projectLikeRepository.save(ProjectLike(project = project, user = user))
+            true
+        }
+        return mapOf(
+            "likeCount" to projectLikeRepository.countByProjectProjectId(projectId),
+            "likedByMe" to likedByMe
+        )
     }
 
     @Transactional(readOnly = true)
@@ -270,6 +304,8 @@ class ProjectService(
         projectFollowRepository.deleteByProjectProjectId(projectId)
         rewardRepository.deleteByProjectProjectId(projectId)
         donateRepository.deleteByProjectProjectId(projectId)
+        commentRepository.deleteByProjectProjectId(projectId)
+        projectLikeRepository.deleteByProjectProjectId(projectId)
     }
 
     private fun Project.toPreviewProjectDto(): PreviewProjectDto =
@@ -285,6 +321,18 @@ class ProjectService(
             mainImage = mainImage?.id,
             categories = categories.map { it.categoryName }.toSet()
         )
+
+    private fun ProjectDto.withSocialStats(): ProjectDto {
+        val pid = projectId ?: return this
+        val viewerId = currentUserIdOrNull()
+        return copy(
+            likeCount = projectLikeRepository.countByProjectProjectId(pid),
+            likedByMe = viewerId?.let {
+                projectLikeRepository.existsByProjectProjectIdAndUserUserId(pid, it)
+            } ?: false,
+            commentCount = commentRepository.countByProjectProjectId(pid)
+        )
+    }
 
     private fun Project.toProjectDto(): ProjectDto =
         ProjectDto(
@@ -309,6 +357,6 @@ class ProjectService(
                 )
             }.toSet(),
             categories = categories.map { it.categoryName }.toSet()
-        )
+        ).withSocialStats()
 
 }

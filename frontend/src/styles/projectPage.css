@@ -602,3 +602,24 @@ video.carousel-image {
 .project-donor-item--clickable:hover .project-donor-arrow {
     color: #1a1a1a;
 }
+
+.project-page-social {
+    max-width: 720px;
+    margin: 32px auto 0;
+    padding: 0 20px;
+}
+
+.project-page-social-title {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.project-page-social-footer {
+    margin-top: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+}

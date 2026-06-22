@@ -5,6 +5,7 @@ import com.gripet12.crowdfundingService.dto.CommentResponseDto
 import com.gripet12.crowdfundingService.model.Comment
 import com.gripet12.crowdfundingService.repository.CommentRepository
 import com.gripet12.crowdfundingService.repository.PostRepository
+import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.core.context.SecurityContextHolder
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional
 class CommentService(
     private val commentRepository: CommentRepository,
     private val postRepository: PostRepository,
+    private val projectRepository: ProjectRepository,
     private val userRepository: UserRepository,
     private val postgresSequenceSync: PostgresSequenceSync
 ) {
@@ -28,6 +30,10 @@ class CommentService(
     fun getComments(postId: Long): List<CommentResponseDto> =
         commentRepository.findByPostId(postId).map { it.toDto() }
 
+    @Transactional(readOnly = true)
+    fun getProjectComments(projectId: Long): List<CommentResponseDto> =
+        commentRepository.findByProjectId(projectId).map { it.toDto() }
+
     @Transactional(noRollbackFor = [DataIntegrityViolationException::class])
     fun addComment(postId: Long, text: String): CommentResponseDto {
         if (text.isBlank()) throw IllegalArgumentException("Comment cannot be empty")
@@ -36,13 +42,30 @@ class CommentService(
         val post = postRepository.findByPostId(postId)
             ?: throw NoSuchElementException("Post not found")
         val comment = Comment(author = author, post = post, commentText = text.trim())
-        return try {
+        return saveComment(comment)
+    }
+
+    @Transactional(noRollbackFor = [DataIntegrityViolationException::class])
+    fun addProjectComment(projectId: Long, text: String): CommentResponseDto {
+        if (text.isBlank()) throw IllegalArgumentException("Comment cannot be empty")
+        val userId = currentUserId()
+        val author = userRepository.findByUserId(userId)
+        val project = projectRepository.findById(projectId)
+            .orElseThrow { NoSuchElementException("Project not found") }
+        if (project.status != "ACTIVE" || project.banned) {
+            throw IllegalStateException("Коментарі недоступні для цього проєкту")
+        }
+        val comment = Comment(author = author, project = project, commentText = text.trim())
+        return saveComment(comment)
+    }
+
+    private fun saveComment(comment: Comment): CommentResponseDto =
+        try {
             commentRepository.save(comment).toDto()
         } catch (_: DataIntegrityViolationException) {
             postgresSequenceSync.syncTable("comments", "comment_id")
             commentRepository.save(comment.copy(commentId = 0)).toDto()
         }
-    }
 
     @Transactional
     fun deleteComment(commentId: Long) {

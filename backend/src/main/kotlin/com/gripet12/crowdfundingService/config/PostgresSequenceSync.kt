@@ -17,6 +17,7 @@ class PostgresSequenceSync(
         "author_follows" to "id",
         "project_follows" to "id",
         "post_likes" to "id",
+        "project_likes" to "id",
         "comments" to "comment_id",
         "chat_messages" to "message_id",
         "analytics_logs" to "log_id"

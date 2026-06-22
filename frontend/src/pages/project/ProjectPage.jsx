@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DonateSection from '../../components/pay/DonateSection.jsx';
 import ProjectDonorsList from '../../components/project/ProjectDonorsList.jsx';
+import ProjectSocialSection from '../../components/project/ProjectSocialSection.jsx';
 import AuthService from '../../components/user/AuthService.jsx';
 import AdminBanButton from '../../components/common/AdminBanButton.jsx';
 import analyticsService from '../../utils/analyticsService.js';
@@ -286,6 +287,16 @@ const ProjectPage = () => {
                         dangerouslySetInnerHTML={{ __html: project.description }}
                     />
                 </div>
+            )}
+
+            {project.status === 'ACTIVE' && !project.banned && (
+                <ProjectSocialSection
+                    projectId={project.projectId}
+                    creatorId={project.creator}
+                    initialLikeCount={project.likeCount ?? 0}
+                    initialLikedByMe={project.likedByMe ?? false}
+                    initialCommentCount={project.commentCount ?? 0}
+                />
             )}
 
             {project.fundraisingClosed && (
