@@ -7,6 +7,7 @@ import SubscriptionTiersManager from '../../components/subscription/Subscription
 import AuthorChat from '../../components/user/AuthorChat.jsx';
 import PostCard from '../../components/post/PostCard.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
+import PasswordInput from '../../components/common/PasswordInput.jsx';
 import StatsTab from '../../components/user/StatsTab.jsx';
 import BalanceTab from '../../components/user/BalanceTab.jsx';
 import '../../styles/myPage.css';
@@ -403,9 +404,8 @@ const ChangePasswordModal = ({ token, onClose }) => {
                     <form className="chpwd-form" onSubmit={handleSubmit}>
                         <div className="chpwd-field">
                             <label className="chpwd-label">Поточний пароль</label>
-                            <input
+                            <PasswordInput
                                 className="chpwd-input"
-                                type="password"
                                 value={currentPassword}
                                 onChange={e => setCurrentPassword(e.target.value)}
                                 required
@@ -414,9 +414,8 @@ const ChangePasswordModal = ({ token, onClose }) => {
                         </div>
                         <div className="chpwd-field">
                             <label className="chpwd-label">Новий пароль</label>
-                            <input
+                            <PasswordInput
                                 className="chpwd-input"
-                                type="password"
                                 value={newPassword}
                                 onChange={e => setNewPassword(e.target.value)}
                                 required
@@ -426,9 +425,8 @@ const ChangePasswordModal = ({ token, onClose }) => {
                         </div>
                         <div className="chpwd-field">
                             <label className="chpwd-label">Підтвердити новий пароль</label>
-                            <input
+                            <PasswordInput
                                 className="chpwd-input"
-                                type="password"
                                 value={confirmPassword}
                                 onChange={e => setConfirmPassword(e.target.value)}
                                 required

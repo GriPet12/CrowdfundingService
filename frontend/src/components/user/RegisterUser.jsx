@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AuthService from './AuthService';
+import PasswordInput from '../common/PasswordInput.jsx';
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{10,}$/;
 
@@ -185,8 +186,13 @@ const RegisterUser = ({ onSuccess }) => {
 
             <div className="form-group">
                 <label className="form-label">Пароль</label>
-                <input type="password" className="form-input" placeholder="Мін. 10 символів"
-                    value={data.password} onChange={e => setData({...data, password: e.target.value})} required />
+                <PasswordInput
+                    placeholder="Мін. 10 символів"
+                    value={data.password}
+                    onChange={e => setData({...data, password: e.target.value})}
+                    required
+                    autoComplete="new-password"
+                />
                 {strength && (
                     <div className="auth-password-strength">
                         <div className="auth-password-strength-bar-track">
@@ -205,8 +211,13 @@ const RegisterUser = ({ onSuccess }) => {
 
             <div className="form-group">
                 <label className="form-label">Підтвердіть пароль</label>
-                <input type="password" className="form-input" placeholder="Повторіть пароль"
-                    value={data.confirmPassword} onChange={e => setData({...data, confirmPassword: e.target.value})} required />
+                <PasswordInput
+                    placeholder="Повторіть пароль"
+                    value={data.confirmPassword}
+                    onChange={e => setData({...data, confirmPassword: e.target.value})}
+                    required
+                    autoComplete="new-password"
+                />
                 {data.confirmPassword && data.password !== data.confirmPassword && (
                     <p style={{ color: '#e53935', fontSize: 12, margin: '4px 0 0' }}>Паролі не співпадають</p>
                 )}

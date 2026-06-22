@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import PasswordInput from '../../components/common/PasswordInput.jsx';
 import '../../styles/auth.css';
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{10,}$/;
@@ -89,9 +90,7 @@ const ResetPasswordPage = () => {
                             {error && <div className="auth-error-box">{error}</div>}
                             <div className="form-group">
                                 <label className="form-label">Новий пароль</label>
-                                <input
-                                    type="password"
-                                    className="form-input"
+                                <PasswordInput
                                     placeholder="Мін. 10 символів"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -101,9 +100,7 @@ const ResetPasswordPage = () => {
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Підтвердження пароля</label>
-                                <input
-                                    type="password"
-                                    className="form-input"
+                                <PasswordInput
                                     placeholder="Повторіть пароль"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}

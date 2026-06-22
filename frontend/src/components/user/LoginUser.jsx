@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import AuthService from './AuthService.jsx';
+import PasswordInput from '../common/PasswordInput.jsx';
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://api.crowd-funding.app').replace(/\/$/, '');
 const FACEBOOK_ENABLED = false;
@@ -127,8 +128,13 @@ const LoginUser = ({ onSwitchToRegister, onClose }) => {
             </div>
             <div className="form-group">
                 <label className="form-label">Пароль</label>
-                <input type="password" className="form-input" placeholder="Введіть ваш пароль"
-                    value={data.password} onChange={e => setData({...data, password: e.target.value})} required />
+                <PasswordInput
+                    placeholder="Введіть ваш пароль"
+                    value={data.password}
+                    onChange={e => setData({...data, password: e.target.value})}
+                    required
+                    autoComplete="current-password"
+                />
                 <p className="auth-forgot-link-wrap">
                     <Link to="/forgot-password" className="auth-forgot-link" onClick={() => onClose?.()}>
                         Забули пароль?
