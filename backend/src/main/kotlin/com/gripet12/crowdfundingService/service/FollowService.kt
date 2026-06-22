@@ -24,14 +24,17 @@ class FollowService(
     private val subscriptionRepository: SubscriptionRepository
 ) {
 
-    private fun currentUserId(): Long {
+    private fun currentUserIdOrNull(): Long? {
         val auth = SecurityContextHolder.getContext().authentication
         if (auth == null || !auth.isAuthenticated || auth.name == "anonymousUser") {
-            throw IllegalArgumentException("Authentication required")
+            return null
         }
-        return userRepository.findByUsername(auth.name)
-            .orElseThrow { IllegalStateException("User not found") }
-            .userId!!
+        return userRepository.findByUsername(auth.name).orElse(null)?.userId
+    }
+
+    private fun currentUserId(): Long {
+        return currentUserIdOrNull()
+            ?: throw IllegalArgumentException("Authentication required")
     }
 
     @Transactional
@@ -101,14 +104,14 @@ class FollowService(
     @Transactional(readOnly = true)
     fun getFollowedProjectIds(projectIds: List<Long>): Set<Long> {
         if (projectIds.isEmpty()) return emptySet()
-        val userId = currentUserId()
+        val userId = currentUserIdOrNull() ?: return emptySet()
         return followRepository.findFollowedProjectIds(userId, projectIds).toSet()
     }
 
     @Transactional(readOnly = true)
     fun getFollowedAuthorIds(creatorIds: List<Long>): Set<Long> {
         if (creatorIds.isEmpty()) return emptySet()
-        val userId = currentUserId()
+        val userId = currentUserIdOrNull() ?: return emptySet()
         return authorFollowRepository.findFollowedAuthorIds(userId, creatorIds).toSet()
     }
 

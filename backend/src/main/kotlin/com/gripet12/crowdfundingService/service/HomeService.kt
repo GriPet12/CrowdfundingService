@@ -26,11 +26,7 @@ class HomeService(
         val followedProjectIds = if (projectIds.isEmpty()) {
             emptyList()
         } else {
-            try {
-                followService.getFollowedProjectIds(projectIds).toList()
-            } catch (_: Exception) {
-                emptyList()
-            }
+            followService.getFollowedProjectIds(projectIds).toList()
         }
 
         return HomePageDto(
