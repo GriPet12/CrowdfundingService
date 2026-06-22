@@ -236,7 +236,7 @@ const ProjectPage = () => {
                             onClick={handleFollowProject}
                             disabled={followLoading}
                         >
-                            {following ? '♥ Відстежується' : '♡ Відстежувати проект'}
+                            {following ? '★ Відстежується' : '☆ Відстежувати проект'}
                         </button>
                     )}
 

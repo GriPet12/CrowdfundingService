@@ -1070,7 +1070,7 @@ const MyPage = () => {
                     <div className="my-page-following-tab">
                         {followedProjects.length === 0 ? (
                             <div className="my-page-empty">
-                                <p>Ви ще не відстежуєте жодного проекту. Натисніть ♡ на картці проекту.</p>
+                                <p>Ви ще не відстежуєте жодного проекту. Натисніть ☆ на картці проекту.</p>
                             </div>
                         ) : (
                             <div className="projects-grid">

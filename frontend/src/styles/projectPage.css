@@ -463,18 +463,18 @@ video.carousel-image {
     transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 .project-page-follow-btn:hover:not(:disabled) {
-    border-color: #cc0000;
-    color: #cc0000;
-    background: #fff5f5;
+    border-color: #c8960c;
+    color: #c8960c;
+    background: #fffbf0;
 }
 .project-page-follow-btn--active {
-    border-color: #cc0000 !important;
-    background: #cc0000 !important;
+    border-color: #c8960c !important;
+    background: #c8960c !important;
     color: #fff !important;
 }
 .project-page-follow-btn--active:hover:not(:disabled) {
-    background: #aa0000 !important;
-    border-color: #aa0000 !important;
+    background: #a87a0a !important;
+    border-color: #a87a0a !important;
 }
 .project-page-follow-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 

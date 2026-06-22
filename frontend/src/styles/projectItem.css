@@ -99,16 +99,16 @@
 }
 .project-follow-btn:hover:not(:disabled) {
     background: #fff;
-    color: #cc0000;
+    color: #c8960c;
     transform: scale(1.12);
 }
 .project-follow-btn--active {
-    background: #cc0000 !important;
+    background: #c8960c !important;
     color: #fff !important;
-    box-shadow: 0 2px 8px rgba(204,0,0,0.35);
+    box-shadow: 0 2px 8px rgba(200,150,12,0.45);
 }
 .project-follow-btn--active:hover:not(:disabled) {
-    background: #aa0000 !important;
+    background: #a87a0a !important;
     transform: scale(1.12);
 }
 .project-follow-btn:disabled { opacity: 0.6; cursor: not-allowed; }

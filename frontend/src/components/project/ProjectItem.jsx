@@ -70,7 +70,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCard
                         disabled={followLoading}
                         title={following ? 'Відписатись від проекту' : 'Відстежувати проект'}
                     >
-                        {following ? '♥' : '♡'}
+                        {following ? '★' : '☆'}
                     </button>
                 )}
                 <AdminBanButton
