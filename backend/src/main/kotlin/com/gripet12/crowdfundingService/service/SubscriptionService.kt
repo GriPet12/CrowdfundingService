@@ -44,8 +44,15 @@ class SubscriptionService(
     @Transactional(readOnly = true)
     fun getMySubscriptions(): List<SubscriptionDto> {
         val userId = currentUserId()
-        return subscriptionRepository.findAllBySubscriberUserId(userId)
+        return subscriptionRepository.findAllPaidBySubscriberUserId(userId)
             .map { it.toDto() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getReceivedSubscriptions(): List<SubscriptionDto> {
+        val userId = currentUserId()
+        return subscriptionRepository.findAllPaidByCreatorUserId(userId)
+            .map { it.toReceivedDto() }
     }
 
     @Transactional
@@ -126,6 +133,26 @@ class SubscriptionService(
             tierLevel = tier?.level ?: 0,
             tierPrice = tierPrice,
             paymentStatus = payment?.status ?: "AUTO",
+            expiresAt = expiresAt,
+            isActive = active,
+            grantType = grantType
+        )
+    }
+
+    private fun Subscription.toReceivedDto(): SubscriptionDto {
+        val tier = subscriptionTier
+        return SubscriptionDto(
+            subscriptionId = subscriptionId,
+            creatorId = creator.userId!!,
+            creatorName = creator.username,
+            creatorImageId = creator.image?.id,
+            subscriberId = subscrber.userId,
+            subscriberName = subscrber.username,
+            subscriberImageId = subscrber.image?.id,
+            tierName = tier?.name ?: "—",
+            tierLevel = tier?.level ?: 0,
+            tierPrice = tierPrice,
+            paymentStatus = payment?.status ?: "MANUAL",
             expiresAt = expiresAt,
             isActive = active,
             grantType = grantType
