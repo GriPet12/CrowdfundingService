@@ -65,3 +65,4 @@ stripe:
   secret-key: ${STRIPE_SECRET_KEY:sk_test_changeme}
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_changeme}
   return-url: ${STRIPE_RETURN_URL:http://localhost:5173}
+  currency: ${STRIPE_CURRENCY:uah}

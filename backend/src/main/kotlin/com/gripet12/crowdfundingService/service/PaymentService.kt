@@ -37,9 +37,11 @@ class PaymentService(
     @Lazy private val self: PaymentService,
     @Value("\${stripe.secret-key}") private val stripeSecretKey: String,
     @Value("\${stripe.webhook-secret}") private val webhookSecret: String,
-    @Value("\${stripe.return-url:http://localhost:5173}") private val returnUrl: String
+    @Value("\${stripe.return-url:http://localhost:5173}") private val returnUrl: String,
+    @Value("\${stripe.currency:uah}") private val stripeCurrency: String
 ) {
     private val log = LoggerFactory.getLogger(PaymentService::class.java)
+    private val currency = stripeCurrency.lowercase()
 
     @PostConstruct
     fun init() {
@@ -55,25 +57,25 @@ class PaymentService(
     fun generatePaymentData(request: PaymentRequest, type: String): Map<String, String> {
         val orderReference = createPayment(request, type)
 
-        // Stripe amounts are in the smallest currency unit (cents for USD, kopecks for UAH…)
-        val amountInCents = (request.amount * 100).toLong()
+        // Stripe amounts are in the smallest currency unit (kopiyky for UAH, cents for USD…)
+        val amountInMinorUnits = (request.amount * 100).toLong()
 
         val params = PaymentIntentCreateParams.builder()
-            .setAmount(amountInCents)
-            .setCurrency("usd")
+            .setAmount(amountInMinorUnits)
+            .setCurrency(currency)
             .putMetadata("orderReference", orderReference)
             .putMetadata("type", type)
             .build()
 
         val intent = PaymentIntent.create(params)
-        log.info("Created PaymentIntent ${intent.id} for orderReference=$orderReference amount=${request.amount}")
+        log.info("Created PaymentIntent ${intent.id} for orderReference=$orderReference amount=${request.amount} $currency")
 
         return mapOf(
             "clientSecret"     to intent.clientSecret,
             "paymentIntentId"  to intent.id,
             "orderReference"   to orderReference,
             "amount"           to request.amount.toString(),
-            "currency"         to "usd",
+            "currency"         to currency,
             "returnUrl"        to returnUrl
         )
     }

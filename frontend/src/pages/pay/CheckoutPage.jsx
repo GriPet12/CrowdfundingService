@@ -9,7 +9,7 @@ const CheckoutPage = () => {
             <h1>Оформлення внеску</h1>
             <div style={{ marginBottom: 16 }}>
                 <label htmlFor="amount" style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-                    Сума (USD)
+                    Сума (₴)
                 </label>
                 <input
                     id="amount"

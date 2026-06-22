@@ -14,7 +14,7 @@ const PaymentResultPage = () => {
     const paymentIntentId   = params.get('payment_intent') ?? '';
     const clientSecret      = params.get('payment_intent_client_secret') ?? '';
 
-    const [statusInfo, setStatusInfo] = useState({ status: 'pending', amount: '', currency: 'USD', orderRef: '' });
+    const [statusInfo, setStatusInfo] = useState({ status: 'pending', amount: '', currency: 'UAH', orderRef: '' });
     const [countdown, setCountdown]   = useState(null);
 
     useEffect(() => {
@@ -32,7 +32,7 @@ const PaymentResultPage = () => {
             if (!stripe) return;
             const { paymentIntent, error } = await stripe.retrievePaymentIntent(clientSecret);
             if (error) {
-                setStatusInfo({ status: 'declined', amount: '', currency: 'USD', orderRef: paymentIntentId });
+                setStatusInfo({ status: 'declined', amount: '', currency: 'UAH', orderRef: paymentIntentId });
                 return;
             }
             const s = paymentIntent.status;
@@ -97,7 +97,7 @@ const PaymentResultPage = () => {
 
                 {amount && (
                     <div className="pr-amount">
-                        {Number(amount).toLocaleString('uk-UA', { minimumFractionDigits: 2 })} {currency}
+                        {Number(amount).toLocaleString('uk-UA', { minimumFractionDigits: 2 })} {currency === 'UAH' ? '₴' : currency}
                     </div>
                 )}
 

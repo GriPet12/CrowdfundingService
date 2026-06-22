@@ -40,7 +40,7 @@ const CheckoutForm = ({ amount, onBeforeSubmit, onError }) => {
                 <h2 className="auth-modal-title">Оплата</h2>
                 {amount > 0 && (
                     <p style={{ margin: '-8px 0 0', fontSize: 15, color: '#7c3aed', fontWeight: 700 }}>
-                        {Number(amount).toLocaleString('uk-UA', { minimumFractionDigits: 2 })} USD
+                        {Number(amount).toLocaleString('uk-UA', { minimumFractionDigits: 2 })} ₴
                     </p>
                 )}
             </div>
