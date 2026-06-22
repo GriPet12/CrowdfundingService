@@ -3,6 +3,7 @@ package com.gripet12.crowdfundingService.controller
 import com.gripet12.crowdfundingService.dto.CreateProjectDto
 import com.gripet12.crowdfundingService.dto.PageResponseDto
 import com.gripet12.crowdfundingService.dto.PreviewProjectDto
+import com.gripet12.crowdfundingService.dto.ProjectDonorDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
 import com.gripet12.crowdfundingService.service.ProjectService
 import org.springframework.http.ResponseEntity
@@ -59,6 +60,10 @@ class ProjectController(
         @RequestBody dto: CreateProjectDto
     ): ResponseEntity<ProjectDto> =
         ResponseEntity.ok(projectService.updateProject(id, dto))
+
+    @GetMapping("/{id}/donors")
+    fun getProjectDonors(@PathVariable id: Long): ResponseEntity<List<ProjectDonorDto>> =
+        ResponseEntity.ok(projectService.getProjectDonors(id))
 
     @PostMapping("/{id}/close-fundraising")
     @PreAuthorize("isAuthenticated()")

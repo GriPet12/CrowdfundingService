@@ -472,3 +472,133 @@ video.carousel-image {
     border-color: #aa0000 !important;
 }
 .project-page-follow-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.project-page-donors-section {
+    max-width: 720px;
+    margin: 32px auto 48px;
+    padding: 0 20px;
+}
+
+.project-page-donors-title {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.project-page-donors-subtitle {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.project-donors-loading,
+.project-donors-empty,
+.project-donors-error {
+    margin: 0;
+    padding: 16px;
+    border-radius: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.project-donors-error {
+    color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.project-donors-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.project-donor-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    text-align: left;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.project-donor-item--clickable {
+    cursor: pointer;
+}
+
+.project-donor-item--clickable:hover {
+    border-color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.project-donor-item:disabled {
+    cursor: default;
+}
+
+.project-donor-avatar-wrap {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+}
+
+.project-donor-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.project-donor-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+}
+
+.project-donor-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.project-donor-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.project-donor-meta {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.project-donor-arrow {
+    flex-shrink: 0;
+    font-size: 18px;
+    color: #9ca3af;
+}
+
+.project-donor-item--clickable:hover .project-donor-arrow {
+    color: #1a1a1a;
+}

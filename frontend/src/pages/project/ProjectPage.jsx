@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DonateSection from '../../components/pay/DonateSection.jsx';
+import ProjectDonorsList from '../../components/project/ProjectDonorsList.jsx';
 import AuthService from '../../components/user/AuthService.jsx';
 import AdminBanButton from '../../components/common/AdminBanButton.jsx';
 import analyticsService from '../../utils/analyticsService.js';
@@ -50,6 +51,13 @@ const ProjectPage = () => {
         };
         fetchProject();
     }, [id]);
+
+    useEffect(() => {
+        if (!project?.fundraisingClosed) return;
+        if (window.location.hash !== '#donors') return;
+        const el = document.getElementById('donors');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [project?.fundraisingClosed, project?.projectId]);
 
     useEffect(() => {
         if (!currentUser || !id) return;
@@ -277,6 +285,16 @@ const ProjectPage = () => {
                         className="project-page-description-text"
                         dangerouslySetInnerHTML={{ __html: project.description }}
                     />
+                </div>
+            )}
+
+            {project.fundraisingClosed && (
+                <div className="project-page-donors-section" id="donors">
+                    <h2 className="project-page-donors-title">Меценати проекту</h2>
+                    <p className="project-page-donors-subtitle">
+                        Люди, які підтримали цей проект. Натисніть на ім&apos;я, щоб перейти на сторінку користувача.
+                    </p>
+                    <ProjectDonorsList projectId={project.projectId} />
                 </div>
             )}
         </div>

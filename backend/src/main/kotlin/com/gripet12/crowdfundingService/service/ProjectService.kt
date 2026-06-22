@@ -4,6 +4,7 @@ import com.gripet12.crowdfundingService.dto.CreateProjectDto
 import com.gripet12.crowdfundingService.dto.MediaDto
 import com.gripet12.crowdfundingService.dto.PageResponseDto
 import com.gripet12.crowdfundingService.dto.PreviewProjectDto
+import com.gripet12.crowdfundingService.dto.ProjectDonorDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
 import com.gripet12.crowdfundingService.model.Project
 import com.gripet12.crowdfundingService.repository.AnalyticsLogRepository
@@ -121,6 +122,54 @@ class ProjectService(
             if (auth.authorities.any { it.authority == "ROLE_ADMIN" }) return project.toProjectDto()
         }
         return null
+    }
+
+    @Transactional(readOnly = true)
+    fun getProjectDonors(projectId: Long): List<ProjectDonorDto> {
+        val project = projectRepository.findById(projectId)
+            .orElseThrow { NoSuchElementException("Project not found") }
+        if (!project.fundraisingClosed) {
+            throw IllegalStateException("Список меценатів доступний лише після закриття збору")
+        }
+
+        val donations = donateRepository.findApprovedByProjectId(projectId)
+        if (donations.isEmpty()) return emptyList()
+
+        val identified = donations
+            .filter { !it.isAnonymous && it.donor?.userId != null }
+            .groupBy { it.donor!!.userId!! }
+            .map { (_, list) ->
+                val donor = list.first().donor!!
+                ProjectDonorDto(
+                    donorId = donor.userId,
+                    username = donor.username,
+                    imageId = donor.image?.id,
+                    totalAmount = list.fold(java.math.BigDecimal.ZERO) { acc, d -> acc.add(d.amount) },
+                    donationsCount = list.size,
+                    lastDonatedAt = list.maxOf { it.createAt },
+                    anonymous = false
+                )
+            }
+            .sortedByDescending { it.totalAmount }
+
+        val anonymousDonations = donations.filter { it.isAnonymous || it.donor == null }
+        val anonymous = if (anonymousDonations.isEmpty()) {
+            emptyList()
+        } else {
+            listOf(
+                ProjectDonorDto(
+                    donorId = null,
+                    username = "Анонім",
+                    imageId = null,
+                    totalAmount = anonymousDonations.fold(java.math.BigDecimal.ZERO) { acc, d -> acc.add(d.amount) },
+                    donationsCount = anonymousDonations.size,
+                    lastDonatedAt = anonymousDonations.maxOf { it.createAt },
+                    anonymous = true
+                )
+            )
+        }
+
+        return identified + anonymous
     }
 
     @Transactional

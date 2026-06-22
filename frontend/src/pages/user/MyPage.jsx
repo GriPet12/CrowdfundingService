@@ -907,6 +907,15 @@ const MyPage = () => {
                                             {p.status === 'ACTIVE' && p.fundraisingClosed && (
                                                 <span className="my-page-fundraising-closed-badge">Збір закрито</span>
                                             )}
+                                            {p.status === 'ACTIVE' && p.fundraisingClosed && (
+                                                <button
+                                                    type="button"
+                                                    className="my-page-project-donors-btn"
+                                                    onClick={() => navigate(`/project/${p.projectId}#donors`)}
+                                                >
+                                                    Меценати
+                                                </button>
+                                            )}
                                             <button
                                                 className="my-page-project-edit-btn"
                                                 onClick={() => navigate(`/projects/${p.projectId}/edit`)}

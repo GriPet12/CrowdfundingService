@@ -867,6 +867,23 @@
     color: #6b7280;
 }
 
+.my-page-project-donors-btn {
+    flex: 1 1 100%;
+    padding: 8px 0;
+    background: #fff;
+    border: 1.5px solid #6366f1;
+    color: #4338ca;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.my-page-project-donors-btn:hover {
+    background: #eef2ff;
+}
+
 .my-page-project-edit-btn {
     flex: 1;
     padding: 8px 0;
