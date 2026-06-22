@@ -6,9 +6,13 @@ import com.gripet12.crowdfundingService.dto.PageResponseDto
 import com.gripet12.crowdfundingService.dto.PreviewProjectDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
 import com.gripet12.crowdfundingService.model.Project
+import com.gripet12.crowdfundingService.repository.AnalyticsLogRepository
 import com.gripet12.crowdfundingService.repository.CategoryRepository
+import com.gripet12.crowdfundingService.repository.DonateRepository
 import com.gripet12.crowdfundingService.repository.FileRepository
+import com.gripet12.crowdfundingService.repository.ProjectFollowRepository
 import com.gripet12.crowdfundingService.repository.ProjectRepository
+import com.gripet12.crowdfundingService.repository.RewardRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
 import com.gripet12.crowdfundingService.util.searchPattern
 import org.springframework.data.domain.Page
@@ -24,7 +28,11 @@ class ProjectService(
     private val projectRepository: ProjectRepository,
     private val userRepository: UserRepository,
     private val fileRepository: FileRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val analyticsLogRepository: AnalyticsLogRepository,
+    private val projectFollowRepository: ProjectFollowRepository,
+    private val rewardRepository: RewardRepository,
+    private val donateRepository: DonateRepository
 ) {
 
     private fun currentUserId(): Long {
@@ -161,13 +169,21 @@ class ProjectService(
     @Transactional
     fun deleteProject(id: Long) {
         val project = projectRepository.findById(id)
-            .orElseThrow { RuntimeException("Project not found") }
-        if (project.collectedAmount > 0.toBigDecimal()) {
+            .orElseThrow { NoSuchElementException("Project not found") }
+        if (project.collectedAmount > java.math.BigDecimal.ZERO) {
             project.status = "CANCELLED"
             projectRepository.save(project)
-        } else {
-            projectRepository.deleteById(id)
+            return
         }
+        purgeProjectDependencies(id)
+        projectRepository.deleteById(id)
+    }
+
+    private fun purgeProjectDependencies(projectId: Long) {
+        analyticsLogRepository.deleteByProjectProjectId(projectId)
+        projectFollowRepository.deleteByProjectProjectId(projectId)
+        rewardRepository.deleteByProjectProjectId(projectId)
+        donateRepository.deleteByProjectProjectId(projectId)
     }
 
     private fun Project.toPreviewProjectDto(): PreviewProjectDto =

@@ -17,6 +17,7 @@ import java.time.LocalDate
 class AdminService(
     private val userRepository: UserRepository,
     private val projectRepository: ProjectRepository,
+    private val projectService: ProjectService,
     private val postRepository: PostRepository,
     private val categoryRepository: CategoryRepository,
     private val subscriptionRepository: SubscriptionRepository,
@@ -182,14 +183,7 @@ class AdminService(
 
     @Transactional
     fun deleteProject(projectId: Long) {
-        val project = projectRepository.findById(projectId)
-            .orElseThrow { NoSuchElementException("Project not found") }
-        if (project.collectedAmount > BigDecimal.ZERO) {
-            project.status = "CANCELLED"
-            projectRepository.save(project)
-        } else {
-            projectRepository.deleteById(projectId)
-        }
+        projectService.deleteProject(projectId)
     }
 
     @Transactional(readOnly = true)

@@ -2,7 +2,9 @@ package com.gripet12.crowdfundingService.repository
 
 import com.gripet12.crowdfundingService.model.ProjectFollow
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 
 interface ProjectFollowRepository : JpaRepository<ProjectFollow, Long> {
 
@@ -15,4 +17,8 @@ interface ProjectFollowRepository : JpaRepository<ProjectFollow, Long> {
 
     @Query("SELECT pf.project.projectId FROM ProjectFollow pf WHERE pf.user.userId = :userId AND pf.project.projectId IN :projectIds")
     fun findFollowedProjectIds(userId: Long, projectIds: List<Long>): List<Long>
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM ProjectFollow pf WHERE pf.project.projectId = :projectId")
+    fun deleteByProjectProjectId(@Param("projectId") projectId: Long)
 }

@@ -3,7 +3,9 @@ package com.gripet12.crowdfundingService.repository
 import com.gripet12.crowdfundingService.model.AnalyticsLog
 import com.gripet12.crowdfundingService.model.User
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
 
 interface AnalyticsLogRepository : JpaRepository<AnalyticsLog, Long> {
@@ -79,4 +81,8 @@ interface AnalyticsLogRepository : JpaRepository<AnalyticsLog, Long> {
         ORDER BY CAST(a.actionTime AS date)
     """)
     fun activityByDay(creatorId: Long, since: LocalDateTime): List<Array<Any>>
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM AnalyticsLog a WHERE a.project.projectId = :projectId")
+    fun deleteByProjectProjectId(@Param("projectId") projectId: Long)
 }

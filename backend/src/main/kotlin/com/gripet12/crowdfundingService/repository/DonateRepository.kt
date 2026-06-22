@@ -5,6 +5,7 @@ import com.gripet12.crowdfundingService.model.Payment
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.math.BigDecimal
@@ -132,4 +133,8 @@ interface DonateRepository : JpaRepository<Donate, Long> {
 
     @Query("SELECT COUNT(d) FROM Donate d JOIN d.payment p WHERE p.status = 'APPROVED'")
     fun countAllApprovedDonations(): Long
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM Donate d WHERE d.project.projectId = :projectId")
+    fun deleteByProjectProjectId(@Param("projectId") projectId: Long)
 }
