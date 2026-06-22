@@ -18,8 +18,4 @@ class SubscriptionController(
     @GetMapping("/my")
     fun getMySubscriptions(): ResponseEntity<List<SubscriptionDto>> =
         ResponseEntity.ok(subscriptionService.getMySubscriptions())
-
-    @GetMapping("/received")
-    fun getReceivedSubscriptions(): ResponseEntity<List<SubscriptionDto>> =
-        ResponseEntity.ok(subscriptionService.getReceivedSubscriptions())
 }
