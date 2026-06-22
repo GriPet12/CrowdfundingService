@@ -36,6 +36,11 @@
     border-color: #a7f3d0;
 }
 
+.balance-card--frozen {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #fcd34d;
+}
+
 .balance-card-label {
     font-size: 13px;
     color: #6b7280;
@@ -52,6 +57,10 @@
 .balance-card-value--sm {
     font-size: 22px;
     color: #1a1a1a;
+}
+
+.balance-card-value--frozen {
+    color: #b45309;
 }
 
 .balance-fee-note {

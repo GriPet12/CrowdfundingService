@@ -269,6 +269,22 @@
     background-color: #333;
 }
 
+.donate-button-start.donate-button-closed,
+.donate-button-closed {
+    background-color: #9ca3af;
+    color: #fff;
+    cursor: not-allowed;
+}
+
+.donate-button-start.donate-button-closed:hover,
+.donate-button-closed:hover {
+    background-color: #9ca3af;
+}
+
+.donate-section--closed .donate-start-wrapper {
+    pointer-events: none;
+}
+
 .donate-input-group {
     display: flex;
     gap: 10px;

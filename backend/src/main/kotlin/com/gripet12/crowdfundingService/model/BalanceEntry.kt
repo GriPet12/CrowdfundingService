@@ -34,6 +34,12 @@ class BalanceEntry(
 
     val description: String? = null,
 
+    @Column(name = "project_id")
+    var projectId: Long? = null,
+
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    var frozen: Boolean = false,
+
     @Column(name = "created_at", nullable = false)
     val createdAt: Timestamp = Timestamp(System.currentTimeMillis())
 )

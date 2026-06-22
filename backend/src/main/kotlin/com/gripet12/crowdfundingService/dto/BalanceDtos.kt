@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 
 data class BalanceSummaryDto(
     val availableBalance: BigDecimal,
+    val frozenBalance: BigDecimal,
     val totalEarned: BigDecimal,
     val totalWithdrawn: BigDecimal,
     val platformFeePercent: Int,

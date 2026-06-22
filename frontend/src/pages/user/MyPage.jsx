@@ -348,6 +348,7 @@ const MyPage = () => {
 
     
     const [deletingProjectId, setDeletingProjectId] = useState(null);
+    const [closingFundraisingProjectId, setClosingFundraisingProjectId] = useState(null);
     const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
     useEffect(() => {
@@ -552,6 +553,28 @@ const MyPage = () => {
             alert('Помилка при видаленні проекту');
         } finally {
             setDeletingProjectId(null);
+        }
+    };
+
+    const handleCloseFundraising = async (projectId) => {
+        try {
+            const res = await fetch(`/api/projects/${projectId}/close-fundraising`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${currentUser.token}` },
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setProjects(prev => prev.map(p =>
+                    p.projectId === projectId ? { ...p, ...updated } : p
+                ));
+            } else {
+                const msg = await res.text();
+                alert(msg || 'Не вдалося закрити збір');
+            }
+        } catch {
+            alert('Помилка при закритті збору');
+        } finally {
+            setClosingFundraisingProjectId(null);
         }
     };
 
@@ -872,6 +895,18 @@ const MyPage = () => {
                                     <div key={p.projectId} className="my-page-project-wrapper">
                                         <ProjectItem project={p} />
                                         <div className="my-page-project-actions">
+                                            {p.status === 'ACTIVE' && !p.fundraisingClosed && (
+                                                <button
+                                                    type="button"
+                                                    className="my-page-project-close-fundraising-btn"
+                                                    onClick={() => setClosingFundraisingProjectId(p.projectId)}
+                                                >
+                                                    Закрити збір
+                                                </button>
+                                            )}
+                                            {p.status === 'ACTIVE' && p.fundraisingClosed && (
+                                                <span className="my-page-fundraising-closed-badge">Збір закрито</span>
+                                            )}
                                             <button
                                                 className="my-page-project-edit-btn"
                                                 onClick={() => navigate(`/projects/${p.projectId}/edit`)}
@@ -897,6 +932,16 @@ const MyPage = () => {
                                 cancelLabel="Скасувати"
                                 onConfirm={() => handleDeleteProject(deletingProjectId)}
                                 onCancel={() => setDeletingProjectId(null)}
+                            />
+                        )}
+
+                        {closingFundraisingProjectId && (
+                            <ConfirmModal
+                                message="Закрити збір коштів? Нові донати будуть недоступні, а зібрані кошти стануть доступними для виведення."
+                                confirmLabel="Закрити збір"
+                                cancelLabel="Скасувати"
+                                onConfirm={() => handleCloseFundraising(closingFundraisingProjectId)}
+                                onCancel={() => setClosingFundraisingProjectId(null)}
                             />
                         )}
                     </div>

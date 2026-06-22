@@ -100,8 +100,13 @@ class PaymentService(
                     .orElseThrow { IllegalArgumentException("Project not found") }
             } else null
 
-            if (project != null && (project.status != "ACTIVE" || project.banned)) {
-                throw IllegalStateException("Project is not available for donations")
+            if (project != null && (project.status != "ACTIVE" || project.banned || project.fundraisingClosed)) {
+                val message = when {
+                    project.fundraisingClosed -> "Збір коштів для цього проєкту закрито"
+                    project.status != "ACTIVE" -> "Project is not available for donations"
+                    else -> "Project is not available for donations"
+                }
+                throw IllegalStateException(message)
             }
 
             val creatorUser = if (project == null && request.creator > 0L)

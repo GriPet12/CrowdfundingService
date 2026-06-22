@@ -45,6 +45,7 @@ class RecommendationService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
+            fundraisingClosed = fundraisingClosed,
             hotnessScore = hotnessScore,
             mainImage = mainImage?.id,
             categories = categories.map { it?.categoryName }.toSet()

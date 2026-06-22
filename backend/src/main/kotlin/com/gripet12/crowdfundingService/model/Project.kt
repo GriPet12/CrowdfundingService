@@ -44,6 +44,9 @@ data class Project(
     @Column(nullable = false, columnDefinition = "boolean not null default false")
     var bannedWithUser: Boolean = false,
 
+    @Column(name = "fundraising_closed", nullable = false, columnDefinition = "boolean not null default false")
+    var fundraisingClosed: Boolean = false,
+
     @Column(name = "created_at", nullable = false,
         columnDefinition = "timestamp not null default now()")
     val createdAt: LocalDateTime = LocalDateTime.now()

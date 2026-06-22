@@ -60,6 +60,11 @@ class ProjectController(
     ): ResponseEntity<ProjectDto> =
         ResponseEntity.ok(projectService.updateProject(id, dto))
 
+    @PostMapping("/{id}/close-fundraising")
+    @PreAuthorize("isAuthenticated()")
+    fun closeFundraising(@PathVariable id: Long): ResponseEntity<ProjectDto> =
+        ResponseEntity.ok(projectService.closeFundraising(id))
+
     @GetMapping("/{id}/can-delete")
     fun canDelete(@PathVariable id: Long): ResponseEntity<Map<String, Any>> =
         ResponseEntity.ok(projectService.canDelete(id))

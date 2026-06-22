@@ -15,6 +15,8 @@ data class PreviewProjectDto(
 
     val status: String?,
 
+    val fundraisingClosed: Boolean = false,
+
     val hotnessScore: Double,
 
     val mainImage: Long?,

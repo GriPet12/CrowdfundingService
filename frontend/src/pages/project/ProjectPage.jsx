@@ -189,6 +189,7 @@ const ProjectPage = () => {
                             type="DONATION"
                             projectId={project.projectId}
                             disabled={!!currentUser?.banned}
+                            fundraisingClosed={!!project.fundraisingClosed}
                             paymentPayload={{
                                 donateId: currentUser?.id ?? 0,
                                 donor: currentUser?.id ?? 0,

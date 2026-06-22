@@ -15,6 +15,8 @@ data class ProjectDto(
 
     val status: String? = null,
 
+    val fundraisingClosed: Boolean = false,
+
     val description: String? = null,
 
     var hotnessScore: Double = 0.0,

@@ -108,6 +108,7 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCard
                 type="DONATION"
                 projectId={project.projectId}
                 disabled={!!currentUser?.banned}
+                fundraisingClosed={!!project.fundraisingClosed}
                 paymentPayload={{
                     donateId: currentUser?.id ?? 0,
                     donor: currentUser?.id ?? 0,

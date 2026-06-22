@@ -7,6 +7,8 @@ const DonateSection = ({
     paymentPayload  = {},
     projectId       = null,
     disabled        = false,
+    fundraisingClosed = false,
+    closedLabel     = 'Збір закрито',
     wrapperClass    = 'donate-section',
     btnStartClass   = 'donate-start-wrapper',
     btnInputClass   = 'donate-input-wrapper',
@@ -26,15 +28,16 @@ const DonateSection = ({
     const [rewardWarning, setRewardWarning]   = useState(false);
 
     const currentUser = AuthService.getCurrentUser();
+    const isClosed = fundraisingClosed;
+    const isBlocked = disabled || isClosed;
 
-    
     useEffect(() => {
-        if (!projectId) return;
+        if (!projectId || isClosed) return;
         fetch(`/api/rewards/${projectId}`)
             .then(r => r.ok ? r.json() : [])
             .then(data => setRewards(Array.isArray(data) ? data : []))
             .catch(() => {});
-    }, [projectId]);
+    }, [projectId, isClosed]);
 
     const handleCancel = () => {
         setIsDonating(false);
@@ -54,38 +57,45 @@ const DonateSection = ({
             setSelectedReward(null);
         } else {
             setSelectedReward(reward);
-            
             if (!amount || parseFloat(amount) < parseFloat(reward.minimalAmount)) {
                 setAmount(String(reward.minimalAmount));
             }
         }
     };
 
-    
     const finalPayload = {
         ...paymentPayload,
         reward: selectedReward ? selectedReward.rewardId : (paymentPayload.reward ?? 0),
     };
 
-    return (
-        <div className={`${wrapperClass} ${isDonating ? 'active' : ''}`}>
+    const buttonLabel = isClosed ? closedLabel : 'Задонатити';
+    const buttonTitle = isClosed
+        ? 'Збір коштів для цього проєкту закрито'
+        : disabled
+            ? 'Ваш акаунт заблоковано'
+            : undefined;
 
-            {disabled ? (
-                <div className={btnStartClass}>
-                    <button type="button" className={startBtnClass} disabled title="Ваш акаунт заблоковано">
+    return (
+        <div className={`${wrapperClass} ${isDonating ? 'active' : ''}${isClosed ? ' donate-section--closed' : ''}`}>
+            <div className={btnStartClass}>
+                {isBlocked ? (
+                    <button
+                        type="button"
+                        className={`${startBtnClass}${isClosed ? ' donate-button-closed' : ''}`}
+                        disabled
+                        title={buttonTitle}
+                    >
+                        {buttonLabel}
+                    </button>
+                ) : (
+                    <button type="button" className={startBtnClass} onClick={() => setIsDonating(true)}>
                         Задонатити
                     </button>
-                </div>
-            ) : (
-            <div className={btnStartClass}>
-                <button type="button" className={startBtnClass} onClick={() => setIsDonating(true)}>
-                    Задонатити
-                </button>
+                )}
             </div>
-            )}
 
-            {!disabled && <div className={btnInputClass}>
-
+            {!isBlocked && (
+            <div className={btnInputClass}>
                 {isDonating && rewards.length > 0 && (
                     <div className="donate-rewards-list">
                         <p className="donate-rewards-title">Оберіть винагороду (необов'язково):</p>
@@ -133,8 +143,8 @@ const DonateSection = ({
                         onBeforeSubmit={onDonate}
                     />
                 </div>
-            </div>}
-
+            </div>
+            )}
         </div>
     );
 };

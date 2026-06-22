@@ -70,6 +70,7 @@ class FollowService(
                 goalAmount = p.goalAmount,
                 collectedAmount = p.collectedAmount,
                 status = p.status,
+                fundraisingClosed = p.fundraisingClosed,
                 hotnessScore = p.hotnessScore,
                 mainImage = p.mainImage?.id,
                 categories = p.categories.map { it?.categoryName }.toSet()

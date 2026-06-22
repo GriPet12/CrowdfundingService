@@ -16,6 +16,7 @@ import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.RewardRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
 import com.gripet12.crowdfundingService.util.searchPattern
+import org.springframework.context.annotation.Lazy
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -33,7 +34,8 @@ class ProjectService(
     private val analyticsLogRepository: AnalyticsLogRepository,
     private val projectFollowRepository: ProjectFollowRepository,
     private val rewardRepository: RewardRepository,
-    private val donateRepository: DonateRepository
+    private val donateRepository: DonateRepository,
+    @Lazy private val balanceService: BalanceService
 ) {
 
     private fun currentUserId(): Long {
@@ -172,6 +174,26 @@ class ProjectService(
         return projectRepository.save(updated).toProjectDto()
     }
 
+    @Transactional
+    fun closeFundraising(projectId: Long): ProjectDto {
+        val project = projectRepository.findById(projectId)
+            .orElseThrow { NoSuchElementException("Project not found") }
+        if (project.creator.userId != currentUserId()) {
+            throw IllegalAccessException("Not allowed")
+        }
+        if (project.status != "ACTIVE") {
+            throw IllegalStateException("Закрити збір можна лише для активного проєкту")
+        }
+        if (project.fundraisingClosed) {
+            throw IllegalStateException("Збір для цього проєкту уже закрито")
+        }
+        project.fundraisingClosed = true
+        projectRepository.save(project)
+        balanceService.unfreezeProjectFunds(projectId)
+        balanceService.syncProjectFrozenEntries(project.creator.userId!!)
+        return project.toProjectDto()
+    }
+
     fun canDelete(id: Long): Map<String, Any> {
         val project = projectRepository.findById(id)
             .orElseThrow { RuntimeException("Project not found") }
@@ -207,6 +229,7 @@ class ProjectService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
+            fundraisingClosed = fundraisingClosed,
             hotnessScore = hotnessScore,
             mainImage = mainImage?.id,
             categories = categories.map { it.categoryName }.toSet()
@@ -220,6 +243,7 @@ class ProjectService(
             goalAmount = goalAmount,
             collectedAmount = collectedAmount,
             status = status,
+            fundraisingClosed = fundraisingClosed,
             description = description,
             hotnessScore = hotnessScore,
             mainImage = mainImage?.id,

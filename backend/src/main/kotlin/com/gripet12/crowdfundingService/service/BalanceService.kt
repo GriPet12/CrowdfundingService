@@ -84,12 +84,16 @@ class BalanceService(
         val donate = donateRepository.findByPayment(payment)
         if (donate != null) {
             val creatorId = donate.creator?.userId ?: donate.project?.creator?.userId ?: return
+            val project = donate.project
+            val frozen = project != null && !project.fundraisingClosed
             creditUser(
                 creatorId = creatorId,
                 grossAmount = payment.amount,
                 entryType = "DONATION",
                 idempotencyKey = key,
-                description = "Донат ${payment.orderReference.take(8)}"
+                description = if (project != null) "Донат на проект «${project.title}»" else "Донат ${payment.orderReference.take(8)}",
+                frozen = frozen,
+                projectId = project?.projectId
             )
             return
         }
@@ -110,7 +114,9 @@ class BalanceService(
         grossAmount: BigDecimal,
         entryType: String,
         idempotencyKey: String,
-        description: String
+        description: String,
+        frozen: Boolean = false,
+        projectId: Long? = null
     ) {
         if (balanceEntryRepository.existsByIdempotencyKey(idempotencyKey)) return
 
@@ -124,10 +130,36 @@ class BalanceService(
                 amount = net,
                 entryType = entryType,
                 idempotencyKey = idempotencyKey,
-                description = description
+                description = description,
+                frozen = frozen,
+                projectId = projectId
             )
         )
-        log.info("Balance credited: userId=$creatorId amount=$net type=$entryType key=$idempotencyKey")
+        log.info("Balance credited: userId=$creatorId amount=$net frozen=$frozen projectId=$projectId type=$entryType key=$idempotencyKey")
+    }
+
+    @Transactional
+    fun unfreezeProjectFunds(projectId: Long) {
+        val updated = balanceEntryRepository.unfreezeByProjectId(projectId)
+        log.info("Unfroze project funds: projectId=$projectId entries=$updated")
+    }
+
+    @Transactional
+    fun syncProjectFrozenEntries(userId: Long) {
+        donateRepository.findAllApprovedForCreator(userId)
+            .filter { it.project != null && it.payment != null }
+            .forEach { donate ->
+                val payment = donate.payment ?: return@forEach
+                val key = "pay-${payment.orderReference}"
+                val entry = balanceEntryRepository.findByIdempotencyKey(key) ?: return@forEach
+                val project = donate.project ?: return@forEach
+                val shouldFreeze = !project.fundraisingClosed
+                if (entry.projectId != project.projectId || entry.frozen != shouldFreeze) {
+                    entry.projectId = project.projectId
+                    entry.frozen = shouldFreeze
+                    balanceEntryRepository.save(entry)
+                }
+            }
     }
 
     @Transactional
@@ -149,13 +181,16 @@ class BalanceService(
     fun getBalanceSummary(): BalanceSummaryDto {
         val userId = currentUserId()
         backfillBalanceIfNeeded(userId)
+        syncProjectFrozenEntries(userId)
         val user = currentUser()
-        val available = balanceEntryRepository.sumByUserId(userId)
+        val available = balanceEntryRepository.sumAvailableByUserId(userId)
+        val frozen = balanceEntryRepository.sumFrozenByUserId(userId)
         val earned = balanceEntryRepository.sumCreditsByUserId(userId)
         val withdrawn = balanceEntryRepository.sumDebitsByUserId(userId)
 
         return BalanceSummaryDto(
             availableBalance = available,
+            frozenBalance = frozen,
             totalEarned = earned,
             totalWithdrawn = withdrawn,
             platformFeePercent = platformFeePercent,
@@ -256,9 +291,10 @@ class BalanceService(
         }
 
         backfillBalanceIfNeeded(user.userId!!)
-        val available = balanceEntryRepository.sumByUserId(user.userId!!)
+        syncProjectFrozenEntries(user.userId!!)
+        val available = balanceEntryRepository.sumAvailableByUserId(user.userId!!)
         if (amount > available) {
-            throw IllegalArgumentException("Недостатньо коштів на балансі. Доступно: ₴$available")
+            throw IllegalArgumentException("Недостатньо доступних коштів. Доступно: ₴$available (частина зібрана на проекти заморожена до закриття збору)")
         }
 
         val usesManualPayout = !connectEnabled || user.stripeConnectAccountId.isNullOrBlank() || !user.stripePayoutsEnabled

@@ -832,8 +832,39 @@
 
 .my-page-project-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     padding: 0 4px;
+    align-items: center;
+}
+
+.my-page-project-close-fundraising-btn {
+    flex: 1 1 100%;
+    padding: 8px 0;
+    background: #fff7ed;
+    border: 1.5px solid #f97316;
+    color: #c2410c;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.my-page-project-close-fundraising-btn:hover {
+    background: #ffedd5;
+}
+
+.my-page-fundraising-closed-badge {
+    flex: 1 1 100%;
+    text-align: center;
+    padding: 8px 10px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7280;
 }
 
 .my-page-project-edit-btn {

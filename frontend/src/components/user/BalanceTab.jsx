@@ -153,6 +153,14 @@ const BalanceTab = ({ token }) => {
                     <span className="balance-card-label">Доступно для виведення</span>
                     <span className="balance-card-value">{fmtMoney(available)}</span>
                 </div>
+                {Number(balance?.frozenBalance ?? 0) > 0 && (
+                    <div className="balance-card balance-card--frozen">
+                        <span className="balance-card-label">Заморожено (відкриті проекти)</span>
+                        <span className="balance-card-value balance-card-value--sm balance-card-value--frozen">
+                            {fmtMoney(balance.frozenBalance)}
+                        </span>
+                    </div>
+                )}
                 <div className="balance-card">
                     <span className="balance-card-label">Зароблено всього</span>
                     <span className="balance-card-value balance-card-value--sm">
@@ -166,6 +174,12 @@ const BalanceTab = ({ token }) => {
                     </span>
                 </div>
             </div>
+
+            {Number(balance?.frozenBalance ?? 0) > 0 && (
+                <p className="balance-fee-note">
+                    Кошти з донатів на активні проекти заморожені до закриття збору. Закрийте збір у розділі «Проекти» на /me.
+                </p>
+            )}
 
             {balance?.platformFeePercent > 0 && (
                 <p className="balance-fee-note">
