@@ -21,7 +21,14 @@ data class UploadedFile(
     val size: Long,
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(nullable = false)
     val data: ByteArray,
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "preview_data")
+    var previewData: ByteArray? = null,
 
     val uploadedAt: LocalDateTime = LocalDateTime.now()
 ) {

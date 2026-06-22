@@ -5,22 +5,41 @@ import '../../styles/userItem.css';
 import '../../styles/projectItem.css';
 import '../../styles/projectSearch.css';
 
+const AUTHORS_PAGE_SIZE = 6;
+
 const UserList = () => {
     const [users, setUsers]             = useState([]);
     const [followedIds, setFollowedIds] = useState(new Set());
-    const [loading, setLoading]         = useState(true);
+    const [loading, setLoading]         = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError]             = useState(null);
     const [page, setPage]               = useState(0);
     const [hasMore, setHasMore]         = useState(false);
+    const [shouldLoad, setShouldLoad]   = useState(false);
 
     const [search, setSearch]   = useState('');
     const [sortBy, setSortBy]   = useState('createdAt');
     const [sortDir, setSortDir] = useState('desc');
 
+    const sectionRef = useRef(null);
     const currentUserRef = useRef(AuthService.getCurrentUser());
     const filtersRef = useRef({ search, sortBy, sortDir });
     filtersRef.current = { search, sortBy, sortDir };
+
+    useEffect(() => {
+        const node = sectionRef.current;
+        if (!node) return undefined;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) setShouldLoad(true);
+            },
+            { rootMargin: '240px' }
+        );
+
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, []);
 
     const fetchFollowStatuses = useCallback(async (userList) => {
         const currentUser = currentUserRef.current;
@@ -39,7 +58,7 @@ const UserList = () => {
 
     const fetchUsers = useCallback(async (pageNum, filters) => {
         const { search, sortBy, sortDir } = filters;
-        const params = new URLSearchParams({ page: pageNum, size: 12, sortBy, sortDir });
+        const params = new URLSearchParams({ page: pageNum, size: AUTHORS_PAGE_SIZE, sortBy, sortDir });
         if (search) params.set('search', search);
         const response = await fetch(`/api/creators?${params}`);
         if (!response.ok) throw new Error(`Помилка сервера: ${response.status}`);
@@ -55,15 +74,16 @@ const UserList = () => {
     }, []);
 
     useEffect(() => {
+        if (!shouldLoad) return;
         const filters = { search, sortBy, sortDir };
         setPage(0);
         setError(null);
         setLoading(true);
         fetchUsers(0, filters)
-            .then(userList => fetchFollowStatuses(userList))
+            .then(userList => { fetchFollowStatuses(userList); })
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
-    }, [search, sortBy, sortDir, fetchUsers, fetchFollowStatuses]);
+    }, [shouldLoad, search, sortBy, sortDir, fetchUsers, fetchFollowStatuses]);
 
     const handleLoadMore = async () => {
         const nextPage = page + 1;
@@ -92,54 +112,62 @@ const UserList = () => {
     };
 
     return (
-        <div>
+        <div ref={sectionRef}>
             <h2 style={{ textAlign: 'center', marginTop: '40px' }}>Наші автори</h2>
 
-            <div className="project-search-bar">
-                <input
-                    className="project-search-input"
-                    type="text"
-                    placeholder="Пошук авторів…"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                />
-                <select className="project-search-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                    <option value="createdAt">Нові</option>
-                    <option value="username">За іменем</option>
-                </select>
-                <button
-                    className="project-search-dir-btn"
-                    onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
-                    title={sortDir === 'desc' ? 'За спаданням' : 'За зростанням'}
-                >
-                    {sortDir === 'desc' ? '↓' : '↑'}
-                </button>
-            </div>
-
-            {loading ? (
-                <p style={{ textAlign: 'center' }}>Завантаження авторів...</p>
-            ) : error ? (
-                <p style={{ margin: '10px', color: 'red', textAlign: 'center' }}>Сталася помилка: {error}</p>
-            ) : users.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>Авторів не знайдено</p>
+            {!shouldLoad ? (
+                <p style={{ textAlign: 'center', color: '#888', padding: '24px 0 40px' }}>
+                    Прокрутіть нижче, щоб завантажити авторів…
+                </p>
             ) : (
-                <div className="authors-grid">
-                    {users.map(user => (
-                        <UserItem
-                            key={user.id || user.username}
-                            user={user}
-                            initialFollowing={followedIds.has(user.id)}
+                <>
+                    <div className="project-search-bar">
+                        <input
+                            className="project-search-input"
+                            type="text"
+                            placeholder="Пошук авторів…"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
                         />
-                    ))}
-                </div>
-            )}
+                        <select className="project-search-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                            <option value="createdAt">Нові</option>
+                            <option value="username">За іменем</option>
+                        </select>
+                        <button
+                            className="project-search-dir-btn"
+                            onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                            title={sortDir === 'desc' ? 'За спаданням' : 'За зростанням'}
+                        >
+                            {sortDir === 'desc' ? '↓' : '↑'}
+                        </button>
+                    </div>
 
-            {hasMore && (
-                <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '40px' }}>
-                    <button className="load-more-btn" onClick={handleLoadMore} disabled={loadingMore}>
-                        {loadingMore ? 'Завантаження...' : 'Завантажити ще'}
-                    </button>
-                </div>
+                    {loading ? (
+                        <p style={{ textAlign: 'center' }}>Завантаження авторів...</p>
+                    ) : error ? (
+                        <p style={{ margin: '10px', color: 'red', textAlign: 'center' }}>Сталася помилка: {error}</p>
+                    ) : users.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>Авторів не знайдено</p>
+                    ) : (
+                        <div className="authors-grid">
+                            {users.map(user => (
+                                <UserItem
+                                    key={user.id || user.username}
+                                    user={user}
+                                    initialFollowing={followedIds.has(user.id)}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {hasMore && (
+                        <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '40px' }}>
+                            <button className="load-more-btn" onClick={handleLoadMore} disabled={loadingMore}>
+                                {loadingMore ? 'Завантаження...' : 'Завантажити ще'}
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

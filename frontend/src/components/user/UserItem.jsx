@@ -51,10 +51,11 @@ const UserItem = ({ user, initialFollowing = false, onFollowChange }) => {
                 >
                     {user.imageId ? (
                         <img
-                            src={`/api/files/${user.imageId}`}
+                            src={`/api/files/${user.imageId}/preview?w=160`}
                             alt={user.username}
                             className="author-avatar"
                             loading="lazy"
+                            decoding="async"
                         />
                     ) : (
                         <div className="author-avatar-placeholder">

@@ -16,26 +16,30 @@ const Header = ({ onLoginClick, onRegisterClick }) => {
 
     useEffect(() => {
         const user = AuthService.getCurrentUser();
-        if (!user) return;
+        if (!user) return undefined;
 
-        fetch('/api/users/me', {
-            headers: { 'Authorization': `Bearer ${user.token}` }
-        })
-            .then(r => r.ok ? r.json() : null)
-            .then(data => {
-                if (!data) return;
-                const updated = {
-                    ...user,
-                    id: data.id,
-                    imageId: data.imageId,
-                    role: data.role ?? user.role,
-                    roles: data.roles ?? user.roles,
-                    banned: data.banned ?? false,
-                };
-                localStorage.setItem('user', JSON.stringify(updated));
-                setCurrentUser(updated);
+        const timer = window.setTimeout(() => {
+            fetch('/api/users/me', {
+                headers: { 'Authorization': `Bearer ${user.token}` }
             })
-            .catch(() => {});
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data) return;
+                    const updated = {
+                        ...user,
+                        id: data.id,
+                        imageId: data.imageId,
+                        role: data.role ?? user.role,
+                        roles: data.roles ?? user.roles,
+                        banned: data.banned ?? false,
+                    };
+                    localStorage.setItem('user', JSON.stringify(updated));
+                    setCurrentUser(updated);
+                })
+                .catch(() => {});
+        }, 2000);
+
+        return () => window.clearTimeout(timer);
     }, []);
 
     const logOut = () => {
@@ -65,9 +69,11 @@ const Header = ({ onLoginClick, onRegisterClick }) => {
                             >
                                 {currentUser.imageId ? (
                                     <img
-                                        src={`/api/files/${currentUser.imageId}`}
+                                        src={`/api/files/${currentUser.imageId}/preview?w=96`}
                                         alt={currentUser.username}
                                         className="user-avatar"
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                 ) : (
                                     <div className="user-avatar-placeholder">

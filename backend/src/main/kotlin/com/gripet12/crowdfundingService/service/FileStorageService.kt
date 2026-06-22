@@ -3,6 +3,7 @@ package com.gripet12.crowdfundingService.service
 import com.gripet12.crowdfundingService.model.UploadedFile
 import com.gripet12.crowdfundingService.model.enums.FileCategory
 import com.gripet12.crowdfundingService.repository.FileRepository
+import com.gripet12.crowdfundingService.util.ImagePreviewGenerator
 import org.apache.tika.Tika
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,13 +20,15 @@ class FileStorageService(
         val bytes = file.bytes
         val mimeType = tika.detect(bytes)
         val category = determineCategory(mimeType)
+        val preview = ImagePreviewGenerator.create(bytes, mimeType)
 
         val entity = UploadedFile(
             originalFileName = file.originalFilename ?: "unknown",
             mimeType = mimeType,
             category = category,
             size = file.size,
-            data = bytes
+            data = bytes,
+            previewData = preview?.bytes
         )
 
         return fileRepository.save(entity)

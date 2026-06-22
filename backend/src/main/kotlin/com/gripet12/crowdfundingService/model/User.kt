@@ -26,7 +26,7 @@ data class User(
     @Column(columnDefinition = "boolean default false")
     val isPrivate: Boolean = false,
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "image_id", nullable = true) 
     val image: UploadedFile? = null,
 

@@ -12,6 +12,8 @@ const SORT_OPTIONS = [
     { value: 'createdAt',       label: 'Нові' },
 ];
 
+const PAGE_SIZE = 6;
+
 const ProjectCardSkeleton = () => (
     <div className="project-card project-card--skeleton" aria-hidden="true">
         <div className="project-card-image-wrapper">
@@ -39,97 +41,73 @@ const ProjectList = () => {
     const [sortBy, setSortBy]       = useState('hotnessScore');
     const [sortDir, setSortDir]     = useState('desc');
 
-    const currentUserRef = useRef(AuthService.getCurrentUser());
     const filtersRef = useRef({ search, categoryId, sortBy, sortDir });
     filtersRef.current = { search, categoryId, sortBy, sortDir };
 
-    
-    useEffect(() => {
-        fetch('/api/categories')
-            .then(r => r.ok ? r.json() : [])
-            .then(data => setCategories(Array.isArray(data) ? data : []))
-            .catch(() => {});
-    }, []);
-
-    const fetchFollowStatuses = useCallback(async (projectList) => {
-        const currentUser = currentUserRef.current;
-        if (!currentUser || projectList.length === 0) return;
-        const ids = projectList.map(p => p.projectId).filter(Boolean);
-        if (ids.length === 0) return;
-        try {
-            const res = await fetch('/api/follows/projects/batch-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentUser.token}` },
-                body: JSON.stringify(ids),
-            });
-            if (res.ok) setFollowedIds(new Set(await res.json()));
-        } catch {  }
-    }, []);
-
-    
-    const buildUrl = (pageNum, filters) => {
-        const currentUser = currentUserRef.current;
+    const buildProjectsUrl = (pageNum, filters) => {
         const { search, categoryId, sortBy, sortDir } = filters;
-        const PAGE_SIZE = 6;
-
-        
-        const noFilters = !search && !categoryId && sortBy === 'hotnessScore' && sortDir === 'desc';
-        if (noFilters && currentUser && pageNum === 0) {
-            return {
-                url: `/api/recommendations?page=${pageNum}&size=${PAGE_SIZE}`,
-                headers: { Authorization: `Bearer ${currentUser.token}` },
-            };
-        }
-
-        const params = new URLSearchParams({ page: pageNum, size: PAGE_SIZE, sortBy, sortDir });
-        if (search)     params.set('search', search);
+        const params = new URLSearchParams({
+            page: pageNum,
+            size: PAGE_SIZE,
+            sortBy,
+            sortDir,
+        });
+        if (search) params.set('search', search);
         if (categoryId) params.set('categoryId', categoryId);
-        return { url: `/api/projects?${params}`, headers: {} };
+        return `/api/projects?${params}`;
     };
 
-    const fetchData = useCallback(async (pageNum, filters) => {
-        const { url, headers } = buildUrl(pageNum, filters);
-        const response = await fetch(url, { headers });
-        if (!response.ok) throw new Error(`Помилка сервера: ${response.status}`);
-        const data = await response.json();
-        const newProjects = data.content || [];
+    const applyProjectsPage = (projectsData, pageNum) => {
+        const newProjects = projectsData.content || [];
         setProjects(prev => pageNum === 0 ? newProjects : [...prev, ...newProjects]);
-        const totalPages  = data.totalPages  ?? 1;
-        const currentPage = data.currentPage ?? 0;
+        const totalPages  = projectsData.totalPages  ?? 1;
+        const currentPage = projectsData.currentPage ?? pageNum;
         setHasMore(newProjects.length > 0 && currentPage + 1 < totalPages);
         return newProjects;
-    }, []); 
+    };
+
+    const fetchInitialHome = useCallback(async (filters) => {
+        const { search, categoryId, sortBy, sortDir } = filters;
+        const params = new URLSearchParams({
+            page: 0,
+            size: PAGE_SIZE,
+            sortBy,
+            sortDir,
+        });
+        if (search) params.set('search', search);
+        if (categoryId) params.set('categoryId', categoryId);
+
+        const response = await fetch(`/api/home?${params}`);
+        if (!response.ok) throw new Error(`Помилка сервера: ${response.status}`);
+        const data = await response.json();
+        setCategories(Array.isArray(data.categories) ? data.categories : []);
+        setFollowedIds(new Set(data.followedProjectIds || []));
+        return applyProjectsPage(data.projects || {}, 0);
+    }, []);
+
+    const fetchMoreProjects = useCallback(async (pageNum, filters) => {
+        const response = await fetch(buildProjectsUrl(pageNum, filters));
+        if (!response.ok) throw new Error(`Помилка сервера: ${response.status}`);
+        const data = await response.json();
+        return applyProjectsPage(data, pageNum);
+    }, []);
 
     useEffect(() => {
         const filters = { search, categoryId, sortBy, sortDir };
         setPage(0);
         setLoading(true);
         setError(null);
-        fetchData(0, filters)
-            .then(newProjects => { fetchFollowStatuses(newProjects); })
+        fetchInitialHome(filters)
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
-    }, [search, categoryId, sortBy, sortDir, fetchData, fetchFollowStatuses]);
+    }, [search, categoryId, sortBy, sortDir, fetchInitialHome]);
 
     const handleLoadMore = async () => {
         const nextPage = page + 1;
-        const currentUser = currentUserRef.current;
         setLoadingMore(true);
         try {
-            const newProjects = await fetchData(nextPage, filtersRef.current);
+            await fetchMoreProjects(nextPage, filtersRef.current);
             setPage(nextPage);
-            if (currentUser && newProjects.length > 0) {
-                const ids = newProjects.map(p => p.projectId).filter(Boolean);
-                const res = await fetch('/api/follows/projects/batch-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentUser.token}` },
-                    body: JSON.stringify(ids),
-                });
-                if (res.ok) {
-                    const extra = await res.json();
-                    setFollowedIds(prev => new Set([...prev, ...extra]));
-                }
-            }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -179,7 +157,7 @@ const ProjectList = () => {
 
             {loading ? (
                 <div className="projects-grid">
-                    {Array.from({ length: 6 }, (_, i) => <ProjectCardSkeleton key={i} />)}
+                    {Array.from({ length: PAGE_SIZE }, (_, i) => <ProjectCardSkeleton key={i} />)}
                 </div>
             ) : error ? (
                 <p style={{ color: 'red', textAlign: 'center' }}>Сталася помилка: {error}</p>
@@ -211,4 +189,3 @@ const ProjectList = () => {
 };
 
 export default ProjectList;
-

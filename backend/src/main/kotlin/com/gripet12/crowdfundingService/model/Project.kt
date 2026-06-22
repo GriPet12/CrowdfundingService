@@ -28,7 +28,7 @@ data class Project(
 
     var hotnessScore: Double = 0.0,
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "image_id", nullable = false)
     val mainImage: UploadedFile?,
 

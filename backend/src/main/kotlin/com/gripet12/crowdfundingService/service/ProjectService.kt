@@ -7,6 +7,7 @@ import com.gripet12.crowdfundingService.dto.PreviewProjectDto
 import com.gripet12.crowdfundingService.dto.ProjectDto
 import com.gripet12.crowdfundingService.model.Project
 import com.gripet12.crowdfundingService.repository.AnalyticsLogRepository
+import org.hibernate.Hibernate
 import com.gripet12.crowdfundingService.repository.CategoryRepository
 import com.gripet12.crowdfundingService.repository.DonateRepository
 import com.gripet12.crowdfundingService.repository.FileRepository
@@ -85,12 +86,17 @@ class ProjectService(
     }
 
     private fun toPageResponse(projectsPage: Page<Project>): PageResponseDto<PreviewProjectDto> {
-        val ids = projectsPage.content.mapNotNull { it.projectId }
-        val withCategories = if (ids.isNotEmpty())
-            projectRepository.findAllWithCategoriesByIds(ids).associateBy { it.projectId }
-        else emptyMap()
-        val content = projectsPage.content.map { p ->
-            (withCategories[p.projectId] ?: p).toPreviewProjectDto()
+        val projects = projectsPage.content
+        val needsCategoryFetch = projects.any { !Hibernate.isInitialized(it.categories) }
+        val byId = if (needsCategoryFetch) {
+            val ids = projects.mapNotNull { it.projectId }
+            if (ids.isEmpty()) emptyMap()
+            else projectRepository.findAllWithCategoriesByIds(ids).associateBy { it.projectId }
+        } else {
+            emptyMap()
+        }
+        val content = projects.map { project ->
+            (byId[project.projectId] ?: project).toPreviewProjectDto()
         }
         return PageResponseDto(
             content = content,
