@@ -393,6 +393,15 @@
 }
 .my-subs-period { font-size: 12px; font-weight: 500; color: #888; margin-left: 2px; }
 
+.my-subs-avatar--received {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.my-subs-price--received {
+    color: #2e7d32;
+}
+
 .my-subs-status {
     font-size: 13px;
     font-weight: 700;

@@ -18,6 +18,16 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
     @Query("SELECT s FROM Subscription s JOIN FETCH s.creator c LEFT JOIN FETCH c.image JOIN FETCH s.subscriptionTier WHERE s.subscrber.userId = :userId ORDER BY s.subscriptionId DESC")
     fun findAllBySubscriberUserId(userId: Long): List<Subscription>
 
+    @Query("""
+        SELECT s FROM Subscription s
+        JOIN FETCH s.subscrber sub LEFT JOIN FETCH sub.image
+        JOIN FETCH s.creator c LEFT JOIN FETCH c.image
+        JOIN FETCH s.subscriptionTier
+        WHERE s.creator.userId = :creatorId
+        ORDER BY s.subscriptionId DESC
+    """)
+    fun findAllByCreatorUserId(@Param("creatorId") creatorId: Long): List<Subscription>
+
     fun findByPayment(payment: Payment): Subscription?
 
     fun findBySubscrberUserIdAndCreatorUserIdAndActiveTrue(subscriberId: Long, creatorId: Long): List<Subscription>

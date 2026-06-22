@@ -48,6 +48,13 @@ class SubscriptionService(
             .map { it.toDto() }
     }
 
+    @Transactional(readOnly = true)
+    fun getReceivedSubscriptions(): List<SubscriptionDto> {
+        val userId = currentUserId()
+        return subscriptionRepository.findAllByCreatorUserId(userId)
+            .map { it.toReceivedDto() }
+    }
+
     @Transactional
     fun checkAndGrantAutoSubscription(donorId: Long, creatorId: Long) {
         val since = Timestamp.valueOf(LocalDateTime.now().minusDays(30))
@@ -122,6 +129,26 @@ class SubscriptionService(
             creatorId = creator.userId!!,
             creatorName = creator.username,
             creatorImageId = creator.image?.id,
+            tierName = tier?.name ?: "—",
+            tierLevel = tier?.level ?: 0,
+            tierPrice = tierPrice,
+            paymentStatus = payment?.status ?: "AUTO",
+            expiresAt = expiresAt,
+            isActive = active,
+            grantType = grantType
+        )
+    }
+
+    private fun Subscription.toReceivedDto(): SubscriptionDto {
+        val tier = subscriptionTier
+        return SubscriptionDto(
+            subscriptionId = subscriptionId,
+            creatorId = creator.userId!!,
+            creatorName = creator.username,
+            creatorImageId = creator.image?.id,
+            subscriberId = subscrber.userId,
+            subscriberName = subscrber.username,
+            subscriberImageId = subscrber.image?.id,
             tierName = tier?.name ?: "—",
             tierLevel = tier?.level ?: 0,
             tierPrice = tierPrice,
