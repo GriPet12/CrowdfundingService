@@ -191,7 +191,9 @@ class ProjectService(
         projectRepository.save(project)
         balanceService.unfreezeProjectFunds(projectId)
         balanceService.syncProjectFrozenEntries(project.creator.userId!!)
-        return project.toProjectDto()
+        return projectRepository.findById(projectId)
+            .orElseThrow { NoSuchElementException("Project not found") }
+            .toProjectDto()
     }
 
     fun canDelete(id: Long): Map<String, Any> {

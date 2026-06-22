@@ -29,7 +29,7 @@ interface BalanceEntryRepository : JpaRepository<BalanceEntry, Long> {
     @Query("SELECT COALESCE(SUM(ABS(b.amount)), 0) FROM BalanceEntry b WHERE b.user.userId = :userId AND b.amount < 0")
     fun sumDebitsByUserId(@Param("userId") userId: Long): BigDecimal
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query("UPDATE BalanceEntry b SET b.frozen = false WHERE b.projectId = :projectId AND b.frozen = true")
     fun unfreezeByProjectId(@Param("projectId") projectId: Long): Int
 }
