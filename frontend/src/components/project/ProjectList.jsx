@@ -12,6 +12,18 @@ const SORT_OPTIONS = [
     { value: 'createdAt',       label: 'Нові' },
 ];
 
+const ProjectCardSkeleton = () => (
+    <div className="project-card project-card--skeleton" aria-hidden="true">
+        <div className="project-card-image-wrapper">
+            <div className="project-image project-image--loading" />
+        </div>
+        <div className="project-skeleton-line project-skeleton-line--title" />
+        <div className="project-skeleton-line project-skeleton-line--short" />
+        <div className="project-skeleton-bar" />
+        <div className="project-skeleton-line project-skeleton-line--stats" />
+    </div>
+);
+
 const ProjectList = () => {
     const [projects, setProjects]         = useState([]);
     const [followedIds, setFollowedIds]   = useState(new Set());
@@ -94,7 +106,7 @@ const ProjectList = () => {
         setLoading(true);
         setError(null);
         fetchData(0, filters)
-            .then(newProjects => fetchFollowStatuses(newProjects))
+            .then(newProjects => { fetchFollowStatuses(newProjects); })
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
     }, [search, categoryId, sortBy, sortDir, fetchData, fetchFollowStatuses]);
@@ -166,18 +178,21 @@ const ProjectList = () => {
             </div>
 
             {loading ? (
-                <p style={{ textAlign: 'center' }}>Завантаження проєктів...</p>
+                <div className="projects-grid">
+                    {Array.from({ length: 6 }, (_, i) => <ProjectCardSkeleton key={i} />)}
+                </div>
             ) : error ? (
                 <p style={{ color: 'red', textAlign: 'center' }}>Сталася помилка: {error}</p>
             ) : projects.length === 0 ? (
                 <p style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>Проєктів не знайдено</p>
             ) : (
                 <div className="projects-grid">
-                    {projects.map(project => (
+                    {projects.map((project, index) => (
                         <ProjectItem
                             key={project.projectId}
                             project={project}
                             initialFollowing={followedIds.has(project.projectId)}
+                            imagePriority={index < 3}
                             onCardClick={id => analyticsService.projectClick(id)}
                         />
                     ))}

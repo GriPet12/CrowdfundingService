@@ -12,13 +12,14 @@ const getLabel = (category) => {
     return category.name ?? category.title ?? category.label ?? null;
 };
 
-const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCardClick }) => {
+const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCardClick, imagePriority = false }) => {
     const percentage = Math.min((project.collectedAmount / project.goalAmount) * 100, 100);
     const currentUser = AuthService.getCurrentUser();
     const navigate = useNavigate();
 
     const [following, setFollowing] = useState(initialFollowing);
     const [followLoading, setFollowLoading] = useState(false);
+    const [imgLoaded, setImgLoaded] = useState(false);
 
     useEffect(() => { setFollowing(initialFollowing); }, [initialFollowing]);
 
@@ -49,15 +50,18 @@ const ProjectItem = ({ project, initialFollowing = false, onFollowChange, onCard
         <div className="project-card">
             <div className="project-card-image-wrapper">
                 <img
-                    src={`/api/files/${project.mainImage}`}
+                    src={project.mainImage ? `/api/files/${project.mainImage}/preview?w=640` : undefined}
                     alt={project.title}
-                    className="project-image project-image-clickable"
+                    className={`project-image project-image-clickable${imgLoaded ? '' : ' project-image--loading'}`}
                     onClick={() => {
                         onCardClick?.(project.projectId);
                         navigate(`/project/${project.projectId}`);
                     }}
+                    onLoad={() => setImgLoaded(true)}
                     title="Відкрити проект"
-                    loading="lazy"
+                    loading={imagePriority ? 'eager' : 'lazy'}
+                    decoding="async"
+                    fetchPriority={imagePriority ? 'high' : 'auto'}
                 />
                 {currentUser && !currentUser.banned && String(currentUser.id) !== String(project.creatorId) && (
                     <button

@@ -1,6 +1,7 @@
 package com.gripet12.crowdfundingService.controller
 
 import com.gripet12.crowdfundingService.service.FileStorageService
+import com.gripet12.crowdfundingService.service.ImagePreviewService
 import org.springframework.http.ContentDisposition
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpRange
@@ -19,12 +20,27 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 @RequestMapping("/files")
 class UploadedFileController(
-    private val fileStorageService: FileStorageService
+    private val fileStorageService: FileStorageService,
+    private val imagePreviewService: ImagePreviewService
 ) {
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, Long?>> {
         val saved = fileStorageService.uploadFile(file)
         return ResponseEntity.ok(mapOf("id" to saved.id))
+    }
+
+    @GetMapping("/{id}/preview")
+    fun getPreview(
+        @PathVariable id: Long,
+        @RequestParam(defaultValue = "640") width: Int
+    ): ResponseEntity<ByteArray> {
+        val preview = imagePreviewService.getPreview(id, width) ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(preview.mimeType))
+            .header(HttpHeaders.CACHE_CONTROL, CACHE_CONTROL_IMMUTABLE)
+            .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+            .contentLength(preview.bytes.size.toLong())
+            .body(preview.bytes)
     }
 
     @GetMapping("/{id}")
@@ -62,6 +78,7 @@ class UploadedFileController(
             return ResponseEntity.ok()
                 .contentType(contentType)
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                .header(HttpHeaders.CACHE_CONTROL, CACHE_CONTROL_IMMUTABLE)
                 .contentLength(fileLength)
                 .body(data)
         }
@@ -85,5 +102,9 @@ class UploadedFileController(
             .header(HttpHeaders.CONTENT_RANGE, "bytes $start-$end/$fileLength")
             .contentLength(rangeLength)
             .body(partialData)
+    }
+
+    companion object {
+        private const val CACHE_CONTROL_IMMUTABLE = "public, max-age=31536000, immutable"
     }
 }

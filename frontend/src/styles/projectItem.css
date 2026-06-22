@@ -121,6 +121,52 @@
     margin-bottom: 5px;
 }
 
+.project-image--loading {
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    background-size: 200% 100%;
+    animation: project-image-shimmer 1.2s linear infinite;
+}
+
+.project-card--skeleton {
+    pointer-events: none;
+}
+
+.project-skeleton-line,
+.project-skeleton-bar {
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    background-size: 200% 100%;
+    animation: project-image-shimmer 1.2s linear infinite;
+    border-radius: 4px;
+}
+
+.project-skeleton-line {
+    height: 14px;
+    margin-bottom: 10px;
+}
+
+.project-skeleton-line--title {
+    height: 20px;
+    width: 75%;
+}
+
+.project-skeleton-line--short {
+    width: 45%;
+}
+
+.project-skeleton-line--stats {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.project-skeleton-bar {
+    height: 10px;
+    margin-bottom: 10px;
+}
+
+@keyframes project-image-shimmer {
+    to { background-position-x: -200%; }
+}
+
 .project-image-clickable {
     cursor: pointer;
     transition: opacity 0.2s, transform 0.2s;

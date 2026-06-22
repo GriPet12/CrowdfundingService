@@ -7,7 +7,9 @@ import com.gripet12.crowdfundingService.repository.ProjectRepository
 import com.gripet12.crowdfundingService.repository.UserRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -32,23 +34,21 @@ class RecommendationService(
 
     @Transactional(readOnly = true)
     fun getProjectRecommendations(userId: Long?, pageable: Pageable): Page<PreviewProjectDto> {
-        val allProjects = projectRepository.findAll()
-            .filter { it.status == "ACTIVE" && !it.banned }
-
         if (userId == null) {
-
-            val sorted = allProjects.sortedByDescending { it.hotnessScore }
-            return paginateProjects(sorted, pageable)
+            return loadPopularPage(pageable)
         }
 
         val user = userRepository.findById(userId).orElse(null)
-            ?: return paginateProjects(allProjects.sortedByDescending { it.hotnessScore }, pageable)
+            ?: return loadPopularPage(pageable)
 
         val userLogs = analyticsLogRepository.getAnalyticsLogsByUser(user)
-
         if (userLogs.isEmpty()) {
-            return paginateProjects(allProjects.sortedByDescending { it.hotnessScore }, pageable)
+            return loadPopularPage(pageable)
         }
+
+        val activeProjects = projectRepository
+            .findActivePublic(PageRequest.of(0, 500, Sort.by(Sort.Direction.DESC, "hotnessScore")))
+            .content
 
         val categoryWeights = mutableMapOf<Long, Double>()
         for (log in userLogs) {
@@ -63,7 +63,7 @@ class RecommendationService(
 
             val categories: Set<com.gripet12.crowdfundingService.model.Category?> = when {
                 log.project != null -> log.project.categories
-                log.targetUser != null -> allProjects
+                log.targetUser != null -> activeProjects
                     .filter { it.creator.userId == log.targetUser.userId }
                     .flatMap { it.categories }
                     .toSet()
@@ -76,8 +76,8 @@ class RecommendationService(
             }
         }
 
-        val maxHotness = allProjects.maxOfOrNull { it.hotnessScore }?.takeIf { it > 0 } ?: 1.0
-        val sorted = allProjects.sortedByDescending { project ->
+        val maxHotness = activeProjects.maxOfOrNull { it.hotnessScore }?.takeIf { it > 0 } ?: 1.0
+        val sorted = activeProjects.sortedByDescending { project ->
             val catScore = project.categories.sumOf { cat ->
                 cat?.categoryId?.let { categoryWeights.getOrDefault(it, 0.0) } ?: 0.0
             }
@@ -85,6 +85,20 @@ class RecommendationService(
         }
 
         return paginateProjects(sorted, pageable)
+    }
+
+    private fun loadPopularPage(pageable: Pageable): Page<PreviewProjectDto> {
+        val sortedPageable = PageRequest.of(
+            pageable.pageNumber,
+            pageable.pageSize,
+            Sort.by(Sort.Direction.DESC, "hotnessScore")
+        )
+        val projectsPage = projectRepository.findActivePublic(sortedPageable)
+        return PageImpl(
+            projectsPage.content.map { it.toPreviewProjectDto() },
+            projectsPage.pageable,
+            projectsPage.totalElements
+        )
     }
 
     private fun paginateProjects(projects: List<Project>, pageable: Pageable): Page<PreviewProjectDto> {

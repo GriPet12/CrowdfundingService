@@ -64,7 +64,7 @@ class ProjectService(
             search != null || categoryId != null ->
                 projectRepository.findByFilters(searchPattern(search), categoryId, 0, pageable)
             else ->
-                projectRepository.findByStatus("ACTIVE", pageable)
+                projectRepository.findActivePublic(pageable)
         }
 
         return toPageResponse(projectsPage)

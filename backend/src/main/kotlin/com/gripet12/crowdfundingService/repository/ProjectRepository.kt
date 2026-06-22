@@ -59,6 +59,9 @@ interface ProjectRepository : JpaRepository<Project, Long> {
     @Query("SELECT p FROM Project p WHERE p.status = :status")
     fun findByStatus(@Param("status") status: String, pageable: Pageable): Page<Project>
 
+    @Query("SELECT p FROM Project p WHERE p.status = 'ACTIVE' AND p.banned = false")
+    fun findActivePublic(pageable: Pageable): Page<Project>
+
     @Query(
         value = """
             SELECT p FROM Project p LEFT JOIN p.creator u
