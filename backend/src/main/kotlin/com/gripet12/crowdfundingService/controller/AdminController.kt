@@ -184,6 +184,17 @@ class AdminController(
     @GetMapping("/transactions/summary")
     fun getTransactionSummary(): ResponseEntity<TransactionSummaryDto> = ResponseEntity.ok(adminService.getTransactionSummary())
 
+    @GetMapping("/withdrawals")
+    fun getWithdrawals(
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) status: String?,
+        @RequestParam(required = false) from: LocalDate?,
+        @RequestParam(required = false) to: LocalDate?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponseDto<TransactionDto>> =
+        ResponseEntity.ok(adminService.getWithdrawals(search, status, from, to, page, size).toDto())
+
     @PostMapping("/withdrawals/{id}/complete")
     fun completeWithdrawal(@PathVariable id: Long): ResponseEntity<Void> {
         balanceService.completeWithdrawalAdmin(id)

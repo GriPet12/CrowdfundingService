@@ -1245,12 +1245,191 @@ const PendingProjectsTab = ({ token }) => {
     );
 };
 
+const payoutMethodLabel = (method) => {
+    if (method === 'CARD') return 'Картка';
+    if (method === 'IBAN') return 'IBAN';
+    return method ?? '—';
+};
+
+const WithdrawalsTab = ({ token }) => {
+    const [items, setItems] = useState([]);
+    const [summary, setSummary] = useState(null);
+    const [search, setSearch] = useState('');
+    const [status, setStatus] = useState('PENDING');
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [actionLoading, setActionLoading] = useState(null);
+    const [toast, setToast] = useState('');
+    const dSearch = useDebounce(search);
+
+    const fetchSummary = useCallback(async () => {
+        const res = await fetch('/api/admin/transactions/summary', { headers: authHeaders(token) });
+        if (res.ok) setSummary(await res.json());
+    }, [token]);
+
+    const fetchItems = useCallback(async (pg = 0) => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({ page: pg, size: 20 });
+            if (status) params.set('status', status);
+            if (dSearch.trim()) params.set('search', dSearch.trim());
+            const res = await fetch(`/api/admin/withdrawals?${params}`, { headers: authHeaders(token) });
+            if (res.ok) {
+                const data = await res.json();
+                setItems(data.content ?? []);
+                setTotalPages(data.totalPages ?? 1);
+            }
+        } finally { setLoading(false); }
+    }, [token, status, dSearch]);
+
+    useEffect(() => { fetchSummary(); }, [fetchSummary]);
+    useEffect(() => { setPage(0); fetchItems(0); }, [dSearch, status, fetchItems]);
+
+    const handlePage = (p) => { setPage(p); fetchItems(p); };
+
+    const handleAction = async (id, action) => {
+        setActionLoading(id);
+        try {
+            const url = action === 'complete'
+                ? `/api/admin/withdrawals/${id}/complete`
+                : `/api/admin/withdrawals/${id}/reject`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+                body: action === 'reject' ? JSON.stringify({ reason: 'Відхилено адміністратором' }) : undefined,
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.message || 'Помилка операції');
+            }
+            setToast(action === 'complete'
+                ? 'Виплату підтверджено — переведіть кошти на вказані реквізити'
+                : 'Заявку відхилено, кошти повернуто на баланс автора');
+            fetchSummary();
+            fetchItems(page);
+        } catch (err) {
+            setToast(err.message);
+        } finally {
+            setActionLoading(null);
+            setTimeout(() => setToast(''), 4000);
+        }
+    };
+
+    const withdrawalStatusBadge = (s) => {
+        if (s === 'COMPLETED') return <span className="badge badge-done">Виконано</span>;
+        if (s === 'FAILED' || s === 'REJECTED') return <span className="badge badge-failed">{s === 'REJECTED' ? 'Відхилено' : s}</span>;
+        if (s === 'PENDING') return <span className="badge badge-pending">Очікує виплати</span>;
+        return <span className="badge badge-pending">{s}</span>;
+    };
+
+    const pendingCount = summary?.pendingWithdrawalsCount ?? 0;
+
+    return (
+        <div>
+            <div className="admin-withdrawals-intro">
+                <h3>Заявки на виведення коштів</h3>
+                <p>
+                    Автори подають заявки на сторінці <strong>/me → Баланс</strong>.
+                    Переведіть кошти на вказані реквізити вручну, потім натисніть <strong>«Виплатити»</strong>.
+                </p>
+                {pendingCount > 0 && (
+                    <div className="admin-withdrawals-alert">
+                        {pendingCount} заяв{pendingCount === 1 ? 'а' : pendingCount < 5 ? 'и' : ''} очікують виплати
+                    </div>
+                )}
+            </div>
+
+            <div className="admin-toolbar">
+                <input
+                    className="admin-search"
+                    placeholder="Пошук за ім'ям або email…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                />
+                <select className="admin-select" value={status} onChange={e => setStatus(e.target.value)}>
+                    <option value="PENDING">Очікують виплати</option>
+                    <option value="COMPLETED">Виконані</option>
+                    <option value="REJECTED">Відхилені</option>
+                    <option value="">Всі статуси</option>
+                </select>
+                <button className="btn-secondary" onClick={() => fetchItems(page)}>↻ Оновити</button>
+            </div>
+
+            {loading ? (
+                <div className="admin-loading">Завантаження…</div>
+            ) : items.length === 0 ? (
+                <div className="admin-empty">
+                    {status === 'PENDING' ? 'Немає заявок, що очікують виплати' : 'Заявок не знайдено'}
+                </div>
+            ) : (
+                <div className="admin-table-wrap">
+                    <table className="admin-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Автор</th>
+                                <th>Email</th>
+                                <th>Сума</th>
+                                <th>Спосіб</th>
+                                <th>Реквізити</th>
+                                <th>ПІБ</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map(tx => (
+                                <tr key={tx.id}>
+                                    <td style={{ color: '#9ca3af', fontSize: 12 }}>{tx.id}</td>
+                                    <td>{tx.fromUser ?? '—'}</td>
+                                    <td style={{ fontSize: 12 }}>{tx.userEmail ?? '—'}</td>
+                                    <td style={{ fontWeight: 700, color: '#059669' }}>{fmtMoney(tx.amount)}</td>
+                                    <td>{payoutMethodLabel(tx.payoutMethod)}</td>
+                                    <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{tx.payoutDestination ?? '—'}</td>
+                                    <td>{tx.recipientName ?? '—'}</td>
+                                    <td style={{ color: '#9ca3af', fontSize: 12 }}>{fmtDateTime(tx.createdAt)}</td>
+                                    <td>{withdrawalStatusBadge(tx.status)}</td>
+                                    <td>
+                                        {tx.status === 'PENDING' ? (
+                                            <div className="admin-row-actions">
+                                                <button
+                                                    className="btn-success-sm"
+                                                    disabled={actionLoading === tx.id}
+                                                    onClick={() => handleAction(tx.id, 'complete')}
+                                                >
+                                                    {actionLoading === tx.id ? '…' : 'Виплатити'}
+                                                </button>
+                                                <button
+                                                    className="btn-danger-sm"
+                                                    disabled={actionLoading === tx.id}
+                                                    onClick={() => handleAction(tx.id, 'reject')}
+                                                >
+                                                    Відхилити
+                                                </button>
+                                            </div>
+                                        ) : '—'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            <Pagination page={page} total={totalPages} onChange={handlePage} />
+            {toast && <div className="admin-toast">{toast}</div>}
+        </div>
+    );
+};
+
 const TABS = [
     { id: 'users',           label: 'Користувачі', icon: null },
     { id: 'projects',        label: 'Проєкти',     icon: null },
     { id: 'pending-projects',label: 'Модерація',   icon: null },
     { id: 'posts',           label: 'Пости',        icon: null },
     { id: 'categories',      label: 'Категорії',    icon: null },
+    { id: 'withdrawals',     label: 'Виведення',   icon: null },
     { id: 'transactions',    label: 'Транзакції',   icon: null },
 ];
 
@@ -1303,6 +1482,7 @@ const AdminPage = () => {
             {activeTab === 'pending-projects' && <PendingProjectsTab token={token} />}
             {activeTab === 'posts'            && <PostsTab           token={token} />}
             {activeTab === 'categories'       && <CategoriesTab      token={token} />}
+            {activeTab === 'withdrawals'      && <WithdrawalsTab     token={token} />}
             {activeTab === 'transactions'     && <TransactionsTab    token={token} />}
         </div>
     );

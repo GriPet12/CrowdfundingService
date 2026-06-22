@@ -307,23 +307,14 @@ class AdminService(
         val normalizedType = type?.uppercase()
 
         if (normalizedType == "WITHDRAWAL") {
-            val pageable = PageRequest.of(page, size)
-            return withdrawalRepository.findByFilters(
-                search = search?.takeIf { it.isNotBlank() },
+            return getWithdrawals(
+                search = search,
+                status = null,
                 from = from,
                 to = to,
-                pageable = pageable
-            ).map { row ->
-                TransactionDto(
-                    id        = row[0] as? Long,
-                    type      = "WITHDRAWAL",
-                    fromUser  = row[1] as? String,
-                    toUser    = "Банківський рахунок",
-                    amount    = row[2] as BigDecimal,
-                    status    = (row[3] as? String) ?: "PENDING",
-                    createdAt = (row[4] as? java.sql.Timestamp)?.toLocalDateTime()
-                )
-            }
+                page = page,
+                size = size
+            )
         }
 
         if (normalizedType == "SUBSCRIPTION") {
@@ -361,6 +352,53 @@ class AdminService(
     }
 
     @Transactional(readOnly = true)
+    fun getWithdrawals(
+        search: String?,
+        status: String?,
+        from: LocalDate?,
+        to: LocalDate?,
+        page: Int,
+        size: Int
+    ): Page<TransactionDto> {
+        val pageable = PageRequest.of(page, size)
+        return withdrawalRepository.findByFilters(
+            search = search?.takeIf { it.isNotBlank() },
+            status = status?.takeIf { it.isNotBlank() }?.uppercase(),
+            from = from,
+            to = to,
+            pageable = pageable
+        ).map { row -> mapWithdrawalRow(row) }
+    }
+
+    private fun mapWithdrawalRow(row: Array<Any?>): TransactionDto {
+        val payoutMethod = row[6] as? String
+        val payoutDestination = row[7] as? String
+        val recipientName = row[8] as? String
+        val payoutLabel = when (payoutMethod) {
+            "CARD" -> "Картка"
+            "IBAN" -> "IBAN"
+            else -> payoutMethod
+        }
+        val destinationSummary = listOfNotNull(payoutLabel, payoutDestination, recipientName)
+            .joinToString(" · ")
+            .ifBlank { "—" }
+
+        return TransactionDto(
+            id = row[0] as? Long,
+            type = "WITHDRAWAL",
+            fromUser = row[1] as? String,
+            toUser = destinationSummary,
+            amount = row[3] as BigDecimal,
+            status = (row[4] as? String) ?: "PENDING",
+            createdAt = (row[5] as? java.sql.Timestamp)?.toLocalDateTime(),
+            userEmail = row[2] as? String,
+            payoutMethod = payoutMethod,
+            payoutDestination = payoutDestination,
+            recipientName = recipientName
+        )
+    }
+
+    @Transactional(readOnly = true)
     fun getTransactionSummary(): TransactionSummaryDto {
         val totalDonations      = donateRepository.sumAllApprovedDonations()
         val donationsCount      = donateRepository.countAllApprovedDonations()
@@ -368,12 +406,14 @@ class AdminService(
         val subscriptionsCount  = subscriptionRepository.countAllApprovedSubscriptions()
         val totalWithdrawals    = withdrawalRepository.sumAllCompleted()
         val withdrawalsCount    = withdrawalRepository.countAllCompleted()
+        val pendingWithdrawals  = withdrawalRepository.countByStatus("PENDING")
 
         return TransactionSummaryDto(
             totalDonations     = totalDonations,
             donationsCount     = donationsCount,
             totalWithdrawals   = totalWithdrawals,
             withdrawalsCount   = withdrawalsCount,
+            pendingWithdrawalsCount = pendingWithdrawals,
             totalSubscriptions = totalSubscriptions,
             subscriptionsCount = subscriptionsCount,
             totalVolume        = totalDonations + totalSubscriptions,

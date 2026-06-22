@@ -88,6 +88,42 @@
     line-height: 1.5;
 }
 
+.balance-withdraw-form,
+.balance-history {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.balance-payout-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.balance-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.balance-field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.balance-field-input {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .balance-stripe-section,
 .balance-withdraw-form,
 .balance-history {

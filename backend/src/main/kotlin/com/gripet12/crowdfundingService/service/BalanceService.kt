@@ -3,6 +3,7 @@ package com.gripet12.crowdfundingService.service
 import com.gripet12.crowdfundingService.dto.BalanceSummaryDto
 import com.gripet12.crowdfundingService.dto.ConnectOnboardingDto
 import com.gripet12.crowdfundingService.dto.ConnectStatusDto
+import com.gripet12.crowdfundingService.dto.WithdrawalRequestDto
 import com.gripet12.crowdfundingService.dto.WithdrawalDto
 import com.gripet12.crowdfundingService.model.BalanceEntry
 import com.gripet12.crowdfundingService.model.Payment
@@ -246,7 +247,8 @@ class BalanceService(
     }
 
     @Transactional
-    fun requestWithdrawal(amount: BigDecimal): WithdrawalDto {
+    fun requestWithdrawal(request: WithdrawalRequestDto): WithdrawalDto {
+        val amount = request.amount
         val user = currentUser()
         if (user.banned) throw IllegalStateException("Заблокований акаунт не може виводити кошти")
         if (amount < minWithdrawalAmount) {
@@ -259,8 +261,24 @@ class BalanceService(
             throw IllegalArgumentException("Недостатньо коштів на балансі. Доступно: ₴$available")
         }
 
+        val usesManualPayout = !connectEnabled || user.stripeConnectAccountId.isNullOrBlank() || !user.stripePayoutsEnabled
+        val payoutMethod = request.payoutMethod?.trim()?.uppercase()
+        val payoutDestination = request.payoutDestination?.trim()
+        val recipientName = request.recipientName?.trim()
+
+        if (usesManualPayout) {
+            validateManualPayoutDetails(payoutMethod, payoutDestination, recipientName)
+        }
+
         val withdrawal = withdrawalRepository.save(
-            Withdrawal(user = user, amount = amount, status = "PROCESSING")
+            Withdrawal(
+                user = user,
+                amount = amount,
+                status = "PROCESSING",
+                payoutMethod = payoutMethod,
+                payoutDestination = payoutDestination,
+                recipientName = recipientName
+            )
         )
 
         balanceEntryRepository.save(
@@ -282,6 +300,34 @@ class BalanceService(
         }
 
         return processStripeTransfer(withdrawal, user, accountId)
+    }
+
+    private fun validateManualPayoutDetails(
+        payoutMethod: String?,
+        payoutDestination: String?,
+        recipientName: String?
+    ) {
+        if (payoutMethod.isNullOrBlank() || payoutMethod !in setOf("CARD", "IBAN")) {
+            throw IllegalArgumentException("Оберіть спосіб виплати: карта або IBAN")
+        }
+        if (payoutDestination.isNullOrBlank() || payoutDestination.length < 8) {
+            throw IllegalArgumentException("Вкажіть номер картки або IBAN (мінімум 8 символів)")
+        }
+        if (recipientName.isNullOrBlank() || recipientName.length < 3) {
+            throw IllegalArgumentException("Вкажіть ПІБ отримувача")
+        }
+        if (payoutMethod == "CARD") {
+            val digits = payoutDestination.replace("\\s".toRegex(), "")
+            if (!digits.matches(Regex("\\d{13,19}"))) {
+                throw IllegalArgumentException("Номер картки має містити 13–19 цифр")
+            }
+        }
+        if (payoutMethod == "IBAN") {
+            val normalized = payoutDestination.replace("\\s".toRegex(), "").uppercase()
+            if (!normalized.matches(Regex("UA\\d{27}"))) {
+                throw IllegalArgumentException("IBAN має бути у форматі UA + 27 цифр")
+            }
+        }
     }
 
     @Transactional
@@ -394,6 +440,9 @@ class BalanceService(
         status = status,
         stripeTransferId = stripeTransferId,
         failureReason = failureReason,
+        payoutMethod = payoutMethod,
+        payoutDestination = payoutDestination,
+        recipientName = recipientName,
         createdAt = createdAt.toLocalDateTime(),
         processedAt = processedAt?.toLocalDateTime()
     )

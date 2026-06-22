@@ -35,5 +35,5 @@ class BalanceController(private val balanceService: BalanceService) {
 
     @PostMapping("/withdraw")
     fun withdraw(@RequestBody request: WithdrawalRequestDto): ResponseEntity<WithdrawalDto> =
-        ResponseEntity.ok(balanceService.requestWithdrawal(request.amount))
+        ResponseEntity.ok(balanceService.requestWithdrawal(request))
 }

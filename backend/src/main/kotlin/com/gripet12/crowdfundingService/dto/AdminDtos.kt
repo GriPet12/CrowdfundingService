@@ -53,7 +53,11 @@ data class TransactionDto(
     val toUser: String?,
     val amount: BigDecimal,
     val status: String,
-    val createdAt: LocalDateTime?
+    val createdAt: LocalDateTime?,
+    val userEmail: String? = null,
+    val payoutMethod: String? = null,
+    val payoutDestination: String? = null,
+    val recipientName: String? = null
 )
 
 data class TransactionSummaryDto(
@@ -61,6 +65,7 @@ data class TransactionSummaryDto(
     val donationsCount: Long,
     val totalWithdrawals: BigDecimal,
     val withdrawalsCount: Long,
+    val pendingWithdrawalsCount: Long = 0,
     val totalSubscriptions: BigDecimal,
     val subscriptionsCount: Long,
     val totalVolume: BigDecimal,

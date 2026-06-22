@@ -31,6 +31,15 @@ class Withdrawal(
     @Column(name = "failure_reason", length = 500)
     var failureReason: String? = null,
 
+    @Column(name = "payout_method", length = 20)
+    val payoutMethod: String? = null,
+
+    @Column(name = "payout_destination", length = 120)
+    val payoutDestination: String? = null,
+
+    @Column(name = "recipient_name", length = 120)
+    val recipientName: String? = null,
+
     @Column(name = "created_at", nullable = false)
     val createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
 

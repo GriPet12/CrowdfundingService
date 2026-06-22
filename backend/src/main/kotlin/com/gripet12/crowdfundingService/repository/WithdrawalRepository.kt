@@ -18,17 +18,25 @@ interface WithdrawalRepository : JpaRepository<Withdrawal, Long> {
     @Query("SELECT COUNT(w) FROM Withdrawal w WHERE w.status = 'COMPLETED'")
     fun countAllCompleted(): Long
 
+    fun countByStatus(status: String): Long
+
     @Query(
         value = """
         SELECT
             w.withdrawal_id,
             u.username AS from_user,
+            u.email AS user_email,
             w.amount,
             w.status,
-            w.created_at
+            w.created_at,
+            w.payout_method,
+            w.payout_destination,
+            w.recipient_name
         FROM withdrawals w
         JOIN users u ON u.user_id = w.user_user_id
-        WHERE (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+        WHERE (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:status IS NULL OR w.status = :status)
           AND (:from IS NULL OR CAST(w.created_at AS date) >= CAST(:from AS date))
           AND (:to IS NULL OR CAST(w.created_at AS date) <= CAST(:to AS date))
         ORDER BY w.withdrawal_id DESC
@@ -37,7 +45,9 @@ interface WithdrawalRepository : JpaRepository<Withdrawal, Long> {
         SELECT COUNT(w.withdrawal_id)
         FROM withdrawals w
         JOIN users u ON u.user_id = w.user_user_id
-        WHERE (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+        WHERE (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:status IS NULL OR w.status = :status)
           AND (:from IS NULL OR CAST(w.created_at AS date) >= CAST(:from AS date))
           AND (:to IS NULL OR CAST(w.created_at AS date) <= CAST(:to AS date))
         """,
@@ -45,6 +55,7 @@ interface WithdrawalRepository : JpaRepository<Withdrawal, Long> {
     )
     fun findByFilters(
         @Param("search") search: String?,
+        @Param("status") status: String?,
         @Param("from") from: LocalDate?,
         @Param("to") to: LocalDate?,
         pageable: Pageable

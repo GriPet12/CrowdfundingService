@@ -15,7 +15,10 @@ data class BalanceSummaryDto(
 )
 
 data class WithdrawalRequestDto(
-    val amount: BigDecimal
+    val amount: BigDecimal,
+    val payoutMethod: String? = null,
+    val payoutDestination: String? = null,
+    val recipientName: String? = null
 )
 
 data class WithdrawalDto(
@@ -24,6 +27,9 @@ data class WithdrawalDto(
     val status: String,
     val stripeTransferId: String?,
     val failureReason: String?,
+    val payoutMethod: String?,
+    val payoutDestination: String?,
+    val recipientName: String?,
     val createdAt: LocalDateTime,
     val processedAt: LocalDateTime?
 )

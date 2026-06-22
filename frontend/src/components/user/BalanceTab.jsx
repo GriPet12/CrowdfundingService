@@ -18,11 +18,27 @@ const statusLabel = (status) => {
     }
 };
 
+const payoutMethodLabel = (method) => {
+    if (method === 'CARD') return 'Картка';
+    if (method === 'IBAN') return 'IBAN';
+    return method ?? '—';
+};
+
+const maskDestination = (dest) => {
+    if (!dest) return '—';
+    const clean = dest.replace(/\s/g, '');
+    if (clean.length <= 4) return clean;
+    return `•••• ${clean.slice(-4)}`;
+};
+
 const BalanceTab = ({ token }) => {
     const [balance, setBalance] = useState(null);
     const [withdrawals, setWithdrawals] = useState([]);
     const [connectStatus, setConnectStatus] = useState(null);
     const [amount, setAmount] = useState('');
+    const [payoutMethod, setPayoutMethod] = useState('CARD');
+    const [payoutDestination, setPayoutDestination] = useState('');
+    const [recipientName, setRecipientName] = useState('');
     const [loading, setLoading] = useState(true);
     const [withdrawing, setWithdrawing] = useState(false);
     const [connecting, setConnecting] = useState(false);
@@ -31,6 +47,8 @@ const BalanceTab = ({ token }) => {
 
     const headers = { Authorization: `Bearer ${token}` };
     const connectAvailable = balance?.connectAvailable ?? connectStatus?.connectAvailable ?? false;
+    const stripeAutoPayout = connectAvailable && connectStatus?.payoutsEnabled;
+    const needsPayoutDetails = !stripeAutoPayout;
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -90,10 +108,17 @@ const BalanceTab = ({ token }) => {
         setError('');
         setSuccess('');
         try {
+            const payload = { amount: value };
+            if (needsPayoutDetails) {
+                payload.payoutMethod = payoutMethod;
+                payload.payoutDestination = payoutDestination.trim();
+                payload.recipientName = recipientName.trim();
+            }
+
             const res = await fetch('/api/balance/withdraw', {
                 method: 'POST',
                 headers: { ...headers, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: value }),
+                body: JSON.stringify(payload),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.message || 'Не вдалося створити заявку');
@@ -101,10 +126,11 @@ const BalanceTab = ({ token }) => {
                 data.status === 'COMPLETED'
                     ? `Виведено ${fmtMoney(data.amount)} на ваш Stripe-акаунт`
                     : data.status === 'PENDING'
-                        ? `Заявку на ${fmtMoney(data.amount)} прийнято. Адміністратор обробить виплату вручну.`
+                        ? `Заявку на ${fmtMoney(data.amount)} прийнято. Адміністратор переведе кошти на вказані реквізити.`
                         : `Заявку створено (${statusLabel(data.status)})`
             );
             setAmount('');
+            setPayoutDestination('');
             loadData();
         } catch (err) {
             setError(err.message);
@@ -175,23 +201,65 @@ const BalanceTab = ({ token }) => {
                 </div>
             )}
 
-            {!connectAvailable && (
+            {needsPayoutDetails && (
                 <div className="balance-info-box">
-                    <strong>Ручне виведення</strong>
+                    <strong>Куди переводити кошти</strong>
                     <p>
-                        Подайте заявку на виведення — адміністратор платформи переведе кошти
-                        на вашу картку протягом 1–3 робочих днів.
+                        Вкажіть реквізити нижче — адміністратор побачить їх у розділі
+                        «Адмін → Виведення» і переведе кошти вручну протягом 1–3 робочих днів.
                     </p>
                 </div>
             )}
 
             <form className="balance-withdraw-form" onSubmit={handleWithdraw}>
-                <h4 className="balance-section-title">Вивести кошти</h4>
+                <h4 className="balance-section-title">Подати заявку на виведення</h4>
+
+                {needsPayoutDetails && (
+                    <div className="balance-payout-fields">
+                        <label className="balance-field">
+                            <span className="balance-field-label">Спосіб виплати</span>
+                            <select
+                                className="balance-field-input"
+                                value={payoutMethod}
+                                onChange={(e) => setPayoutMethod(e.target.value)}
+                            >
+                                <option value="CARD">Банківська картка</option>
+                                <option value="IBAN">IBAN (банківський рахунок)</option>
+                            </select>
+                        </label>
+
+                        <label className="balance-field">
+                            <span className="balance-field-label">
+                                {payoutMethod === 'CARD' ? 'Номер картки' : 'IBAN (UA...)'}
+                            </span>
+                            <input
+                                type="text"
+                                className="balance-field-input"
+                                placeholder={payoutMethod === 'CARD' ? '5375 4114 0000 0000' : 'UA123456789012345678901234567'}
+                                value={payoutDestination}
+                                onChange={(e) => setPayoutDestination(e.target.value)}
+                                autoComplete="off"
+                            />
+                        </label>
+
+                        <label className="balance-field">
+                            <span className="balance-field-label">ПІБ отримувача</span>
+                            <input
+                                type="text"
+                                className="balance-field-input"
+                                placeholder="Прізвище Ім'я По батькові"
+                                value={recipientName}
+                                onChange={(e) => setRecipientName(e.target.value)}
+                            />
+                        </label>
+                    </div>
+                )}
+
                 <div className="balance-withdraw-row">
                     <input
                         type="number"
                         className="balance-withdraw-input"
-                        placeholder={`Мін. ${minWithdrawal} ₴`}
+                        placeholder={`Сума, мін. ${minWithdrawal} ₴`}
                         min={minWithdrawal}
                         max={available}
                         step="1"
@@ -231,6 +299,12 @@ const BalanceTab = ({ token }) => {
                                 </div>
                                 <div className="balance-history-meta">
                                     {new Date(w.createdAt).toLocaleString('uk-UA')}
+                                    {w.payoutDestination && (
+                                        <span>
+                                            {' · '}{payoutMethodLabel(w.payoutMethod)} {maskDestination(w.payoutDestination)}
+                                            {w.recipientName ? ` · ${w.recipientName}` : ''}
+                                        </span>
+                                    )}
                                     {w.failureReason && w.status !== 'PENDING' && (
                                         <span className="balance-history-reason"> · {w.failureReason}</span>
                                     )}
