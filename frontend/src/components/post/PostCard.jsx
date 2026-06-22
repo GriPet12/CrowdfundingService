@@ -66,8 +66,12 @@ const AudioPlayer = ({ file }) => {
     };
 
     const handleLoadedMetadata = () => {
-        setDuration(audioRef.current?.duration ?? 0);
-        setProgress(0);
+        const audio = audioRef.current;
+        if (!audio) return;
+        setDuration(audio.duration ?? 0);
+        if (audio.duration && !isDragging.current) {
+            setProgress(audio.currentTime / audio.duration);
+        }
     };
 
     const handleEnded = () => setPlaying(false);
@@ -85,6 +89,7 @@ const AudioPlayer = ({ file }) => {
         isDragging.current = true;
         const pct = eventToPct(e);
         setProgress(pct);
+        seekTo(pct);
     };
 
     const handleTrackPointerMove = (e) => {
